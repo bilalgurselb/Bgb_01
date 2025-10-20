@@ -31,25 +31,19 @@ jobs:
           name: app
           path: ./publish
 
-  deploy:
-    runs-on: windows-latest
-    needs: build
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: app
-          path: ./publish
+deploy:
+  runs-on: windows-latest
+  needs: build
+  steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: app
+        path: ./publish
 
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_BA8E2B2F9351406ABAADA67398BF3254 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_27F4F308130B41A581BEBECEA26A6D3B }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICESUBSCRIPTIONID_EB16AF2311FE48BABEE58153DD1495B4 }}
-
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'bilalgurseliparis'
-          slot-name: 'Production'
-          package: ./publish
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: 'bilalgurseliparis'
+        slot-name: 'Production'
+        publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+        package: ./publish
