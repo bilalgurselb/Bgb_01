@@ -1,66 +1,54 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
 name: Build and deploy ASP.Net Core app to Azure Web App - bilalgurseliparis
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
-    permissions:
-      contents: read #This is required for actions/checkout
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up .NET Core
+      - name: Set up .NET SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.x'
 
-      - name: Build with dotnet
-        run: dotnet build --configuration Release
+      - name: Restore
+        run: dotnet restore ./SiparisApi/SiparisApi.csproj
 
-      - name: dotnet publish
-        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+      - name: Build
+        run: dotnet build ./SiparisApi/SiparisApi.csproj -c Release --no-restore
 
-      - name: Upload artifact for deployment job
+      - name: Publish
+        run: dotnet publish ./SiparisApi/SiparisApi.csproj -c Release -o ./publish --no-build
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          name: app
+          path: ./publish
 
   deploy:
     runs-on: windows-latest
     needs: build
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
-
     steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: .net-app
-      
+          name: app
+          path: ./publish
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id:  ${{ secrets.__clientidsecretname__ }}
-          tenant-id: ${{ secrets.__tenantidsecretname__ }}
-          subscription-id: ${{ secrets.__subscriptionidsecretname__ }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_BA8E2B2F9351406ABAADA67398BF3254 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_27F4F308130B41A581BEBECEA26A6D3B }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_EB16AF2311FE48BABEE58153DD1495B4 }}
 
       - name: Deploy to Azure Web App
-        id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'bilalgurseliparis'
           slot-name: 'Production'
-          package: .
-
-          
+          package: ./publish
