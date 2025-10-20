@@ -9,6 +9,9 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: ./SiparisApi
     steps:
       - uses: actions/checkout@v4
 
@@ -18,13 +21,13 @@ jobs:
           dotnet-version: '8.x'
 
       - name: Restore
-        run: dotnet restore ./SiparisApi/SiparisApi.csproj
+        run: dotnet restore SiparisApi.csproj
 
       - name: Build
-        run: dotnet build ./SiparisApi/SiparisApi.csproj -c Release --no-restore
+        run: dotnet build SiparisApi.csproj -c Release --no-restore
 
       - name: Publish
-        run: dotnet publish ./SiparisApi/SiparisApi.csproj -c Release -o ./publish --no-build
+        run: dotnet publish SiparisApi.csproj -c Release -o ../publish --no-build
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
