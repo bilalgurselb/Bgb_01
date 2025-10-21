@@ -1,0 +1,58 @@
+﻿@model SiparisApi.Models.Order
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Yeni Sipariş Oluştur";
+}
+
+<h2>📦 Yeni Sipariş Oluştur</h2>
+
+<form asp-action="Create" method="post">
+    <label>Müşteri:</label><br />
+    <input asp-for="Customer" required /><br /><br />
+
+    <label>Ürün:</label><br />
+    <input asp-for="Product" required /><br /><br />
+
+    <label>Miktar:</label><br />
+    <input asp-for="Quantity" type="number" required /><br /><br />
+
+    <label>Birim:</label><br />
+    <input asp-for="Unit" /><br /><br />
+
+    <label>Birim Fiyat:</label><br />
+    <input asp-for="Price" type="number" step="0.01" /><br /><br />
+
+    <label>Para Birimi:</label><br />
+    <input asp-for="Currency" /><br /><br />
+
+    <label>Sipariş Tarihi:</label><br />
+    <input asp-for="OrderDate" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" /><br /><br />
+
+    <label>Teslim Tarihi:</label><br />
+    <input asp-for="DeliveryDate" type="date" /><br /><br />
+
+    <label>Ödeme Şartı:</label><br />
+    <input asp-for="PaymentTerm" /><br /><br />
+
+    <label>Taşıma:</label><br />
+    <input asp-for="Transport" /><br /><br />
+
+    <label>Teslim Şartı:</label><br />
+    <input asp-for="DeliveryTerm" /><br /><br />
+
+    <label>Vade (gün):</label><br />
+    <input asp-for="DueDays" type="number" /><br /><br />
+
+    <button type="submit">💾 Kaydet</button>
+    <a asp-action="Index" asp-controller="OrderUIList" style="margin-left:10px;">⬅️ Geri Dön</a>
+</form>
+
+@if (ViewBag.Message != null)
+{
+    <p style="color:green">@ViewBag.Message</p>
+}
+
+@if (ViewBag.Error != null)
+{
+    <p style="color:red">@ViewBag.Error</p>
+}

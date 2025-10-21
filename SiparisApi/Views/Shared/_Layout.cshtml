@@ -1,0 +1,35 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sintan Kimya</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <header>
+        <div class="navbar">
+            <a asp-controller="Home" asp-action="Index" class="navbar-brand">
+                <img src="~/images/logo_org.svg" alt="Sintan Kimya" class="logo-responsive" />
+            </a>
+        </div>
+        <div class="brand-banner">
+            <h1>Sintan Kimya Sipariş Yönetim Sistemi</h1>
+            <p>Kalite, Güven ve Teknoloji ile Üretimde Öncü</p>
+        </div>
+    </header>
+
+    <main role="main" class="container">
+        @RenderBody()
+    </main>
+
+    <footer class="footer">
+        <p>© @DateTime.Now.Year Sintan Kimya A.Ş. — Tüm hakları saklıdır.</p>
+    </footer>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,65 @@
+﻿@model List<SiparisApi.Models.Order>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "📦 Sipariş Listesi";
+}
+
+<h2>📦 Sipariş Listesi</h2>
+
+<table border="1" cellpadding="5" cellspacing="0" style="width:100%; border-collapse:collapse;">
+    <thead style="background:#f2f2f2;">
+        <tr>
+            <th>ID</th>
+            <th>Müşteri</th>
+            <th>Ürün</th>
+            <th>Miktar</th>
+            <th>Oluşturan</th>
+            <th>Fabrika Onayı</th>
+            <th>Satış Onayı</th>
+            <th>İşlemler</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var order in Model)
+        {
+            <tr>
+                <td>@order.Id</td>
+                <td>@order.Customer</td>
+                <td>@order.Product</td>
+                <td>@order.Quantity</td>
+                <td>@order.CreatedBy</td>
+                <td>@(order.IsApprovedByFactory ? "✅ Onaylı" : "⏳ Bekliyor")</td>
+                <td>@(order.IsApprovedBySales ? "✅ Onaylı" : "⏳ Bekliyor")</td>
+                <td>
+
+                    @* ✏️ Düzenleme butonu (onaylanmamış siparişler için) *@
+                    @if (!order.IsApprovedByFactory)
+                    {
+                        <a href="/OrderUI/Edit/@order.Id" style="margin-right:10px;">✏️ Düzenle</a>
+                    }
+
+                    @* ✅ Fabrika Onayla *@
+                    @if (!order.IsApprovedByFactory)
+                    {
+                        <form method="post" action="/OrdersUI/Approve" style="display:inline;">
+                            <input type="hidden" name="id" value="@order.Id" />
+                            <button type="submit" style="background:green;color:white;padding:5px;">✅ Onayla</button>
+                        </form>
+                    }
+
+                    @* ❌ Onayı Geri Al (Sadece admin) *@
+                    @if (order.IsApprovedByFactory)
+                    {
+                        <form method="post" action="/OrdersUI/RevokeApproval" style="display:inline;">
+                            <input type="hidden" name="id" value="@order.Id" />
+                            <button type="submit" style="background:red;color:white;padding:5px;">❌ Onayı Geri Al</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<br />
+<a href="/OrderUI/Create" style="padding:8px 15px; background:#007bff; color:#fff; text-decoration:none;">➕ Yeni Sipariş Oluştur</a>

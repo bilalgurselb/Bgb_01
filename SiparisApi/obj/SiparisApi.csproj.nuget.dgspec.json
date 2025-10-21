@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\WINDOWS\\system32\\Bgb_01\\SiparisApi\\SiparisApi.csproj": {}
+    "C:\\Users\\bborekci\\source\\repos\\bilalgurselb\\Bgb_01\\SiparisApi\\SiparisApi.csproj": {}
   },
   "projects": {
-    "C:\\WINDOWS\\system32\\Bgb_01\\SiparisApi\\SiparisApi.csproj": {
+    "C:\\Users\\bborekci\\source\\repos\\bilalgurselb\\Bgb_01\\SiparisApi\\SiparisApi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\WINDOWS\\system32\\Bgb_01\\SiparisApi\\SiparisApi.csproj",
+        "projectUniqueName": "C:\\Users\\bborekci\\source\\repos\\bilalgurselb\\Bgb_01\\SiparisApi\\SiparisApi.csproj",
         "projectName": "SiparisApi",
-        "projectPath": "C:\\WINDOWS\\system32\\Bgb_01\\SiparisApi\\SiparisApi.csproj",
+        "projectPath": "C:\\Users\\bborekci\\source\\repos\\bilalgurselb\\Bgb_01\\SiparisApi\\SiparisApi.csproj",
         "packagesPath": "C:\\Users\\bborekci\\.nuget\\packages\\",
-        "outputPath": "C:\\WINDOWS\\system32\\Bgb_01\\SiparisApi\\obj\\",
+        "outputPath": "C:\\Users\\bborekci\\source\\repos\\bilalgurselb\\Bgb_01\\SiparisApi\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -22,7 +22,7 @@
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
-          "net8.0"
+          "net9.0"
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
@@ -30,8 +30,8 @@
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net8.0": {
-            "targetAlias": "net8.0",
+          "net9.0": {
+            "targetAlias": "net9.0",
             "projectReferences": {}
           }
         },
@@ -48,12 +48,44 @@
         "SdkAnalysisLevel": "9.0.300"
       },
       "frameworks": {
-        "net8.0": {
-          "targetAlias": "net8.0",
+        "net9.0": {
+          "targetAlias": "net9.0",
           "dependencies": {
+            "BCrypt.Net-Next": {
+              "target": "Package",
+              "version": "[4.0.3, )"
+            },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[9.0.10, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[9.0.10, )"
+            },
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[9.0.10, )"
+            },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[9.0.10, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[9.0.10, )"
+            },
             "Swashbuckle.AspNetCore": {
               "target": "Package",
               "version": "[9.0.6, )"
+            },
+            "System.Runtime.CompilerServices.Unsafe": {
+              "target": "Package",
+              "version": "[6.1.2, )"
             }
           },
           "imports": [

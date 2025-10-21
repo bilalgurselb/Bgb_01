@@ -1,0 +1,30 @@
+﻿@model List<SiparisApi.Controllers.LogViewModel>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h2>📜 Sistem Logları</h2>
+
+<table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+        <tr>
+            <th>Kullanıcı</th>
+            <th>İşlem</th>
+            <th>Endpoint</th>
+            <th>Tarih</th>
+            <th>Detay</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var log in Model)
+        {
+            <tr>
+                <td>@log.UserEmail</td>
+                <td>@log.Action</td>
+                <td>@log.Endpoint</td>
+                <td>@log.Timestamp.ToString("yyyy-MM-dd HH:mm")</td>
+                <td>@log.Details</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
