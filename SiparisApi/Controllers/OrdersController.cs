@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+
 using SiparisApi.Data;
+using SiparisApi.Dtos;
 using SiparisApi.Models;
 using SiparisApi.Services;
-using SiparisApi.Dtos;
-
-
 
 namespace SiparisApi.Controllers
 {
@@ -23,7 +21,7 @@ namespace SiparisApi.Controllers
             _context = context;
             _email = email;
         }
-      
+
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] OrderDto dto)
         {

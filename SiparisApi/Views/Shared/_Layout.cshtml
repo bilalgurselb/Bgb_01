@@ -1,34 +1,119 @@
-﻿@{
-    Layout = null;
-}
+﻿@*
+    Responsive iOS 15 uyumlu layout
+    Bilal – Sipariş Yönetim Uygulaması
+*@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sintan Kimya</title>
-    <link rel="stylesheet" href="~/css/site.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#002B5B" />
+    <title>@ViewData["Title"] - Sipariş Yönetimi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: linear-gradient(90deg, #002B5B 0%, #00B8D9 100%);
+        }
+
+        .navbar-brand img {
+            height: 40px;
+            margin-right: 10px;
+        }
+
+        .nav-link {
+            color: #fff !important;
+            font-weight: 500;
+        }
+
+            .nav-link:hover {
+                color: #FFD700 !important;
+            }
+
+        footer {
+            background-color: #002B5B;
+            color: #fff;
+            padding: 10px 0;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 40px;
+        }      
+        @@supports (-webkit-touch-callout: none) {
+            input, button, select, textarea
+
+        {
+            font-size: 16px !important;
+        }
+
+        }
+    </style>
 </head>
+
 <body>
     <header>
-        <div class="navbar">
-            <a asp-controller="Home" asp-action="Index" class="navbar-brand">
-                <img src="~/images/logo_org.svg" alt="Sintan Kimya" class="logo-responsive" />
-            </a>
-        </div>
-        <div class="brand-banner">
-            <h1>Sintan Kimya Sipariş Yönetim Sistemi</h1>
-            <p>Kalite, Güven ve Teknoloji ile Üretimde Öncü</p>
-        </div>
+        <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center" href="/">
+                    <img src="~/images/logo_org.svg" alt="Logo" />
+                    <span class="fw-bold text-white">Sipariş Yönetimi</span>
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link" href="/OrderUIList/Index"><i class="bi bi-list-ul me-1"></i> Siparişler</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/OrdersUI/Create"><i class="bi bi-plus-circle me-1"></i> Yeni Sipariş</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/Account/Login"><i class="bi bi-person me-1"></i> Giriş</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#" id="logoutBtn"><i class="bi bi-box-arrow-right me-1"></i> Çıkış</a></li>
+                    </ul>
+                </div> <!-- collapse -->
+            </div> <!-- container -->
+        </nav> <!-- navbar -->
     </header>
 
-    <main role="main" class="container">
+    <main class="container mt-4">
         @RenderBody()
     </main>
 
-    <footer class="footer">
-        <p>© @DateTime.Now.Year Sintan Kimya A.Ş. — Tüm hakları saklıdır.</p>
+    <footer>
+        © @DateTime.Now.Year Sintan Kimya – Tüm Hakları Saklıdır
     </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const logoutBtn = document.getElementById("logoutBtn");
+            if (!logoutBtn) return;
+
+            logoutBtn.addEventListener("click", function (e) {
+                e.preventDefault();
+
+                // Token temizleme
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("refreshToken");
+
+                // Cookie temizleme
+                document.cookie.split(";").forEach(c => {
+                    document.cookie = c
+                        .replace(/^ +/, "")
+                        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+                });
+
+                // Login sayfasına yönlendir
+                window.location.href = "/Account/Login";
+            });
+        });
+    </script>
 
     @RenderSection("Scripts", required: false)
 </body>

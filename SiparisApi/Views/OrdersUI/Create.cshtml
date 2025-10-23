@@ -1,58 +1,105 @@
-﻿@model SiparisApi.Models.Order
-@{
+﻿@{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Yeni Sipariş Oluştur";
 }
 
-<h2>📦 Yeni Sipariş Oluştur</h2>
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold text-primary mb-0">Yeni Sipariş</h4>
+        <a href="/OrderUIList/Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Geri Dön
+        </a>
+    </div>
 
-<form asp-action="Create" method="post">
-    <label>Müşteri:</label><br />
-    <input asp-for="Customer" required /><br /><br />
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body">
+            <form id="createOrderForm" method="post" novalidate>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Müşteri Adı</label>
+                    <input type="text" class="form-control" id="customerName" placeholder="Müşteri adı girin" required />
+                </div>
 
-    <label>Ürün:</label><br />
-    <input asp-for="Product" required /><br /><br />
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Ürün</label>
+                    <select class="form-select" id="productName" required>
+                        <option value="">Seçiniz...</option>
+                        <option>Polimer 200</option>
+                        <option>Asit 25%</option>
+                        <option>Baz 15%</option>
+                        <option>Reçine 32</option>
+                    </select>
+                </div>
 
-    <label>Miktar:</label><br />
-    <input asp-for="Quantity" type="number" required /><br /><br />
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Adet (kg)</label>
+                    <input type="number" class="form-control" id="quantity" min="1" placeholder="0" required />
+                </div>
 
-    <label>Birim:</label><br />
-    <input asp-for="Unit" /><br /><br />
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Termin Tarihi</label>
+                    <input type="text" class="form-control" id="deliveryDate" placeholder="GG/AA/YYYY" inputmode="numeric" required />
+                </div>
 
-    <label>Birim Fiyat:</label><br />
-    <input asp-for="Price" type="number" step="0.01" /><br /><br />
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-success py-2 fw-semibold">
+                        <i class="bi bi-check-circle me-1"></i> Kaydet
+                    </button>
+                </div>
 
-    <label>Para Birimi:</label><br />
-    <input asp-for="Currency" /><br /><br />
+                <div id="formAlert" class="alert mt-3 d-none"></div>
+            </form>
+        </div>
+    </div>
+</div>
 
-    <label>Sipariş Tarihi:</label><br />
-    <input asp-for="OrderDate" type="date" value="@DateTime.Now.ToString("yyyy-MM-dd")" /><br /><br />
+@section Scripts {
+    <script>
+        document.getElementById("createOrderForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const customer = document.getElementById("customerName").value.trim();
+            const product = document.getElementById("productName").value;
+            const qty = document.getElementById("quantity").value;
+            const date = document.getElementById("deliveryDate").value;
+            const alertBox = document.getElementById("formAlert");
 
-    <label>Teslim Tarihi:</label><br />
-    <input asp-for="DeliveryDate" type="date" /><br /><br />
+            if (!customer || !product || !qty || !date) {
+                alertBox.className = "alert alert-warning mt-3";
+                alertBox.textContent = "Tüm alanları doldurmanız gerekiyor.";
+                alertBox.classList.remove("d-none");
+                return;
+            }
 
-    <label>Ödeme Şartı:</label><br />
-    <input asp-for="PaymentTerm" /><br /><br />
+            const baseUrl = window.location.origin;
+            try {
+                const response = await fetch(baseUrl + "/api/orders", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + localStorage.getItem("accessToken")
+                    },
+                    body: JSON.stringify({
+                        customerName: customer,
+                        productName: product,
+                        quantity: qty,
+                        deliveryDate: date
+                    })
+                });
 
-    <label>Taşıma:</label><br />
-    <input asp-for="Transport" /><br /><br />
-
-    <label>Teslim Şartı:</label><br />
-    <input asp-for="DeliveryTerm" /><br /><br />
-
-    <label>Vade (gün):</label><br />
-    <input asp-for="DueDays" type="number" /><br /><br />
-
-    <button type="submit">💾 Kaydet</button>
-    <a asp-action="Index" asp-controller="OrderUIList" style="margin-left:10px;">⬅️ Geri Dön</a>
-</form>
-
-@if (ViewBag.Message != null)
-{
-    <p style="color:green">@ViewBag.Message</p>
-}
-
-@if (ViewBag.Error != null)
-{
-    <p style="color:red">@ViewBag.Error</p>
+                if (response.ok) {
+                    alertBox.className = "alert alert-success mt-3";
+                    alertBox.textContent = "Sipariş başarıyla kaydedildi!";
+                    alertBox.classList.remove("d-none");
+                    setTimeout(() => window.location.href = "/OrderUIList/Index", 1200);
+                } else {
+                    alertBox.className = "alert alert-danger mt-3";
+                    alertBox.textContent = "Kayıt başarısız! API yanıt vermedi.";
+                    alertBox.classList.remove("d-none");
+                }
+            } catch {
+                alertBox.className = "alert alert-danger mt-3";
+                alertBox.textContent = "Bağlantı hatası. Lütfen tekrar deneyin.";
+                alertBox.classList.remove("d-none");
+            }
+        });
+    </script>
 }
