@@ -51,25 +51,8 @@ jobs:
           app-name: 'bilalgurseliparis'
           package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
-
-  deploy:
-    runs-on: windows-latest
-    needs: build
-
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: .net-app
-
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'bilalgurseliparis'
-          package: .
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
-
-           - name: Warm up the site
+           
+      - name: Warm up the site
         shell: pwsh
         run: |
           Write-Host "Warming up Azure Web App..."
