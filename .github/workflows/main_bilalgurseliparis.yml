@@ -69,7 +69,13 @@ jobs:
           package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
 
-      - name: Warm up the site
+           - name: Warm up the site
+        shell: pwsh
         run: |
-          echo "Warming up the site..."
-          curl -s -o nul -w "%{http_code}" https://bilalgurseliparis-eyehgshwhfg4a7ew.northeurope-01.azurewebsites.net/
+          Write-Host "Warming up Azure Web App..."
+          try {
+              $response = Invoke-WebRequest -Uri "https://bilalgurseliparis-eyehgshwhfg4a7ew.northeurope-01.azurewebsites.net/" -UseBasicParsing
+              Write-Host "Warm-up completed with status code $($response.StatusCode)"
+          } catch {
+              Write-Host "Warm-up failed but deployment succeeded."
+          }
