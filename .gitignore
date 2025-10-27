@@ -1,0 +1,51 @@
+###############################################
+# Visual Studio ve .NET build geçici dosyaları
+###############################################
+.vs/
+[Bb]in/
+[Oo]bj/
+publish/
+*.user
+*.suo
+
+###############################################
+# Derlenmiş veya dağıtım çıktıları
+###############################################
+*.dll
+*.exe
+*.pdb
+*.log
+*.cache
+*.zip
+*.rar
+
+###############################################
+# Proje yedekleri
+###############################################
+Yedekler/
+Backup_*/
+
+###############################################
+# Hassas veya kişisel dosyalar
+###############################################
+*.PublishSettings
+*.pubxml
+*.publishproj
+secrets.json
+.env
+*.pfx
+*.cer
+
+###############################################
+# Yapılandırma notu
+# (appsettings.json dosyası repo içinde kalmalı,
+# ama hassas ConnectionString veya JWT içeriyorsa
+# local/appsettings.Development.json dışlanabilir.)
+###############################################
+# appsettings.Development.json
+
+###############################################
+# Log klasörleri
+###############################################
+logs/
+log/
