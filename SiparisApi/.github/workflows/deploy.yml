@@ -10,9 +10,9 @@ permissions:
 
 env:
   DOTNET_VERSION: "9.0.x"
-  PROJECT_PATH: "SiparisApi.csproj"
+  PROJECT_PATH: "SiparisApi/SiparisApi.csproj"
   SOLUTION_PATH: "SiparisApi.sln"
-  PUBLISH_DIR: "publish"
+  PUBLISH_DIR: "SiparisApi/publish"
 
 jobs:
   build-and-deploy:
@@ -38,14 +38,15 @@ jobs:
           dotnet publish ${{ env.PROJECT_PATH }} \
             --configuration Release \
             --no-build \
+            --self-contained false \
             --output ${{ env.PUBLISH_DIR }}
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: "bilalgurseliparis"
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: ${{ env.PUBLISH_DIR }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          package: ${{ env.PUBLISH_DIR }}/.
 
       - name: Warm-up ping (optional)
         run: |
