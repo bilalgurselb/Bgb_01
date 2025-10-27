@@ -9,3 +9,31 @@ obj/
 
 # Publish dosyaları
 wwwroot/dist/
+
+# ----------------------------
+# 💡 Güvenlik ekleri
+# ----------------------------
+
+# Hassas yapılandırma dosyaları
+appsettings.json
+appsettings.*.json
+
+# Azure veya publish profilleri
+*.PublishSettings
+*.pubxml
+*.publishproj
+
+# Kullanıcı gizli anahtarları (JWT, ConnectionString)
+secrets.json
+.env
+*.pfx
+*.cer
+
+# NuGet cache ve kilit dosyaları
+*.nupkg
+project.lock.json
+project.fragment.lock.json
+
+# Log ve geçici dosyalar
+*.log
+logs/

@@ -1,14 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using global::SiparisApi.Data;
+﻿using global::SiparisApi.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SiparisApi.Data;
-using SiparisApi.Models;
 
 namespace SiparisApi.Controllers
 {
-   
+
 
     namespace SiparisApi.Controllers
     {

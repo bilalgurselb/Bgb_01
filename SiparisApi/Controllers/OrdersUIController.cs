@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SiparisApi.Data;
 using SiparisApi.Models;
-using System.Linq;
 
 namespace SiparisApi.Controllers
 {

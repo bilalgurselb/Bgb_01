@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using SiparisApi.Data;
 using SiparisApi.Models;
 using System.Security.Cryptography;

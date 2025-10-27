@@ -7,10 +7,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SiparisApi", "SiparisApi.cs
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Bilal Yapılandırma|Any CPU = Bilal Yapılandırma|Any CPU
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1FBAACAB-219B-F90C-B0AB-63CC190A42DA}.Bilal Yapılandırma|Any CPU.ActiveCfg = Bilal Yapılandırma|Any CPU
+		{1FBAACAB-219B-F90C-B0AB-63CC190A42DA}.Bilal Yapılandırma|Any CPU.Build.0 = Bilal Yapılandırma|Any CPU
 		{1FBAACAB-219B-F90C-B0AB-63CC190A42DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1FBAACAB-219B-F90C-B0AB-63CC190A42DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1FBAACAB-219B-F90C-B0AB-63CC190A42DA}.Release|Any CPU.ActiveCfg = Release|Any CPU

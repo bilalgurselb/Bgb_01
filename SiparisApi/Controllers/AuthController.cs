@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using SiparisApi.Data;
 using SiparisApi.Models;
-using System.Linq;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.IdentityModel.Tokens;
+
 
 namespace SiparisApi.Controllers
 {
@@ -26,16 +27,29 @@ namespace SiparisApi.Controllers
         public IActionResult Signup([FromBody] User newUser)
         {
             // 1) Yetkili e-posta kontrolü: sabit liste yerine DB
-            var allowed = _context.AllowedEmails.Any(x => x.Email == newUser.Email && x.IsActive);
-            if (!allowed)
+            var allowed = _context.AllowedEmails
+     .FirstOrDefault(x => x.Email == newUser.Email && x.IsActive);
+
+            if (string.IsNullOrWhiteSpace(newUser.Email))
+                return BadRequest("E-posta adresi zorunludur.");
+
+            if (allowed==null)
                 return BadRequest("Bu e-posta ile kayıt yapılamaz.");
 
             // 2) Tekil e-posta
             if (_context.Users.Any(u => u.Email == newUser.Email))
                 return BadRequest("Bu e-posta ile daha önce kayıt yapılmış.");
 
-            // 3) Şifreyi hashle (düz metin yok)
+            // 🔹 Rol belirleme (Ledger'da NULL olsa bile kodda kesinleştiriyoruz)
+            string role;
+            if (newUser.Email.Equals("bborekci@sintankimya.com", StringComparison.OrdinalIgnoreCase))
+                role = "Admin";
+            else
+                role = string.IsNullOrEmpty(allowed.Role) ? "User" : allowed.Role;
+
             newUser.Password = BCrypt.Net.BCrypt.HashPassword(newUser.Password);
+            newUser.Role = role;
+            newUser.IsActive = allowed.IsActive;
 
             _context.Users.Add(newUser);
             _context.SaveChanges();
