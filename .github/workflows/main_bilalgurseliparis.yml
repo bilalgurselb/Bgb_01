@@ -1,65 +1,72 @@
-name: Build and deploy ASP.NET Core app to Azure Web App - bilalgurseliparis
+name: Build & Deploy SiparisApi to Azure App Service
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: "9.0.x"
+  PROJECT_PATH: "SiparisApi/SiparisApi.csproj"
+  SOLUTION_PATH: "SiparisApi.sln"
+  PUBLISH_DIR: "publish"
+
 jobs:
-  build:
+  build-and-deploy:
     runs-on: windows-latest
-    permissions:
-      contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set up .NET Core
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.x'
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Restore dependencies
-        run: dotnet restore ./SiparisApi/SiparisApi.csproj
+      - name: Restore NuGet packages
+        run: dotnet restore ${{ env.SOLUTION_PATH }}
 
-      - name: Build with dotnet
-        run: dotnet build ./SiparisApi/SiparisApi.csproj --configuration Release --no-restore
+      - name: Build in Release mode
+        run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
 
-      - name: Publish app
-        run: dotnet publish ./SiparisApi/SiparisApi.csproj -c Release -o './publish'
-        
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
-        with:
-          name: .net-app
-          path: ./publish
-  deploy:
-    runs-on: windows-latest
-    needs: build
+      # ⚙️ Temiz ve sabit publish: wwwroot klasörü iç içe kopyalanmaz
+      - name: Publish Web API
+        run: >
+          dotnet publish ${{ env.PROJECT_PATH }}
+          --configuration Release
+          --no-build
+          --self-contained false
+          --output "${{ github.workspace }}\\${{ env.PUBLISH_DIR }}"
 
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: .net-app
+      # 🧹 Eski publish klasörlerini sil (önceki wwwroot/wwwroot kalıntısı)
+      - name: Remove nested wwwroot if exists
+        shell: pwsh
+        run: |
+          $nested = Join-Path "${{ github.workspace }}" "${{ env.PUBLISH_DIR }}\\wwwroot\\wwwroot"
+          if (Test-Path $nested) {
+              Write-Host "Removing nested wwwroot..."
+              Remove-Item -Recurse -Force $nested
+          }
 
+      # 🚀 Azure Deploy (ZIP Deploy)
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'bilalgurseliparis'
-          package: .
+          app-name: "bilalgurseliparis"
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
-           
-      - name: Warm up the site
+          package: "${{ github.workspace }}\\${{ env.PUBLISH_DIR }}"
+
+      # 🔄 Site warm-up (ilk isteği gönder)
+      - name: Warm-up Azure Web App
         shell: pwsh
         run: |
-          Write-Host "Warming up Azure Web App..."
           try {
-              $response = Invoke-WebRequest -Uri "https://bilalgurseliparis-eyehgshwhfg4a7ew.northeurope-01.azurewebsites.net/" -UseBasicParsing
-              Write-Host "Warm-up completed with status code $($response.StatusCode)"
+            $response = Invoke-WebRequest -Uri "https://bilalgurseliparis.azurewebsites.net/" -UseBasicParsing -TimeoutSec 10
+            Write-Host "Warm-up completed with status code $($response.StatusCode)"
           } catch {
-              Write-Host "Warm-up failed but deployment succeeded."
+            Write-Host "Warm-up skipped or failed."
           }
-
-
