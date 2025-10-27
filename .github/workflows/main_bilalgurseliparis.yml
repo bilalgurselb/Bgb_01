@@ -27,14 +27,13 @@ jobs:
         run: dotnet build ./SiparisApi/SiparisApi.csproj --configuration Release --no-restore
 
       - name: Publish app
-        run: dotnet publish ./SiparisApi/SiparisApi.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp" --no-build
-
+        run: dotnet publish ./SiparisApi/SiparisApi.csproj -c Release -o './publish'
+        
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
-
+          path: ./publish
   deploy:
     runs-on: windows-latest
     needs: build
@@ -49,7 +48,7 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'bilalgurseliparis'
-          package: '${{env.DOTNET_ROOT}}/myapp'
+          package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
            
       - name: Warm up the site
@@ -62,4 +61,5 @@ jobs:
           } catch {
               Write-Host "Warm-up failed but deployment succeeded."
           }
+
 
