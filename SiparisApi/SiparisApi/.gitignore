@@ -1,0 +1,11 @@
+# Visual Studio geçici dosyaları
+.vs/
+*.user
+*.suo
+
+# Build çıktıları
+bin/
+obj/
+
+# Publish dosyaları
+wwwroot/dist/
