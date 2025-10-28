@@ -38,12 +38,13 @@ jobs:
 
       # 🚀 Yayın klasörünü oluştur
       - name: Publish Web API
+        working-directory: ./SiparisApi
         run: >
-          dotnet publish "${{ env.PROJECT_PATH }}"
+          dotnet publish "SiparisApi.csproj"
           --configuration Release
           --no-build
           --self-contained false
-          --output "${{ env.PUBLISH_DIR }}"
+          --output "../publish"
 
       # 🧹 Eski wwwroot kalıntılarını temizle
       - name: Remove nested wwwroot if exists
@@ -68,7 +69,7 @@ jobs:
         shell: pwsh
         run: |
           try {
-            $response = Invoke-WebRequest -Uri "https://bilalgurseliparis.azurewebsites.net/" -UseBasicParsing -TimeoutSec 10
+            $response = Invoke-WebRequest -Uri "https://bilalgurseliparis-eyehgshwhfg4a7ew.northeurope-01.azurewebsites.net/Account/Login" -UseBasicParsing -TimeoutSec 15
             Write-Host "Warm-up completed with status code $($response.StatusCode)"
           } catch {
             Write-Host "Warm-up skipped or failed."
