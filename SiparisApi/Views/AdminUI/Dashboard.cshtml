@@ -1,12 +1,67 @@
 ﻿@{
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    ViewData["Title"] = "Admin Paneli";
+    ViewData["Title"] = "Dashboard";
 }
 
-<h2>👑 Admin Paneli</h2>
+<div class="dashboard-container">
+    <h1 class="page-title">Hoş geldin, @User.Identity?.Name!</h1>
 
-<ul>
-    <li><a href="/AdminUI/Logs">📜 Logları Görüntüle</a></li>
-    <li><a href="/UsersUI/Manage">👤 Kullanıcı Yönetimi</a></li>
-    <li><a href="/OrdersUI/List">📦 Siparişleri Yönet</a></li>
-</ul>
+    <div class="card-grid">
+        <div class="card info">
+            <i class="fas fa-clipboard-list icon"></i>
+            <h3>Toplam Sipariş</h3>
+            <p>128</p>
+        </div>
+
+        <div class="card success">
+            <i class="fas fa-truck icon"></i>
+            <h3>Teslim Edilen</h3>
+            <p>97</p>
+        </div>
+
+        <div class="card warning">
+            <i class="fas fa-hourglass-half icon"></i>
+            <h3>Hazırlanıyor</h3>
+            <p>18</p>
+        </div>
+
+        <div class="card danger">
+            <i class="fas fa-times-circle icon"></i>
+            <h3>İptal Edilen</h3>
+            <p>13</p>
+        </div>
+    </div>
+
+    <div class="recent-orders">
+        <h2>Son Siparişler</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Sipariş No</th>
+                    <th>Müşteri</th>
+                    <th>Tarih</th>
+                    <th>Durum</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>ORD-1023</td>
+                    <td>ABC Leather</td>
+                    <td>28/10/2025</td>
+                    <td><span class="status success">Teslim Edildi</span></td>
+                </tr>
+                <tr>
+                    <td>ORD-1024</td>
+                    <td>Derimod</td>
+                    <td>27/10/2025</td>
+                    <td><span class="status warning">Hazırlanıyor</span></td>
+                </tr>
+                <tr>
+                    <td>ORD-1025</td>
+                    <td>Kıraç Deri</td>
+                    <td>26/10/2025</td>
+                    <td><span class="status danger">İptal</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

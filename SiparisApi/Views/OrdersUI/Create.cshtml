@@ -1,105 +1,38 @@
 ﻿@{
-    Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Yeni Sipariş Oluştur";
 }
 
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="fw-bold text-primary mb-0">Yeni Sipariş</h4>
-        <a href="/OrderUIList/Index" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i> Geri Dön
-        </a>
-    </div>
-
-    <div class="card shadow-sm border-0 rounded-3">
-        <div class="card-body">
-            <form id="createOrderForm" method="post" novalidate>
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Müşteri Adı</label>
-                    <input type="text" class="form-control" id="customerName" placeholder="Müşteri adı girin" required />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Ürün</label>
-                    <select class="form-select" id="productName" required>
-                        <option value="">Seçiniz...</option>
-                        <option>Polimer 200</option>
-                        <option>Asit 25%</option>
-                        <option>Baz 15%</option>
-                        <option>Reçine 32</option>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Adet (kg)</label>
-                    <input type="number" class="form-control" id="quantity" min="1" placeholder="0" required />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Termin Tarihi</label>
-                    <input type="text" class="form-control" id="deliveryDate" placeholder="GG/AA/YYYY" inputmode="numeric" required />
-                </div>
-
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-success py-2 fw-semibold">
-                        <i class="bi bi-check-circle me-1"></i> Kaydet
-                    </button>
-                </div>
-
-                <div id="formAlert" class="alert mt-3 d-none"></div>
-            </form>
-        </div>
-    </div>
+<div class="page-header">
+    <h1 class="page-title"><i class="fas fa-plus-circle"></i> Yeni Sipariş</h1>
+    <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Listeye Dön</a>
 </div>
 
-@section Scripts {
-    <script>
-        document.getElementById("createOrderForm").addEventListener("submit", async function (e) {
-            e.preventDefault();
-            const customer = document.getElementById("customerName").value.trim();
-            const product = document.getElementById("productName").value;
-            const qty = document.getElementById("quantity").value;
-            const date = document.getElementById("deliveryDate").value;
-            const alertBox = document.getElementById("formAlert");
+<div class="form-card">
+    <form asp-action="Create" method="post">
+        <div class="form-group">
+            <label>Müşteri Adı</label>
+            <input type="text" name="CustomerName" class="form-control" required />
+        </div>
 
-            if (!customer || !product || !qty || !date) {
-                alertBox.className = "alert alert-warning mt-3";
-                alertBox.textContent = "Tüm alanları doldurmanız gerekiyor.";
-                alertBox.classList.remove("d-none");
-                return;
-            }
+        <div class="form-group">
+            <label>Ürün</label>
+            <input type="text" name="ProductName" class="form-control" required />
+        </div>
 
-            const baseUrl = window.location.origin;
-            try {
-                const response = await fetch(baseUrl + "/api/orders", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer " + localStorage.getItem("accessToken")
-                    },
-                    body: JSON.stringify({
-                        customerName: customer,
-                        productName: product,
-                        quantity: qty,
-                        deliveryDate: date
-                    })
-                });
+        <div class="form-group">
+            <label>Miktar</label>
+            <input type="number" name="Quantity" class="form-control" required />
+        </div>
 
-                if (response.ok) {
-                    alertBox.className = "alert alert-success mt-3";
-                    alertBox.textContent = "Sipariş başarıyla kaydedildi!";
-                    alertBox.classList.remove("d-none");
-                    setTimeout(() => window.location.href = "/OrderUIList/Index", 1200);
-                } else {
-                    alertBox.className = "alert alert-danger mt-3";
-                    alertBox.textContent = "Kayıt başarısız! API yanıt vermedi.";
-                    alertBox.classList.remove("d-none");
-                }
-            } catch {
-                alertBox.className = "alert alert-danger mt-3";
-                alertBox.textContent = "Bağlantı hatası. Lütfen tekrar deneyin.";
-                alertBox.classList.remove("d-none");
-            }
-        });
-    </script>
-}
+        <div class="form-group">
+            <label>Durum</label>
+            <select name="Status" class="form-control">
+                <option>Hazırlanıyor</option>
+                <option>Teslim Edildi</option>
+                <option>İptal</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Kaydet</button>
+    </form>
+</div>

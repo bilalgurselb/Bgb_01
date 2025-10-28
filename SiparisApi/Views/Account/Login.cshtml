@@ -1,42 +1,26 @@
 ﻿@{
-    Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Giriş Yap";
+    Layout = null;
 }
-
-<div class="row justify-content-center align-items-center" style="min-height:70vh;">
-    <div class="col-md-4 col-sm-8">
-        <div class="card shadow-sm border-0 rounded-3">
-            <div class="card-body p-4">
-                <div class="text-center mb-4">
-                    <img src="~/images/logo_org.svg" alt="Logo" style="height:60px;" class="mb-3" />
-                    <h4 class="fw-bold text-primary">Sisteme Giriş</h4>
-                    <p class="text-muted small mb-0">Lütfen e-posta ve şifrenizi girin</p>
-                </div>
-
-                <form asp-action="Login" asp-controller="Account" method="post" autocomplete="off">
-                    <div class="mb-3">
-                        <label class="form-label">E-posta</label>
-                        <input type="email" name="email" class="form-control" placeholder="ornek@sirket.com" required />
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Şifre</label>
-                        <input type="password" name="password" class="form-control" placeholder="••••••••" required />
-                    </div>
-
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="rememberMe" />
-                        <label class="form-check-label" for="rememberMe">Beni Hatırla</label>
-                    </div>
-
-                    @if (ViewBag.Error != null)
-                    {
-                        <div class="alert alert-danger py-2">@ViewBag.Error</div>
-                    }
-
-                    <button type="submit" class="btn btn-primary w-100">Giriş Yap</button>
-                </form>
-            </div>
-        </div>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Giriş Yap - SINTAN Chemicals</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+</head>
+<body style="background:#fff; display:flex; justify-content:center; align-items:center; height:100vh;">
+    <div style="width:100%; max-width:360px; text-align:center;">
+        <img src="~/images/logo_login.png" alt="SINTAN Chemicals" style="width:200px; margin-bottom:20px;" />
+        <h2 style="margin-bottom:20px;">Sipariş Yönetim Sistemi</h2>
+        <form method="post" action="/Account/Login">
+            <input type="text" name="Email" placeholder="E-posta" required />
+            <input type="password" name="Password" placeholder="Şifre" required />
+            <button type="submit" class="btn btn-primary" style="width:100%;">Giriş Yap</button>
+        </form>
+        <p style="margin-top:20px; font-size:13px; color:#777;">© @DateTime.Now.Year SINTAN Chemicals</p>
     </div>
-</div>
+</body>
+</html>

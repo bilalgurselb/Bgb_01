@@ -25,6 +25,11 @@ publish/
 Yedekler/
 Backup_*/
 
+# Yedek klasörü ve arşivler
+/Yedekler/
+*.rar
+*.zip
+
 ###############################################
 # Hassas veya kişisel dosyalar
 ###############################################

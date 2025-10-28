@@ -1,106 +1,41 @@
-﻿@{
-    Layout = "~/Views/Shared/_Layout.cshtml";
+﻿@model SiparisApi.Models.Order
+@{
     ViewData["Title"] = "Sipariş Düzenle";
 }
 
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="fw-bold text-primary mb-0">Sipariş Düzenle</h4>
-        <a href="/OrderUIList/Index" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i> Geri Dön
-        </a>
-    </div>
-
-    <div class="card shadow-sm border-0 rounded-3">
-        <div class="card-body">
-            <form id="editOrderForm" method="post" novalidate>
-                <input type="hidden" id="orderId" value="@ViewBag.OrderId" />
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Müşteri Adı</label>
-                    <input type="text" class="form-control" id="customerName" placeholder="Müşteri adı" required />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Ürün</label>
-                    <select class="form-select" id="productName" required>
-                        <option value="">Seçiniz...</option>
-                        <option>Polimer 200</option>
-                        <option>Asit 25%</option>
-                        <option>Baz 15%</option>
-                        <option>Reçine 32</option>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Adet (kg)</label>
-                    <input type="number" class="form-control" id="quantity" min="1" required />
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Termin Tarihi</label>
-                    <input type="text" class="form-control" id="deliveryDate" placeholder="GG/AA/YYYY" inputmode="numeric" required />
-                </div>
-
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-primary py-2 fw-semibold">
-                        <i class="bi bi-save me-1"></i> Güncelle
-                    </button>
-                </div>
-
-                <div id="editAlert" class="alert mt-3 d-none"></div>
-            </form>
-        </div>
-    </div>
+<div class="page-header">
+    <h1 class="page-title"><i class="fas fa-edit"></i> Sipariş Düzenle</h1>
+    <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Listeye Dön</a>
 </div>
 
-@section Scripts {
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // Mock veri – normalde burada API'den veri çekilir
-            const mockOrder = {
-                id: 1,
-                customer: "ABC Kimya",
-                product: "Polimer 200",
-                qty: 120,
-                date: "2025-10-22"
-            };
+<div class="form-card">
+    <form asp-action="Edit" method="post">
+        <input type="hidden" asp-for="Id" />
 
-            document.getElementById("orderId").value = mockOrder.id;
-            document.getElementById("customerName").value = mockOrder.customer;
-            document.getElementById("productName").value = mockOrder.product;
-            document.getElementById("quantity").value = mockOrder.qty;
-            document.getElementById("deliveryDate").value = mockOrder.date;
-        });
+        <div class="form-group">
+            <label>Müşteri Adı</label>
+            <input asp-for="CustomerName" class="form-control" />
+        </div>
 
-        document.getElementById("editOrderForm").addEventListener("submit", async function (e) {
-            e.preventDefault();
-            const alertBox = document.getElementById("editAlert");
-            const id = document.getElementById("orderId").value;
-            const customer = document.getElementById("customerName").value.trim();
-            const product = document.getElementById("productName").value;
-            const qty = document.getElementById("quantity").value;
-            const date = document.getElementById("deliveryDate").value;
+        <div class="form-group">
+            <label>Ürün</label>
+            <input asp-for="ProductName" class="form-control" />
+        </div>
 
-            if (!customer || !product || !qty || !date) {
-                alertBox.className = "alert alert-warning mt-3";
-                alertBox.textContent = "Tüm alanları doldurun.";
-                alertBox.classList.remove("d-none");
-                return;
-            }
+        <div class="form-group">
+            <label>Miktar</label>
+            <input asp-for="Quantity" class="form-control" />
+        </div>
 
-            // Mock güncelleme işlemi
-            try {
-                await new Promise(r => setTimeout(r, 800));
-                alertBox.className = "alert alert-success mt-3";
-                alertBox.textContent = "Sipariş başarıyla güncellendi!";
-                alertBox.classList.remove("d-none");
-                setTimeout(() => window.location.href = "/OrderUIList/Index", 1200);
-            } catch {
-                alertBox.className = "alert alert-danger mt-3";
-                alertBox.textContent = "Bir hata oluştu. Lütfen tekrar deneyin.";
-                alertBox.classList.remove("d-none");
-            }
-        });
-    </script>
-}
+        <div class="form-group">
+            <label>Durum</label>
+            <select asp-for="Status" class="form-control">
+                <option value="Hazırlanıyor">Hazırlanıyor</option>
+                <option value="Teslim Edildi">Teslim Edildi</option>
+                <option value="İptal">İptal</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Güncelle</button>
+    </form>
+</div>
