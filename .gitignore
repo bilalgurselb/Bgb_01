@@ -24,6 +24,7 @@ publish/
 ###############################################
 Yedekler/
 Backup_*/
+/Yedekler/
 
 ###############################################
 # Hassas veya kişisel dosyalar
