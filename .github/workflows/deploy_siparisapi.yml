@@ -42,7 +42,6 @@ jobs:
         run: >
           dotnet publish "SiparisApi.csproj"
           --configuration Release
-          --no-build
           --self-contained false
           --output "../publish"
 
