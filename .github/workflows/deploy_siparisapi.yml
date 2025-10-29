@@ -11,7 +11,7 @@ permissions:
 env:
   DOTNET_VERSION: "9.0.x"
   PROJECT_PATH: "SiparisApi/SiparisApi.csproj"
-  PUBLISH_DIR: "publish"
+  PUBLISH_DIR: "SiparisApi/publish"
 
 jobs:
   build-and-deploy:
