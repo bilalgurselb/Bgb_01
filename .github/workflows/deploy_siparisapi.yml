@@ -1,42 +1,27 @@
-name: Build & Deploy SiparisApi to Azure App Service
-
-on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-
-env:
-  DOTNET_VERSION: "9.0.x"
-  PROJECT_PATH: "SiparisApi/SiparisApi.csproj"
-  PUBLISH_DIR: "publish"
-
 jobs:
   build-and-deploy:
     runs-on: windows-latest
 
     steps:
-      # 🧭 Repo çek
+      # 🧭 1️⃣ Repo'yu çek
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ⚙️ .NET ortamını kur
+      # ⚙️ 2️⃣ .NET ortamını kur
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      # 📦 Bağımlılıkları yükle
+      # 📦 3️⃣ Bağımlılıkları yükle
       - name: Restore dependencies
         run: dotnet restore "${{ env.PROJECT_PATH }}"
 
-      # 🏗️ Derleme (Release)
+      # 🏗️ 4️⃣ Derleme
       - name: Build in Release mode
         run: dotnet build "${{ env.PROJECT_PATH }}" --configuration Release --no-restore
 
-      # 🚀 Yayın klasörünü oluştur
+      # 🚀 5️⃣ Yayın klasörünü oluştur (publish)
       - name: Publish Web API
         working-directory: ./SiparisApi
         run: >
@@ -46,7 +31,7 @@ jobs:
           --self-contained false
           --output "../publish"
 
-      # 🧹 Eski wwwroot kalıntılarını temizle
+      # 🧹 6️⃣ Nested wwwroot temizliği (MUTLAKA BURADA!)
       - name: Remove nested wwwroot if exists
         shell: pwsh
         run: |
@@ -56,7 +41,7 @@ jobs:
               Remove-Item -Recurse -Force $nested
           }
 
-      # ☁️ Azure App Service’e yükle
+      # ☁️ 7️⃣ Azure App Service’e yükle
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
@@ -64,7 +49,7 @@ jobs:
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
           package: ${{ env.PUBLISH_DIR }}
 
-      # 🌡️ Free plan için warm-up isteği (SQL uyanması)
+      # 🌡️ 8️⃣ Free Plan warm-up
       - name: Warm-up Azure Web App
         shell: pwsh
         run: |
