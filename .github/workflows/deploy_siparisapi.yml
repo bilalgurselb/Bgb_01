@@ -71,7 +71,9 @@ jobs:
         run: |
           try {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             $response = Invoke-WebRequest -Uri "https://bilalgurseliparis-eyehgshwhfg4a7ew.northeurope-01.azurewebsites.net/Account/Login" -UseBasicParsing -TimeoutSec 15
+>>>>>>> Stashed changes
 =======
             $response = Invoke-WebRequest -Uri "https://bilalgurseliparis-eyehgshwhfg4a7ew.northeurope-01.azurewebsites.net/" -UseBasicParsing -TimeoutSec 10
 >>>>>>> Stashed changes
