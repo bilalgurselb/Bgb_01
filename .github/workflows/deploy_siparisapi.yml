@@ -32,12 +32,14 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore "${{ env.PROJECT_PATH }}"
 
+      # 🧹 Yayın klasörünü SİL ve oluştur
       - name: Clean up old publish artifacts
         shell: pwsh
         run: |
           if (Test-Path "./publish") {
             Remove-Item -Recurse -Force "./publish"
           }
+          New-Item -ItemType Directory -Force -Path "./publish"
 
       # 🏗️ Derleme (Release)
       - name: Build in Release mode
