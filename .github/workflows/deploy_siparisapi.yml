@@ -71,6 +71,9 @@ jobs:
         run: |
           try {
             $response = Invoke-WebRequest -Uri "https://bilalgurseliparis-eyehgshwhfg4a7ew.northeurope-01.azurewebsites.net/Account/Login" -UseBasicParsing -TimeoutSec 15
+=======
+            $response = Invoke-WebRequest -Uri "https://bilalgurseliparis-eyehgshwhfg4a7ew.northeurope-01.azurewebsites.net/" -UseBasicParsing -TimeoutSec 10
+>>>>>>> Stashed changes
             Write-Host "Warm-up completed with status code $($response.StatusCode)"
           } catch {
             Write-Host "Warm-up skipped or failed."
