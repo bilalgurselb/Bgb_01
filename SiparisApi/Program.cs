@@ -57,6 +57,7 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 // 🚦 Middleware Pipeline
+app.UseStaticFiles();
 app.UseSession();
 app.UseCors("Default");
 app.UseHttpsRedirection();
