@@ -1,27 +1,42 @@
+name: Build & Deploy SiparisApi to Azure App Service
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: "9.0.x"
+  PROJECT_PATH: "SiparisApi/SiparisApi.csproj"
+  PUBLISH_DIR: "publish"
+
 jobs:
   build-and-deploy:
     runs-on: windows-latest
 
     steps:
-      # 🧭 1️⃣ Repo'yu çek
+      # 🧭 Repo çek
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ⚙️ 2️⃣ .NET ortamını kur
+      # ⚙️ .NET ortamını kur
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      # 📦 3️⃣ Bağımlılıkları yükle
+      # 📦 Bağımlılıkları yükle
       - name: Restore dependencies
         run: dotnet restore "${{ env.PROJECT_PATH }}"
 
-      # 🏗️ 4️⃣ Derleme
+      # 🏗️ Derleme (Release)
       - name: Build in Release mode
         run: dotnet build "${{ env.PROJECT_PATH }}" --configuration Release --no-restore
 
-      # 🚀 5️⃣ Yayın klasörünü oluştur (publish)
+      # 🚀 Yayın klasörünü oluştur
       - name: Publish Web API
         working-directory: ./SiparisApi
         run: >
@@ -31,17 +46,18 @@ jobs:
           --self-contained false
           --output "../publish"
 
-      # 🧹 6️⃣ Nested wwwroot temizliği (MUTLAKA BURADA!)
+      # 🧹 Eski wwwroot kalıntılarını temizle (Doğru konumda!)
       - name: Remove nested wwwroot if exists
         shell: pwsh
+        working-directory: ./publish
         run: |
-          $nested = Join-Path "${{ env.PUBLISH_DIR }}" "wwwroot\\wwwroot"
+          $nested = Join-Path (Get-Location) "wwwroot\\wwwroot"
           if (Test-Path $nested) {
               Write-Host "Removing nested wwwroot..."
               Remove-Item -Recurse -Force $nested
           }
 
-      # ☁️ 7️⃣ Azure App Service’e yükle
+      # ☁️ Azure App Service’e yükle
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
@@ -49,7 +65,7 @@ jobs:
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
           package: ${{ env.PUBLISH_DIR }}
 
-      # 🌡️ 8️⃣ Free Plan warm-up
+      # 🌡️ Free plan için warm-up isteği (SQL uyanması)
       - name: Warm-up Azure Web App
         shell: pwsh
         run: |
