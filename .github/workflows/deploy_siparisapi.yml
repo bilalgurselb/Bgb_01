@@ -36,6 +36,13 @@ jobs:
       - name: Build in Release mode
         run: dotnet build "${{ env.PROJECT_PATH }}" --configuration Release --no-restore
 
+      - name: Clean up old publish artifacts
+        shell: pwsh
+        run: |
+          if (Test-Path "./publish") {
+            Remove-Item -Recurse -Force "./publish"
+          }
+
       # 🚀 Yayın klasörünü oluştur
       - name: Publish Web API
         run: >
