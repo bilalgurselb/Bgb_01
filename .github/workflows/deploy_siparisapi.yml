@@ -66,13 +66,11 @@ jobs:
           package: ${{ env.PUBLISH_DIR }}
 
       # 🌡️ Free plan için warm-up isteği (SQL uyanması)
-      - name: Warm-up Azure Web App
+            - name: Warm-up Azure Web App
         shell: pwsh
         run: |
           try {
-<<<<<<< Updated upstream
             $response = Invoke-WebRequest -Uri "https://bilalgurseliparis-eyehgshwhfg4a7ew.northeurope-01.azurewebsites.net/Account/Login" -UseBasicParsing -TimeoutSec 15
->>>>>>> Stashed changes
             Write-Host "Warm-up completed with status code $($response.StatusCode)"
           } catch {
             Write-Host "Warm-up skipped or failed."
