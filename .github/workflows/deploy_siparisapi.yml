@@ -51,7 +51,7 @@ jobs:
         run: >
           dotnet publish "${{ env.PROJECT_PATH }}" 
           --configuration Release 
-          --output "./publish"
+          --output "SiparisApi/publish"
 
       # 🧹 Eski wwwroot kalıntılarını temizle (Doğru konumda!)
       - name: Remove nested wwwroot if exists
