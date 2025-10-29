@@ -36,10 +36,10 @@ jobs:
       - name: Clean up old publish artifacts
         shell: pwsh
         run: |
-          if (Test-Path "./publish") {
-            Remove-Item -Recurse -Force "./publish"
+          if (Test-Path "SiparisApi/publish") {
+            Remove-Item -Recurse -Force "SiparisApi/publish"
           }
-          New-Item -ItemType Directory -Force -Path "./publish"
+          New-Item -ItemType Directory -Force -Path "SiparisApi/publish"
 
       # 🏗️ Derleme (Release)
       - name: Build in Release mode
@@ -53,24 +53,13 @@ jobs:
           --configuration Release 
           --output "SiparisApi/publish"
 
-      # 🧹 Eski wwwroot kalıntılarını temizle (Doğru konumda!)
-      - name: Remove nested wwwroot if exists
-        shell: pwsh
-        working-directory: ./publish
-        run: |
-          $nested = Join-Path (Get-Location) "wwwroot\\wwwroot"
-          if (Test-Path $nested) {
-              Write-Host "Removing nested wwwroot..."
-              Remove-Item -Recurse -Force $nested
-          }
-
       # ☁️ Azure App Service’e yükle
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: "bilalgurseliparis"
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
-          package: ${{ env.PUBLISH_DIR }}
+          package: SiparisApi/publish
 
       # 🌡️ Free plan için warm-up isteği (SQL uyanması)
       - name: Warm-up Azure Web App
