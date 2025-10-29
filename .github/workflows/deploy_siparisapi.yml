@@ -38,12 +38,10 @@ jobs:
 
       # 🚀 Yayın klasörünü oluştur
       - name: Publish Web API
-        working-directory: ./SiparisApi
         run: >
-          dotnet publish "SiparisApi.csproj"
-          --configuration Release
-          --self-contained false
-          --output "../publish"
+          dotnet publish "${{ env.PROJECT_PATH }}" 
+          --configuration Release 
+          --output "./publish"
 
       # 🧹 Eski wwwroot kalıntılarını temizle (Doğru konumda!)
       - name: Remove nested wwwroot if exists
