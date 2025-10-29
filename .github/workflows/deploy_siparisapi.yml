@@ -53,6 +53,34 @@ jobs:
           --configuration Release 
           --output "SiparisApi/publish"
 
+            # ✂️ Nested wwwroot düzeltmesi (css/images klasörlerini taşı, sonra sil)
+      - name: Fix nested wwwroot
+        shell: pwsh
+        working-directory: SiparisApi/publish
+        run: |
+          $nested = Join-Path (Get-Location) "wwwroot\\wwwroot"
+          $target = Join-Path (Get-Location) "wwwroot"
+          if (Test-Path $nested) {
+          Write-Host "📦 Nested wwwroot found, moving contents..."
+
+            $foldersToMove = @("css", "images")
+            foreach ($folder in $foldersToMove) {
+              $sourcePath = Join-Path $nested $folder
+              $destPath = Join-Path $target $folder
+
+              if (Test-Path $sourcePath) {
+                Move-Item -Path $sourcePath -Destination $destPath -Force
+                Write-Host "✅ Moved $folder from nested wwwroot"
+              }
+            }
+
+            Remove-Item -Recurse -Force $nested
+            Write-Host "🧹 Cleaned up nested wwwroot"
+          } else {
+            Write-Host "✅ No nested wwwroot found"
+            }
+
+
       # ☁️ Azure App Service’e yükle
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
