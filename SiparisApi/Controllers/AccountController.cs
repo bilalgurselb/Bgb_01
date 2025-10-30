@@ -31,8 +31,10 @@ namespace SiparisApi.Controllers
             var client = _httpClientFactory.CreateClient();
 
             // ✅ Dinamik API adresi (local ya da Azure fark etmeksizin)
-            var apiUrl = $"{Request.Scheme}://{Request.Host}/api/Auth/login";
-
+            // var apiUrl = $"{Request.Scheme}://{Request.Host}/api/Auth/login";
+            var apiUrl = Request.Host.Host.Contains("azurewebsites.net")
+     ? "https://bilalgurseliparis-eyehgshwhfg4a7ew.northeurope-01.azurewebsites.net/api/Auth/login"
+     : "https://localhost:5001/api/Auth/login";
             var payload = JsonSerializer.Serialize(new { Email = email, Password = password });
             var content = new StringContent(payload, Encoding.UTF8, "application/json");
 
