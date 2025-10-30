@@ -22,11 +22,30 @@ namespace SiparisApi.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(string email, string password)
         {
-            var client = _httpClientFactory.CreateClient();
-            var json = JsonSerializer.Serialize(new { Email = email, Password = password });
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            {
+                ViewBag.Error = "E-posta ve şifre zorunludur.";
+                return View();
+            }
 
-            var response = await client.PostAsync("https://localhost:5001/api/auth/login", content);
+            var client = _httpClientFactory.CreateClient();
+
+            // ✅ Dinamik API adresi (local ya da Azure fark etmeksizin)
+            var apiUrl = $"{Request.Scheme}://{Request.Host}/api/Auth/login";
+
+            var payload = JsonSerializer.Serialize(new { Email = email, Password = password });
+            var content = new StringContent(payload, Encoding.UTF8, "application/json");
+
+            HttpResponseMessage response;
+            try
+            {
+                response = await client.PostAsync(apiUrl, content);
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Error = "Sunucuya ulaşılamadı: " + ex.Message;
+                return View();
+            }
 
             if (!response.IsSuccessStatusCode)
             {
@@ -35,13 +54,30 @@ namespace SiparisApi.Controllers
             }
 
             var responseBody = await response.Content.ReadAsStringAsync();
-            var token = JsonDocument.Parse(responseBody).RootElement.GetProperty("access_token").GetString();
 
-            // Token'ı session'da sakla
-            HttpContext.Session.SetString("AccessToken", token);
+            try
+            {
+                var jsonDoc = JsonDocument.Parse(responseBody);
+                // ✅ Doğru property adı: "token"
+                var token = jsonDoc.RootElement.GetProperty("token").GetString();
 
-            return RedirectToAction("Create", "Orders");
+                if (string.IsNullOrEmpty(token))
+                {
+                    ViewBag.Error = "Sunucudan geçerli bir yanıt alınamadı.";
+                    return View();
+                }
+
+                // ✅ Session'a kaydet
+                HttpContext.Session.SetString("AccessToken", token);
+            }
+            catch
+            {
+                ViewBag.Error = "Yanıt çözümleme hatası oluştu.";
+                return View();
+            }
+
+            // ✅ Başarılı giriş → Sipariş oluşturma ekranına
+            return RedirectToAction("Create", "OrdersUI");
         }
     }
 }
-
