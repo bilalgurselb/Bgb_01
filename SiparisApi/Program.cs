@@ -66,6 +66,86 @@ app.UseCors("Default");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+// 🚫 Login olmadan doğrudan erişimi engelle
+app.Use(async (context, next) =>
+{
+    var path = context.Request.Path.Value?.ToLower();
+    var token = context.Session.GetString("AccessToken");
+
+    // API veya yönetim ekranlarına doğrudan erişim denemelerini engelle
+    if (string.IsNullOrEmpty(token) &&
+        (path!.StartsWith("/api/") || path!.StartsWith("/admin") || path!.StartsWith("/ordersui")))
+    {
+        if (!path.StartsWith("/account/login") && !path.StartsWith("/api/auth"))
+        {
+            context.Response.StatusCode = 401;
+            context.Response.ContentType = "text/html; charset=utf-8";
+
+            var html = @"
+<!DOCTYPE html>
+<html lang='tr'>
+<head>
+<meta charset='utf-8'>
+<title>Erişim Engellendi - SINTAN CHEMICALS</title>
+<style>
+body {
+    background-color: #f8f9fa;
+    font-family: 'Inter', sans-serif;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+.card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    padding: 40px;
+    text-align: center;
+    max-width: 400px;
+}
+h1 {
+    color: #a81e24;
+    font-size: 22px;
+    margin-bottom: 12px;
+}
+p {
+    color: #555;
+    font-size: 14px;
+}
+button {
+    margin-top: 20px;
+    background-color: #a81e24;
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #8f1a1f;
+}
+</style>
+</head>
+<body>
+    <div class='card'>
+        <h1>Erişim Engellendi</h1>
+        <p>Bu sayfayı görüntüleme izniniz bulunmamaktadır.</p>
+        <form action='/Account/Login' method='get'>
+            <button type='submit'>Giriş Ekranına Dön</button>
+        </form>
+    </div>
+</body>
+</html>";
+
+            await context.Response.WriteAsync(html);
+            return;
+        }
+    }
+
+    await next();
+});
 
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
