@@ -437,4 +437,48 @@ input[type=text], input[type=password], select {
     padding: 8px;
     font-size: 13px;
 }
+/* === Global Renk Paleti === */
+:root {
+    --sintan-blue: #1C9AD6;
+    --sintan-red: #E84C3D;
+    --sintan-green: #27AE60;
+    --text-dark: #1B1B1B;
+    --bg-white: #FFFFFF;
+    --bg-light: #F8F9FA;
+}
+
+/* === Erişim Engellendi Sayfası === */
+.access-denied {
+    background: var(--bg-white);
+    border-radius: 10px;
+    padding: 40px;
+    max-width: 420px;
+    margin: 100px auto;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+    .access-denied h2 {
+        color: var(--sintan-blue);
+        margin-bottom: 10px;
+    }
+
+    .access-denied p {
+        color: #555;
+        margin-bottom: 20px;
+    }
+
+    .access-denied .btn {
+        background: var(--sintan-blue);
+        color: white;
+        padding: 8px 18px;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+    }
+
+        .access-denied .btn:hover {
+            background: #168CBF;
+        }
+
 
