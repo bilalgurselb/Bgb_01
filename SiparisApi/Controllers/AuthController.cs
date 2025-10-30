@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using SiparisApi.Data;
 using SiparisApi.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-
 
 namespace SiparisApi.Controllers
 {
@@ -23,120 +23,131 @@ namespace SiparisApi.Controllers
             _config = config;
         }
 
-        [HttpPost("signup")]
-        public IActionResult Signup([FromBody] User newUser)
+        // 🔹 LOGIN (Giriş)
+        [HttpPost("login")]
+        public IActionResult Login([FromBody] User loginUser)
         {
-            // 1) Yetkili e-posta kontrolü: sabit liste yerine DB
-            var allowed = _context.AllowedEmails
-     .FirstOrDefault(x => x.Email == newUser.Email && x.IsActive);
+            if (loginUser == null || string.IsNullOrWhiteSpace(loginUser.Email) || string.IsNullOrWhiteSpace(loginUser.Password))
+                return BadRequest("Email ve şifre zorunludur.");
 
-            if (string.IsNullOrWhiteSpace(newUser.Email))
-                return BadRequest("E-posta adresi zorunludur.");
+            // 🔹 Kullanıcı Users tablosunda var mı kontrol et
+            var user = _context.Users.FirstOrDefault(u => u.Email == loginUser.Email);
 
-            if (allowed==null)
-                return BadRequest("Bu e-posta ile kayıt yapılamaz.");
+            if (user == null)
+            {
+                // 🔹 Kullanıcı bulunamadı → Allowed listede mi kontrol et
+                var allowed = _context.AllowedEmails.FirstOrDefault(a => a.Email == loginUser.Email);
 
-            // 2) Tekil e-posta
-            if (_context.Users.Any(u => u.Email == newUser.Email))
-                return BadRequest("Bu e-posta ile daha önce kayıt yapılmış.");
+                if (allowed != null)
+                {
+                    // ✅ Allowed listede ama Users tablosunda yok
+                    // Frontend bu durumda ikinci şifre kutusunu açar
+                    return NotFound("Allowed but not registered");
+                }
 
-            // 🔹 Rol belirleme (Ledger'da NULL olsa bile kodda kesinleştiriyoruz)
-            string role;
-            if (newUser.Email.Equals("bborekci@sintankimya.com", StringComparison.OrdinalIgnoreCase))
-                role = "Admin";
-            else
-                role = string.IsNullOrEmpty(allowed.Role) ? "User" : allowed.Role;
+                // ❌ Ne Users'ta ne Allowed listede
+                return BadRequest("Email not allowed");
+            }
 
-            newUser.Password = BCrypt.Net.BCrypt.HashPassword(newUser.Password);
-            newUser.Role = role;
-            newUser.IsActive = allowed.IsActive;
+            // 🔹 Kullanıcı varsa → Şifreyi doğrula
+            if (user.Password != loginUser.Password)
+                return Unauthorized("Hatalı şifre.");
+
+            // 🔹 Kullanıcı aktif mi?
+            if (!user.IsActive)
+                return Unauthorized("Hesap aktif değil.");
+
+            // 🔹 JWT Token oluştur
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_config["Jwt:Key"]);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Email, user.Email),
+                    new Claim(ClaimTypes.Role, user.Role ?? "User")
+                }),
+                Expires = DateTime.UtcNow.AddHours(2),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+                Audience = _config["Jwt:Audience"],
+                Issuer = _config["Jwt:Issuer"]
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var jwtToken = tokenHandler.WriteToken(token);
+
+            // 🔹 Başarılı yanıt dön
+            return Ok(new { token = jwtToken });
+        }
+
+        // 🔹 SIGNUP (Allowed listede olup yeni kayıt olan kullanıcılar)
+        [HttpPost("signup")]
+        public IActionResult Signup([FromBody] User signupUser)
+        {
+            if (signupUser == null || string.IsNullOrWhiteSpace(signupUser.Email) || string.IsNullOrWhiteSpace(signupUser.Password))
+                return BadRequest("Email ve şifre zorunludur.");
+
+            // Zaten kayıtlı mı?
+            var existingUser = _context.Users.FirstOrDefault(u => u.Email == signupUser.Email);
+            if (existingUser != null)
+                return BadRequest("Bu kullanıcı zaten kayıtlı.");
+
+            // Allowed listede mi?
+            var allowed = _context.AllowedEmails.FirstOrDefault(a => a.Email == signupUser.Email);
+            if (allowed == null)
+                return Unauthorized("Bu e-posta kayıt listesinde değil.");
+
+            // Yeni kullanıcı oluştur
+            var newUser = new User
+            {
+                Email = signupUser.Email,
+                Password = signupUser.Password,
+                Role = allowed.Role ?? "User",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
 
             _context.Users.Add(newUser);
             _context.SaveChanges();
 
-            return Ok("Kayıt başarılı!");
+            // JWT Token oluştur (hemen giriş yapabilsin)
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_config["Jwt:Key"]);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim(ClaimTypes.Email, newUser.Email),
+                    new Claim(ClaimTypes.Role, newUser.Role)
+                }),
+                Expires = DateTime.UtcNow.AddHours(2),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+                Audience = _config["Jwt:Audience"],
+                Issuer = _config["Jwt:Issuer"]
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var jwtToken = tokenHandler.WriteToken(token);
+
+            return Ok(new { token = jwtToken });
         }
+
+        // 🔹 CHECK USER (Allowed / Registered kontrol)
         [HttpGet("checkuser")]
         public IActionResult CheckUser(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
-                return BadRequest("E-posta zorunludur.");
+                return BadRequest("Email zorunludur.");
 
             var user = _context.Users.FirstOrDefault(u => u.Email == email);
             if (user != null)
-                return Ok(); // Kullanıcı kayıtlı
+                return Ok("Kullanıcı kayıtlı.");
 
-            var allowed = _context.AllowedEmails.FirstOrDefault(a => a.Email == email && a.IsActive);
+            var allowed = _context.AllowedEmails.FirstOrDefault(a => a.Email == email);
             if (allowed != null)
-                return NotFound(); // Allowed listede ama kayıtlı değil
+                return NotFound("Allowed but not registered");
 
-            return BadRequest(); // Hiçbir listede yok
+            return BadRequest("Email not allowed");
         }
-
-        [HttpPost("login")]
-        public IActionResult Login([FromBody] User loginUser)
-        {
-            // 1️⃣ Kullanıcı Users tablosunda var mı?
-            var user = _context.Users.FirstOrDefault(u => u.Email == loginUser.Email);
-
-            // 2️⃣ Yoksa AllowedEmails tablosuna bakalım
-            if (user == null)
-            {
-                var allowed = _context.AllowedEmails.FirstOrDefault(x => x.Email == loginUser.Email && x.IsActive);
-                if (allowed != null)
-                {
-                    // 🔹 Allowed listede var → kullanıcı otomatik oluşturulacak
-                    var newUser = new User
-                    {
-                        Email = loginUser.Email,
-                        Password = BCrypt.Net.BCrypt.HashPassword(loginUser.Password),
-                        Role = string.IsNullOrEmpty(allowed.Role) ? "User" : allowed.Role,
-                        IsActive = true
-                    };
-
-                    _context.Users.Add(newUser);
-                    _context.SaveChanges();
-
-                    user = newUser; // devam etsin
-                }
-                else
-                {
-                    return Unauthorized("Bu e-posta ile kayıt yapılamaz.");
-                }
-            }
-
-            // 📌 Kullanıcı aktif mi?
-            if (!user.IsActive)
-                return Unauthorized("Bu kullanıcı devre dışı bırakılmış. Giriş yapamaz.");
-
-            // 3️⃣ Parola kontrolü
-            var ok = BCrypt.Net.BCrypt.Verify(loginUser.Password, user.Password);
-            if (!ok)
-                return Unauthorized("E-posta veya şifre hatalı.");
-
-            // 4️⃣ JWT üret
-            var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]);
-            var creds = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
-
-            var claims = new[]
-            {
-        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-        new Claim(ClaimTypes.Email, user.Email),
-        new Claim(ClaimTypes.Name, user.Email),
-        new Claim(ClaimTypes.Role, user.Role ?? "User")
-    };
-
-            var token = new JwtSecurityToken(
-                claims: claims,
-                expires: DateTime.UtcNow.AddHours(6),
-                signingCredentials: creds
-            );
-
-            var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
-
-            return Ok(new { access_token = accessToken, token_type = "Bearer", role = user.Role });
-        }
-
-
     }
 }
