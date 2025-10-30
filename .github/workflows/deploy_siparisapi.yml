@@ -53,41 +53,23 @@ jobs:
           --configuration Release 
           --output "SiparisApi/publish"
 
-      - name: 🧾 List contents of publish folder
-        shell: pwsh
-        run: |
-          Write-Host "📂 İçerik listeleniyor: SiparisApi/publish"
-          Get-ChildItem -Recurse "SiparisApi/publish" | Select-Object FullName
 
-      # ✂️ Nested wwwroot düzeltmesi (css/images klasörlerini taşı, sonra sil)
-      - name: Fix nested wwwroot
+      # 📁 wwwroot içeriğini üst dizine taşı
+      - name: Flatten wwwroot into publish root
         shell: pwsh
         working-directory: SiparisApi/publish
         run: |
-          $nested = Join-Path (Get-Location) "wwwroot\\wwwroot"
-          $location = Get-Location
-          Write-Host "📍 Current location: $location"
-          Write-Host "🔍 Nested path: $nested"
-          $target = Join-Path (Get-Location) "wwwroot"
-          if (Test-Path $nested) {
-          Write-Host "📦 Nested wwwroot found, moving contents..."
-
-            $foldersToMove = @("css", "images")
-            foreach ($folder in $foldersToMove) {
-              $sourcePath = Join-Path $nested $folder
-              $destPath = Join-Path $target $folder
-
-              if (Test-Path $sourcePath) {
-                Move-Item -Path $sourcePath -Destination $destPath -Force
-                Write-Host "✅ Moved $folder from nested wwwroot"
-              }
-            }
-
-            Remove-Item -Recurse -Force $nested
-            Write-Host "🧹 Cleaned up nested wwwroot"
+          $src = "wwwroot"
+          if (Test-Path $src) {
+            Get-ChildItem -Path $src | ForEach-Object {
+              Move-Item -Path $_.FullName -Destination .
+               }
+            Remove-Item -Recurse -Force $src
+            Write-Host "✔ Flattened wwwroot into publish root"
           } else {
-            Write-Host "✅ No nested wwwroot found"
-            }
+            Write-Host "⚠ wwwroot not found"
+          }
+
 
       # ☁️ Azure App Service’e yükle
       - name: Deploy to Azure Web App
@@ -96,7 +78,6 @@ jobs:
           app-name: "bilalgurseliparis"
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
           package: SiparisApi/publish
-
           
 
       # 🌡️ Free plan için warm-up isteği (SQL uyanması)
