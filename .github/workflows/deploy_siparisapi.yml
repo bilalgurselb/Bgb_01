@@ -53,7 +53,15 @@ jobs:
           --configuration Release 
           --output "SiparisApi/publish"
 
-            # ✂️ Nested wwwroot düzeltmesi (css/images klasörlerini taşı, sonra sil)
+      # ☁️ Azure App Service’e yükle
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: "bilalgurseliparis"
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          package: SiparisApi/publish
+
+           # ✂️ Nested wwwroot düzeltmesi (css/images klasörlerini taşı, sonra sil)
       - name: Fix nested wwwroot
         shell: pwsh
         working-directory: SiparisApi/publish
@@ -79,15 +87,6 @@ jobs:
           } else {
             Write-Host "✅ No nested wwwroot found"
             }
-
-
-      # ☁️ Azure App Service’e yükle
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: "bilalgurseliparis"
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
-          package: SiparisApi/publish
 
       # 🌡️ Free plan için warm-up isteği (SQL uyanması)
       - name: Warm-up Azure Web App
