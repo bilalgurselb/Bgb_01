@@ -56,24 +56,65 @@ namespace SiparisApi.Controllers
 
             return Ok("Kayıt başarılı!");
         }
+        [HttpGet("checkuser")]
+        public IActionResult CheckUser(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return BadRequest("E-posta zorunludur.");
+
+            var user = _context.Users.FirstOrDefault(u => u.Email == email);
+            if (user != null)
+                return Ok(); // Kullanıcı kayıtlı
+
+            var allowed = _context.AllowedEmails.FirstOrDefault(a => a.Email == email && a.IsActive);
+            if (allowed != null)
+                return NotFound(); // Allowed listede ama kayıtlı değil
+
+            return BadRequest(); // Hiçbir listede yok
+        }
+
         [HttpPost("login")]
         public IActionResult Login([FromBody] User loginUser)
         {
-            // 1) Kullanıcıyı e-posta ile bul
+            // 1️⃣ Kullanıcı Users tablosunda var mı?
             var user = _context.Users.FirstOrDefault(u => u.Email == loginUser.Email);
+
+            // 2️⃣ Yoksa AllowedEmails tablosuna bakalım
             if (user == null)
-                return Unauthorized("E-posta veya şifre hatalı.");
+            {
+                var allowed = _context.AllowedEmails.FirstOrDefault(x => x.Email == loginUser.Email && x.IsActive);
+                if (allowed != null)
+                {
+                    // 🔹 Allowed listede var → kullanıcı otomatik oluşturulacak
+                    var newUser = new User
+                    {
+                        Email = loginUser.Email,
+                        Password = BCrypt.Net.BCrypt.HashPassword(loginUser.Password),
+                        Role = string.IsNullOrEmpty(allowed.Role) ? "User" : allowed.Role,
+                        IsActive = true
+                    };
+
+                    _context.Users.Add(newUser);
+                    _context.SaveChanges();
+
+                    user = newUser; // devam etsin
+                }
+                else
+                {
+                    return Unauthorized("Bu e-posta ile kayıt yapılamaz.");
+                }
+            }
 
             // 📌 Kullanıcı aktif mi?
             if (!user.IsActive)
                 return Unauthorized("Bu kullanıcı devre dışı bırakılmış. Giriş yapamaz.");
 
-            // 2) Parolayı doğrula (hash karşılaştırma)
+            // 3️⃣ Parola kontrolü
             var ok = BCrypt.Net.BCrypt.Verify(loginUser.Password, user.Password);
             if (!ok)
                 return Unauthorized("E-posta veya şifre hatalı.");
 
-            // 3) JWT üret (Rol ve Email claim’lerini ekliyoruz)
+            // 4️⃣ JWT üret
             var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]);
             var creds = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
 
@@ -81,8 +122,8 @@ namespace SiparisApi.Controllers
             {
         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
         new Claim(ClaimTypes.Email, user.Email),
-         new Claim(ClaimTypes.Name, user.Email),
-        new Claim(ClaimTypes.Role, user.Role ?? "User") // 📌 Rol claim'i eklendi
+        new Claim(ClaimTypes.Name, user.Email),
+        new Claim(ClaimTypes.Role, user.Role ?? "User")
     };
 
             var token = new JwtSecurityToken(
@@ -92,6 +133,7 @@ namespace SiparisApi.Controllers
             );
 
             var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+
             return Ok(new { access_token = accessToken, token_type = "Bearer", role = user.Role });
         }
 
