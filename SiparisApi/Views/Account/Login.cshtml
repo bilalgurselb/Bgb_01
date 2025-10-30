@@ -54,35 +54,52 @@
             const password = form.querySelector('[name="Password"]').value.trim();
             const confirmPassword = confirmPasswordInput.value.trim();
 
-            // Şifre kutuları dolu mu kontrolü
             if (!email || !password) {
                 alert("E-posta ve şifre zorunludur.");
                 return;
             }
 
-            // Eğer ikinci kutu açıksa ve eşleşmiyorsa
+            // Eğer ikinci kutu görünüyorsa ve şifreler uyuşmuyorsa
             if (confirmPasswordInput.style.display !== "none" && password !== confirmPassword) {
                 alert("Şifreler uyuşmuyor!");
                 return;
             }
 
             try {
-                // 🔹 CheckUser isteğini tam URL ile yap — 401 hatasını önler
+                // 🔹 Kullanıcı sistemde kayıtlı mı kontrol et
                 const check = await fetch(`https://bilalgurseliparis-eyehgshwhfg4a7ew.northeurope-01.azurewebsites.net/api/Auth/checkuser?email=${encodeURIComponent(email)}`);
 
+                // 🔹 Allowed listede ama kayıtlı değil → ikinci kutuyu göster
                 if (check.status === 404) {
-                    // Allowed listede ama kayıtlı değil → ikinci kutuyu göster
-                    confirmPasswordInput.style.display = "block";
-                    alert("Bu e-posta kayıt listesinde, lütfen şifrenizi iki kez girerek kayıt olun.");
-                    return;
+                    if (confirmPasswordInput.style.display === "none") {
+                        confirmPasswordInput.style.display = "block";
+                        alert("Bu e-posta kayıt listesinde, lütfen şifrenizi iki kez girerek kayıt olun.");
+                        return;
+                    } else {
+                        // 🔹 Kullanıcı iki şifreyi girdi → signup çağrısı yap
+                        const signupRes = await fetch(`https://bilalgurseliparis-eyehgshwhfg4a7ew.northeurope-01.azurewebsites.net/api/Auth/signup`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ Email: email, Password: password })
+                        });
+
+                        if (signupRes.ok) {
+                            alert("Kayıt başarılı! Sisteme giriş yapılıyor...");
+                            form.submit(); // Girişe devam
+                        } else {
+                            alert("Kayıt başarısız: " + signupRes.status);
+                        }
+                        return;
+                    }
                 }
 
+                // 🔹 Hiç Allowed listede değilse
                 if (check.status === 400) {
-                    alert("Bu e-posta sisteme kayıtlı değil.");
+                    alert("Bu e-posta sistemde tanımlı değil.");
                     return;
                 }
 
-                // Kullanıcı kayıtlıysa → formu gönder
+                // 🔹 Kayıtlı kullanıcı → normal login işlemi
                 form.submit();
 
             } catch (err) {
@@ -91,5 +108,6 @@
             }
         });
     </script>
+
 </body>
 </html>
