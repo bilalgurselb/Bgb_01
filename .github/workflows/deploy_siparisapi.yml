@@ -55,20 +55,20 @@ jobs:
 
 
       # 📁 wwwroot içeriğini üst dizine taşı
-      - name: Flatten wwwroot into publish root
-        shell: pwsh
-        working-directory: SiparisApi/publish
-        run: |
-          $src = "wwwroot"
-          if (Test-Path $src) {
-            Get-ChildItem -Path $src | ForEach-Object {
-              Move-Item -Path $_.FullName -Destination .
-               }
-            Remove-Item -Recurse -Force $src
-            Write-Host "✔ Flattened wwwroot into publish root"
-          } else {
-            Write-Host "⚠ wwwroot not found"
-          }
+      #- name: Flatten wwwroot into publish root
+       # shell: pwsh
+      #  working-directory: SiparisApi/publish
+       # run: |
+        #  $src = "wwwroot"
+        #  if (Test-Path $src) {
+        #    Get-ChildItem -Path $src | ForEach-Object {
+        #      Move-Item -Path $_.FullName -Destination .
+        ##      }
+        #   Remove-Item -Recurse -Force $src
+        #    Write-Host "✔ Flattened wwwroot into publish root"
+      # } else {
+         #   Write-Host "⚠ wwwroot not found"
+         #  }
 
 
       # ☁️ Azure App Service’e yükle
