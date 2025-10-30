@@ -53,20 +53,21 @@ jobs:
           --configuration Release 
           --output "SiparisApi/publish"
 
-      # ☁️ Azure App Service’e yükle
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: "bilalgurseliparis"
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
-          package: SiparisApi/publish
+      - name: 🧾 List contents of publish folder
+        shell: pwsh
+        run: |
+          Write-Host "📂 İçerik listeleniyor: SiparisApi/publish"
+          Get-ChildItem -Recurse "SiparisApi/publish" | Select-Object FullName
 
-           # ✂️ Nested wwwroot düzeltmesi (css/images klasörlerini taşı, sonra sil)
+      # ✂️ Nested wwwroot düzeltmesi (css/images klasörlerini taşı, sonra sil)
       - name: Fix nested wwwroot
         shell: pwsh
         working-directory: SiparisApi/publish
         run: |
           $nested = Join-Path (Get-Location) "wwwroot\\wwwroot"
+          $location = Get-Location
+          Write-Host "📍 Current location: $location"
+          Write-Host "🔍 Nested path: $nested"
           $target = Join-Path (Get-Location) "wwwroot"
           if (Test-Path $nested) {
           Write-Host "📦 Nested wwwroot found, moving contents..."
@@ -87,6 +88,16 @@ jobs:
           } else {
             Write-Host "✅ No nested wwwroot found"
             }
+
+      # ☁️ Azure App Service’e yükle
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: "bilalgurseliparis"
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          package: SiparisApi/publish
+
+          
 
       # 🌡️ Free plan için warm-up isteği (SQL uyanması)
       - name: Warm-up Azure Web App
