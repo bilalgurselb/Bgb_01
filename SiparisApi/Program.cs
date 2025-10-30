@@ -6,6 +6,8 @@ using SiparisApi.Data;
 using SiparisApi.Models;
 using SiparisApi.Services;
 using System.Text;
+using Microsoft.AspNetCore.HttpOverrides;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,6 +60,13 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+// ✅ Azure App Service'de HTTPS algılaması için ForwardedHeaders kullan
+var forwardedHeaderOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+app.UseForwardedHeaders(forwardedHeaderOptions);
+
 
 // 🚦 Middleware Pipeline
 app.UseStaticFiles();
@@ -166,35 +175,34 @@ app.MapGet("/", context =>
 // 🌡️ Warm-up 
 Task.Run(async () =>
 {
-    await Task.Delay(2000);
+    await Task.Delay(2000);    
     try
     {
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
         await db.Database.CanConnectAsync();
-
-        // 🔹 Eğer hiç AllowedEmail kaydı yoksa, ilk admini ekle
-        if (!db.AllowedEmails.Any())
         {
-            db.AllowedEmails.Add(new AllowedEmail
+            // 🔹 Eğer hiç AllowedEmail kaydı yoksa, ilk admini ekle
+            if (!db.AllowedEmails.Any())
             {
-                Email = "bborekci@sintankimya.com",
-                Role = "Admin",
-                IsActive = true
-            });
-            await db.SaveChangesAsync();
-            Console.WriteLine("[Warm-up] İlk admin eklendi: bborekci@sintankimya.com");
-        }
-
-        // 🔹 Ledger nedeniyle null Role kayıtlarını düzelt
-        var emptyRoles = db.AllowedEmails.Where(x => x.Role == null).ToList();
-        if (emptyRoles.Any())
-        {
-            foreach (var rec in emptyRoles)
-                rec.Role = "User";
-            await db.SaveChangesAsync();
-            Console.WriteLine($"[Warm-up] {emptyRoles.Count} kullanıcıda eksik rol düzeltildi.");
+                db.AllowedEmails.Add(new AllowedEmail
+                {
+                    Email = "bborekci@sintankimya.com",
+                    Role = "Admin",
+                    IsActive = true
+                });
+                await db.SaveChangesAsync();
+                Console.WriteLine("[Warm-up] İlk admin eklendi: bborekci@sintankimya.com");
+            }
+            // 🔹 Ledger nedeniyle null Role kayıtlarını düzelt
+            var emptyRoles = db.AllowedEmails.Where(x => x.Role == null).ToList();
+            if (emptyRoles.Any())
+            {
+                foreach (var rec in emptyRoles)
+                    rec.Role = "User";
+                await db.SaveChangesAsync();
+                Console.WriteLine($"[Warm-up] {emptyRoles.Count} kullanıcıda eksik rol düzeltildi.");
+            }
         }
     }
     catch (Exception ex)
@@ -202,5 +210,4 @@ Task.Run(async () =>
         Console.WriteLine($"[Warm-up] {ex.Message}");
     }
 });
-
-app.Run();
+    app.Run();
