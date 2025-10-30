@@ -22,18 +22,24 @@ namespace SiparisApi.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(string email, string password)
+        public async Task<IActionResult> Login(string email, string password, string confirmPassword)
         {
+            // 🔹 Giriş kontrolü
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
                 ViewBag.Error = "E-posta ve şifre zorunludur.";
                 return View();
             }
 
-            var client = _httpClientFactory.CreateClient();
+            // 🔹 Şifre tekrar kontrolü
+            if (password != confirmPassword)
+            {
+                ViewBag.Error = "Şifreler birbiriyle uyuşmuyor.";
+                return View();
+            }
 
-            // 🔹 Azure App Service URL (sabit, güvenli domain)
-            var apiUrl = "https://bilalgurseliparis-eyehgshwhfg4a7ew.northeurope-01.azurewebsites.net/api/Auth/login";
+            var client = _httpClientFactory.CreateClient();
+            var apiUrl = $"{_config["ApiBaseUrl"]}/api/Auth/login";
 
             var payload = JsonSerializer.Serialize(new { Email = email, Password = password });
             var content = new StringContent(payload, Encoding.UTF8, "application/json");
@@ -51,7 +57,8 @@ namespace SiparisApi.Controllers
 
             if (!response.IsSuccessStatusCode)
             {
-                ViewBag.Error = "E-posta veya şifre hatalı.";
+                var msg = await response.Content.ReadAsStringAsync();
+                ViewBag.Error = msg;
                 return View();
             }
 
@@ -62,7 +69,6 @@ namespace SiparisApi.Controllers
                 var jsonDoc = JsonDocument.Parse(responseBody);
                 string token = null;
 
-                // 🔹 Token property'si farklı isimlerde olabilir ("access_token" veya "token")
                 if (jsonDoc.RootElement.TryGetProperty("token", out var tokenProp))
                     token = tokenProp.GetString();
                 else if (jsonDoc.RootElement.TryGetProperty("access_token", out var accessTokenProp))
@@ -74,7 +80,6 @@ namespace SiparisApi.Controllers
                     return View();
                 }
 
-                // 🔹 JWT token'ı Session'a kaydet
                 HttpContext.Session.SetString("AccessToken", token);
             }
             catch
@@ -83,8 +88,10 @@ namespace SiparisApi.Controllers
                 return View();
             }
 
-            // 🔹 Başarılı giriş → Sipariş oluşturma ekranına yönlendirme
+            // 🔹 Başarılı giriş veya otomatik kayıt sonrası yönlendirme
             return RedirectToAction("Create", "OrdersUI");
         }
+
     }
 }
+
