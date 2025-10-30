@@ -32,10 +32,13 @@ namespace SiparisApi.Controllers
             }
 
             // 🔹 Şifre tekrar kontrolü
-            if (password != confirmPassword)
+            if (!string.IsNullOrEmpty(confirmPassword))
             {
-                ViewBag.Error = "Şifreler birbiriyle uyuşmuyor.";
-                return View();
+                if (password != confirmPassword)
+                {
+                    ViewBag.Error = "Şifreler birbiriyle uyuşmuyor.";
+                    return View();
+                }
             }
 
             var client = _httpClientFactory.CreateClient();
