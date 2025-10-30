@@ -1,4 +1,4 @@
-﻿//Bilal
+﻿// Bilal
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -28,9 +28,13 @@ builder.Services.AddCors(opt =>
 // 🧩 Dependency Injection
 builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddScoped<IEmailService, EmailService>(); // sadece bir kez tanımlı
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // 🔐 JWT Authentication
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrEmpty(jwtKey))
+    throw new InvalidOperationException("JWT anahtarı (Jwt:Key) appsettings.json veya ortam değişkeninde tanımlı olmalı.");
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
     {
@@ -40,14 +44,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = false,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? string.Empty))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
     });
 
 builder.Services.AddAuthorization();
 
-// 📘 MVC + Swagger
+// 📘 MVC + Swagger + Session
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient();
 builder.Services.AddSession();
@@ -72,6 +75,7 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 
 app.MapControllers();
 app.MapDefaultControllerRoute();
+
 // ✅ Varsayılan yönlendirme: / isteği Login'e gitsin
 app.MapGet("/", context =>
 {
@@ -88,7 +92,6 @@ Task.Run(async () =>
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        // 🔸 Veritabanı bağlantısını test et
         await db.Database.CanConnectAsync();
 
         // 🔹 Eğer hiç AllowedEmail kaydı yoksa, ilk admini ekle
@@ -101,6 +104,7 @@ Task.Run(async () =>
                 IsActive = true
             });
             await db.SaveChangesAsync();
+            Console.WriteLine("[Warm-up] İlk admin eklendi: bborekci@sintankimya.com");
         }
 
         // 🔹 Ledger nedeniyle null Role kayıtlarını düzelt
@@ -110,6 +114,7 @@ Task.Run(async () =>
             foreach (var rec in emptyRoles)
                 rec.Role = "User";
             await db.SaveChangesAsync();
+            Console.WriteLine($"[Warm-up] {emptyRoles.Count} kullanıcıda eksik rol düzeltildi.");
         }
     }
     catch (Exception ex)
