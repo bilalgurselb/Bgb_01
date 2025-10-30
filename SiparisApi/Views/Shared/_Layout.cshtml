@@ -7,38 +7,129 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - SINTAN CHEMICALS</title>
+
+    <!-- Ana stil dosyası -->
     <link rel="stylesheet" href="/css/site.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <script src="https://kit.fontawesome.com/a2d9a6ef5c.js" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+
+    <style>
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 40px;
+            background: #fff;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .navbar-left img {
+                width: 48px;
+                height: 48px;
+            }
+
+            .navbar-left h1 {
+                font-size: 20px;
+                color: #1B1B1B;
+                margin: 0;
+                font-weight: 600;
+            }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+            .navbar-right a {
+                color: #1C9AD6;
+                text-decoration: none;
+                font-weight: 500;
+            }
+
+                .navbar-right a:hover {
+                    text-decoration: underline;
+                }
+
+        /* Sayfa içeriği */
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            color: #777;
+            font-size: 13px;
+            padding: 20px 0;
+            border-top: 1px solid #eee;
+            margin-top: 50px;
+        }
+
+        /* Genel Butonlar */
+        .btn-primary {
+            background-color: #1C9AD6;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+            .btn-primary:hover {
+                background-color: #168CBF;
+            }
+
+        .btn-secondary {
+            background-color: #E84C3D;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+            .btn-secondary:hover {
+                background-color: #cc3f31;
+            }
+    </style>
 </head>
+
 <body>
     <header class="navbar">
-        <div class="nav-left">
-            <img src="/images/logo_nav.png" alt="SINTAN" class="nav-logo" />
-            <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+        <div class="navbar-left">
+            <img src="/images/logo_nav.png" alt="SINTAN Logo" />
+            <h1>Sipariş Yönetim Sistemi</h1>
         </div>
-        <nav class="nav-menu" id="mainMenu">
-            <a href="/Dashboard" class="nav-item"><i class="fas fa-home"></i> Ana Sayfa</a>
-            <a href="/Orders" class="nav-item"><i class="fas fa-list"></i> Siparişler</a>
-            <a href="/Orders/Create" class="nav-item"><i class="fas fa-plus-circle"></i> Yeni Sipariş</a>
-            <a href="/Manage" class="nav-item"><i class="fas fa-users-cog"></i> Kullanıcılar</a>
-            <a href="/Account/Logout" class="nav-item logout"><i class="fas fa-sign-out-alt"></i> Çıkış</a>
-        </nav>
+
+        <div class="navbar-right">
+            <a href="/OrdersUI/Index">Siparişler</a>
+            <a href="/Account/Logout">Çıkış</a>
+        </div>
     </header>
 
-    <main class="main-content">
+    <main class="container">
         @RenderBody()
     </main>
 
-    <footer class="footer">
-        <p>© @DateTime.Now.Year SINTAN CHEMICALS by Bilal G. Borekci - Tüm hakları saklıdır.</p>
+    <footer>
+        © @DateTime.Now.Year SINTAN CHEMICALS by Bilal Börekci
     </footer>
-
-    <script>
-        function toggleMenu() {
-            const menu = document.getElementById("mainMenu");
-            menu.classList.toggle("active");
-        }
-    </script>
 </body>
 </html>
