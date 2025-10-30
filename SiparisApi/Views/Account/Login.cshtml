@@ -2,6 +2,7 @@
     ViewData["Title"] = "Giriş Yap";
     Layout = null;
 }
+
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -11,16 +12,84 @@
     <link rel="stylesheet" href="~/css/site.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
 </head>
-<body style="background:#fff; display:flex; justify-content:center; align-items:center; height:100vh;">
+
+@{
+        // Razor derleyicisinin <body> etiketini "TagHelper" sanmaması için string olarak verdik.
+        string bodyStyle = "background:#fff; display:flex; justify-content:center; align-items:center; height:100vh;";
+}
+
+<body style="@bodyStyle">
     <div style="width:100%; max-width:360px; text-align:center;">
         <img src="~/images/logo_login.png" alt="SINTAN CHEMICALS" style="width:200px; margin-bottom:20px;" />
         <h2 style="margin-bottom:20px;">Sipariş Yönetim Sistemi</h2>
-        <form method="post" action="/Account/Login">
+
+        <form id="loginForm" method="post" action="/Account/Login">
             <input type="text" name="Email" placeholder="E-posta" required />
             <input type="password" name="Password" placeholder="Şifre" required />
+
+            <!-- 🔹 Bu alan başlangıçta gizli olacak -->
+            <input type="password" name="ConfirmPassword" id="confirmPassword" placeholder="Şifre (Tekrar)" style="display:none;" />
+
             <button type="submit" class="btn btn-primary" style="width:100%;">Giriş Yap</button>
         </form>
-        <p style="margin-top:20px; font-size:13px; color:#777;">© @DateTime.Now.Year SINTAN CHEMICALS by Bilal Borekci</p>
+
+        @if (ViewBag.Error != null)
+        {
+            <div style="color:red; margin-top:15px;">@ViewBag.Error</div>
+        }
+
+        <p style="margin-top:20px; font-size:13px; color:#777;">
+            © @DateTime.Now.Year SINTAN CHEMICALS by Bilal Borekci
+        </p>
     </div>
+
+    <script>
+        const form = document.getElementById('loginForm');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const email = form.querySelector('[name="Email"]').value.trim();
+            const password = form.querySelector('[name="Password"]').value.trim();
+            const confirmPassword = confirmPasswordInput.value.trim();
+
+            // Şifre kutuları dolu mu kontrolü
+            if (!email || !password) {
+                alert("E-posta ve şifre zorunludur.");
+                return;
+            }
+
+            // Eğer ikinci kutu açıksa ve eşleşmiyorsa
+            if (confirmPasswordInput.style.display !== "none" && password !== confirmPassword) {
+                alert("Şifreler uyuşmuyor!");
+                return;
+            }
+
+            try {
+                // 🔹 CheckUser isteğini tam URL ile yap — 401 hatasını önler
+                const check = await fetch(`https://bilalgurseliparis-eyehgshwhfg4a7ew.northeurope-01.azurewebsites.net/api/Auth/checkuser?email=${encodeURIComponent(email)}`);
+
+                if (check.status === 404) {
+                    // Allowed listede ama kayıtlı değil → ikinci kutuyu göster
+                    confirmPasswordInput.style.display = "block";
+                    alert("Bu e-posta kayıt listesinde, lütfen şifrenizi iki kez girerek kayıt olun.");
+                    return;
+                }
+
+                if (check.status === 400) {
+                    alert("Bu e-posta sisteme kayıtlı değil.");
+                    return;
+                }
+
+                // Kullanıcı kayıtlıysa → formu gönder
+                form.submit();
+
+            } catch (err) {
+                console.error(err);
+                alert("Sunucuya ulaşılamadı. Lütfen tekrar deneyin.");
+            }
+        });
+    </script>
 </body>
 </html>
