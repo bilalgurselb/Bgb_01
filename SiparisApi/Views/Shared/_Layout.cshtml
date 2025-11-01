@@ -1,135 +1,112 @@
-﻿@{
-    Layout = null;
+﻿@using System.Security.Claims
+@{
+    var userName = User.FindFirst("name")?.Value ?? "Ziyaretçi";
+    var userRole = User.FindFirst("role")?.Value ?? "User";
+    var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+    var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
 }
+
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - SINTAN CHEMICALS</title>
+    <title>@ViewData["Title"] - Sintan Kimya</title>
 
-    <!-- Ana stil dosyası -->
-    <link rel="stylesheet" href="~/wwwroot/css/site.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
-
-    <style>
-        /* Navbar */
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 40px;
-            background: #fff;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.06);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .navbar-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-            .navbar-left img {
-                width: 48px;
-                height: 48px;
-            }
-
-            .navbar-left h1 {
-                font-size: 20px;
-                color: #1B1B1B;
-                margin: 0;
-                font-weight: 600;
-            }
-
-        .navbar-right {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-            .navbar-right a {
-                color: #1C9AD6;
-                text-decoration: none;
-                font-weight: 500;
-            }
-
-                .navbar-right a:hover {
-                    text-decoration: underline;
-                }
-
-        /* Sayfa içeriği */
-        .container {
-            max-width: 1000px;
-            margin: 40px auto;
-            background: #fff;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
-        }
-
-        /* Footer */
-        footer {
-            text-align: center;
-            color: #777;
-            font-size: 13px;
-            padding: 20px 0;
-            border-top: 1px solid #eee;
-            margin-top: 50px;
-        }
-
-        /* Genel Butonlar */
-        .btn-primary {
-            background-color: #1C9AD6;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-            .btn-primary:hover {
-                background-color: #168CBF;
-            }
-
-        .btn-secondary {
-            background-color: #E84C3D;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-
-            .btn-secondary:hover {
-                background-color: #cc3f31;
-            }
-    </style>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 
 <body>
-    <header class="navbar">
-        <div class="navbar-left">
-            <img src="~/wwwroot/images/logo_nav.png" alt="SINTAN Logo" />
-            <h1>Sipariş Yönetim Sistemi</h1>
-        </div>
+    <header class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm px-3">
+        <a class="navbar-brand fw-bold text-white" asp-controller="OrdersUIList" asp-action="Index">
+            🧾 Sintan Kimya
+        </a>
 
-        <div class="navbar-right">
-            <a href="/OrdersUI/Index">Siparişler</a>
-            <a href="/Account/Logout">Çıkış</a>
+        <div class="ms-auto d-flex align-items-center text-white">
+            @if (isAuthenticated)
+            {
+                <span class="me-3">
+                    Hoş geldiniz <strong>@userName</strong> <small>(@userRole)</small>
+                </span>
+                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-light text-dark">Çıkış</button>
+                </form>
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Login" class="btn btn-sm btn-light text-dark">Giriş Yap</a>
+            }
         </div>
     </header>
 
-    <main class="container">
-        @RenderBody()
-    </main>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom shadow-sm">
+        <div class="container-fluid">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="OrdersUIList" asp-action="Index">📦 Sipariş Listesi</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-controller="OrdersUI" asp-action="Create">➕ Yeni Sipariş</a>
+                </li>
 
-    <footer>
-        © @DateTime.Now.Year SINTAN CHEMICALS by Bilal Börekci
+                @if (userRole == "Admin" || userRole == "Yönetici")
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="AdminUI" asp-action="Dashboard">⚙️ Yönetim Paneli</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="AdminUI" asp-action="Logs">🪵 Loglar</a>
+                    </li>
+                }
+
+                @if (userRole == "Admin")
+                {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="UsersUI" asp-action="Manage">👤 Kullanıcı Yönetimi</a>
+                    </li>
+                }
+            </ul>
+
+            @if (isAuthenticated)
+            {
+                <div class="d-flex align-items-center">
+                    <span id="orderBadge" class="badge bg-warning text-dark me-2" style="display:none;">
+                        🔔 Yeni güncellemeler var
+                    </span>
+                </div>
+            }
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="footer bg-light border-top py-3 mt-auto">
+        <div class="container text-center">
+            <small class="text-muted">© @DateTime.Now.Year Sintan Kimya | Sipariş Yönetim Sistemi</small>
+        </div>
     </footer>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // 🔔 Basit ön bildirim (demo amaçlı) — istersen API'den dinamik hale getirebiliriz.
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch('/api/orders/list')
+                .then(r => r.ok ? r.json() : [])
+                .then(data => {
+                    if (data && data.some(o => o.isNew || o.isUpdated)) {
+                        document.getElementById("orderBadge").style.display = "inline-block";
+                    }
+                })
+                .catch(err => console.log("Bildirim kontrol hatası:", err));
+        });
+    </script>
+
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

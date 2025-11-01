@@ -34,7 +34,7 @@ namespace SiparisApi.Controllers
             if (_context.Users.Any(u => u.Email == newUser.Email))
                 return BadRequest("Bu e-posta ile kullanıcı zaten kayıtlı.");
 
-            newUser.Password = HashPassword(newUser.Password);
+            newUser.PasswordHash = HashPassword(newUser.PasswordHash);
             newUser.IsActive = true; // yeni kullanıcı varsayılan olarak aktif gelir
 
             _context.Users.Add(newUser);
@@ -53,7 +53,7 @@ namespace SiparisApi.Controllers
             if (user == null)
                 return NotFound("Kullanıcı bulunamadı.");
 
-            user.Password = HashPassword(newPassword);
+            user.PasswordHash = HashPassword(newPassword);
             _context.SaveChanges();
 
             AddLog("ResetPassword", $"PUT /users/{id}/reset-password", $"Kullanıcı şifresi sıfırlandı: {user.Email}");

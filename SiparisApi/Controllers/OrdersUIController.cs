@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SiparisApi.Data;
 using SiparisApi.Models;
 
@@ -7,112 +9,158 @@ namespace SiparisApi.Controllers
     public class OrdersUIController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly ILogger<OrdersUIController> _logger;
 
-        public OrdersUIController(AppDbContext context)
+        public OrdersUIController(AppDbContext context, ILogger<OrdersUIController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
-        // 📦 Sipariş listesi
-        public IActionResult Index()
+        // 🟢 1. Listeleme
+        public async Task<IActionResult> Index()
         {
-            var orders = _context.Orders.ToList();
+            var userEmail = HttpContext.Session.GetString("UserEmail");
+            var userRole = HttpContext.Session.GetString("UserRole");
+
+            var orders = await _context.Orders
+                .OrderByDescending(o => o.CreatedAt)
+                .ToListAsync();
+
+            ViewBag.UserEmail = userEmail;
+            ViewBag.UserRole = userRole;
+
             return View(orders);
         }
 
-        // 🆕 Yeni sipariş formunu aç
+        // 🟢 2. Yeni Sipariş
         [HttpGet]
-        public IActionResult Create()
+        public IActionResult Create() => View();
+
+        [HttpPost]
+        public async Task<IActionResult> Create(Order order)
         {
-            return View();
+            if (!ModelState.IsValid) return View(order);
+
+            order.CreatedAt = DateTime.UtcNow;
+            order.OrderDate = DateTime.UtcNow;
+            order.CreatedBy = HttpContext.Session.GetString("UserEmail");
+            order.Status = "Onay Bekleniyor";
+
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
+
+            _context.OrderStatusHistories.Add(new OrderStatusHistory
+            {
+                OrderHeaderId = order.Id,
+                Status = order.Status,
+                ChangedBy = order.CreatedBy ?? "system"
+            });
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index");
         }
 
-        // 🆕 Yeni sipariş kaydet
-        [HttpPost]
-        public IActionResult Create(Order order)
+        // 🟢 3. Düzenleme
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
         {
-            if (ModelState.IsValid)
-            {
-                order.CreatedBy = User.Identity?.Name ?? "Sistem";
-                order.IsApprovedByFactory = false;
-                order.IsApprovedBySales = false;
-                _context.Orders.Add(order);
-                _context.SaveChanges();
+            var order = await _context.Orders.FindAsync(id);
+            if (order == null) return NotFound();
 
-                ViewBag.Message = "Sipariş başarıyla oluşturuldu.";
+            var userEmail = HttpContext.Session.GetString("UserEmail");
+            var userRole = HttpContext.Session.GetString("UserRole");
+
+            if (order.Status != "Onay Bekleniyor" && userRole != "Admin")
+            {
+                TempData["Error"] = "Bu sipariş onaylı, düzenlenemez.";
+                return RedirectToAction("Index");
+            }
+
+            if (order.CreatedBy != userEmail && userRole != "Admin")
+            {
+                TempData["Error"] = "Sadece kendi siparişinizi düzenleyebilirsiniz.";
                 return RedirectToAction("Index");
             }
 
             return View(order);
         }
 
-        // ✏️ Sipariş düzenleme formunu aç
-        [HttpGet]
-        public IActionResult Edit(int id)
-        {
-            var order = _context.Orders.FirstOrDefault(o => o.Id == id);
-            if (order == null)
-                return NotFound();
-
-            if (order.IsApprovedByFactory)
-                return BadRequest("Onaylı sipariş düzenlenemez.");
-
-            return View(order);
-        }
-
-        // ✏️ Sipariş düzenleme işlemi
         [HttpPost]
-        public IActionResult Edit(Order updatedOrder)
+        public async Task<IActionResult> Edit(Order order)
         {
-            var order = _context.Orders.FirstOrDefault(o => o.Id == updatedOrder.Id);
-            if (order == null)
-                return NotFound();
+            if (!ModelState.IsValid) return View(order);
 
-            if (order.IsApprovedByFactory)
-                return BadRequest("Onaylı sipariş düzenlenemez.");
+            var existingOrder = await _context.Orders.AsNoTracking().FirstOrDefaultAsync(o => o.Id == order.Id);
+            if (existingOrder == null) return NotFound();
 
-            order.Customer = updatedOrder.Customer;
-            order.Product = updatedOrder.Product;
-            order.Quantity = updatedOrder.Quantity;
-            order.Unit = updatedOrder.Unit;
-            order.Price = updatedOrder.Price;
-            order.Currency = updatedOrder.Currency;
-            order.OrderDate = updatedOrder.OrderDate;
-            order.DeliveryDate = updatedOrder.DeliveryDate;
-            order.PaymentTerm = updatedOrder.PaymentTerm;
-            order.Transport = updatedOrder.Transport;
-            order.DeliveryTerm = updatedOrder.DeliveryTerm;
-            order.DueDays = updatedOrder.DueDays;
+            existingOrder.Product = order.Product;
+            existingOrder.Customer = order.Customer;
+            existingOrder.Quantity = order.Quantity;
+            existingOrder.Unit = order.Unit;
+            existingOrder.Price = order.Price;
+            existingOrder.Currency = order.Currency;
+            existingOrder.PaymentTerm = order.PaymentTerm;
+            existingOrder.Transport = order.Transport;
+            existingOrder.DeliveryTerm = order.DeliveryTerm;
+            existingOrder.DueDays = order.DueDays;
+            existingOrder.IsChanged = true;
+            existingOrder.Status = "Onay Bekleniyor";
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
+
+            _context.OrderStatusHistories.Add(new OrderStatusHistory
+            {
+                OrderHeaderId = existingOrder.Id,
+                Status = "Düzenlendi",
+                ChangedBy = existingOrder.CreatedBy ?? "system"
+            });
+            await _context.SaveChangesAsync();
+
             return RedirectToAction("Index");
         }
 
-        // ✅ Fabrika onayı ver
+        // 🟢 4. Durum Güncelleme (Admin)
         [HttpPost]
-        public IActionResult Approve(int id)
+        public async Task<IActionResult> ChangeStatus(int id, string status)
         {
-            var order = _context.Orders.FirstOrDefault(o => o.Id == id);
-            if (order == null)
-                return NotFound();
+            var order = await _context.Orders.FindAsync(id);
+            if (order == null) return NotFound();
 
-            order.IsApprovedByFactory = true;
-            _context.SaveChanges();
+            order.Status = status;
+            order.IsApprovedByFactory = status == "Üretimde" || status == "Onaylandı";
+            await _context.SaveChangesAsync();
 
-            // 📩 TODO: Buraya mail gönderme işlemi eklenecek
+            _context.OrderStatusHistories.Add(new OrderStatusHistory
+            {
+                OrderHeaderId = id,
+                Status = status,
+                ChangedBy = HttpContext.Session.GetString("UserEmail") ?? "system"
+            });
+            await _context.SaveChangesAsync();
+
             return RedirectToAction("Index");
         }
 
-        // ❌ Onayı geri al (sadece admin yetkisi gerekebilir)
+        // 🟢 5. Admin onayı kaldırma
         [HttpPost]
-        public IActionResult RevokeApproval(int id)
+        public async Task<IActionResult> RevokeApproval(int id)
         {
-            var order = _context.Orders.FirstOrDefault(o => o.Id == id);
-            if (order == null)
-                return NotFound();
+            var order = await _context.Orders.FindAsync(id);
+            if (order == null) return NotFound();
 
+            order.Status = "Onay Bekleniyor";
             order.IsApprovedByFactory = false;
-            _context.SaveChanges();
+            order.IsApprovedBySales = false;
+            await _context.SaveChangesAsync();
+
+            _context.OrderStatusHistories.Add(new OrderStatusHistory
+            {
+                OrderHeaderId = id,
+                Status = "Onay Kaldırıldı",
+                ChangedBy = HttpContext.Session.GetString("UserEmail") ?? "admin"
+            });
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("Index");
         }

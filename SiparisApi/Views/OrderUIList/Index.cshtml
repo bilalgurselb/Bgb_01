@@ -1,51 +1,103 @@
-﻿@{
+﻿@model IEnumerable<SiparisApi.Models.OrderHeader>
+@using System.Security.Claims
+
+@{
     ViewData["Title"] = "Sipariş Listesi";
+    var userRole = User.FindFirst("role")?.Value ?? "User";
+    var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
 }
 
-<h1 class="page-title">Sipariş Listesi</h1>
+<h2 class="mb-3">📦 Sipariş Listesi</h2>
 
-<div class="table-wrapper">
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Müşteri</th>
-                <th>Ürün</th>
-                <th>Miktar</th>
-                <th>Durum</th>
-                <th>Tarih</th>
-                <th>İşlemler</th>
+<table class="table table-hover align-middle shadow-sm">
+    <thead class="table-light">
+        <tr>
+            <th>ID</th>
+            <th>Müşteri</th>
+            <th>Durum</th>
+            <th>Oluşturan</th>
+            <th>Oluşturulma</th>
+            <th>Güncelleme</th>
+            <th>Fiyat</th>
+            <th>İşlem</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var order in Model)
+        {
+            var rowClass = order.IsNew ? "new-order" :
+            order.IsUpdated ? "updated-order" : "";
+
+            <tr class="@rowClass">
+                <td>
+                    @if (order.IsNew)
+                    {
+                        <span class="badge bg-warning text-dark me-1">Yeni</span>
+                    }
+                    else if (order.IsUpdated)
+                    {
+                        <span class="badge bg-info text-dark me-1">Güncellendi</span>
+                    }
+                    @order.Id
+                </td>
+                <td>@order.CustomerId</td>
+                <td>
+                    <span class="badge rounded-pill"
+                          style="background-color:@order.StatusColor; color:white;">
+                        @order.Status
+                    </span>
+                </td>
+                <td>@order.CreatedBy?.AllowedEmail?.NameSurname</td>
+                <td>@order.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                <td>@order.UpdatedAt?.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+
+                <td>
+                    @if (userRole == "Admin" || userRole == "Yönetici")
+                    {
+                        <span>@order.Items?.Sum(i => i.Price * i.Quantity).ToString("C2")</span>
+                    }
+                    else if (order.CreatedBy?.Email == userEmail)
+                    {
+                        <span>@order.Items?.Sum(i => i.Price * i.Quantity).ToString("C2")</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                </td>
+
+                <td>
+                    <a asp-controller="OrdersUI" asp-action="Edit" asp-route-id="@order.Id" class="btn btn-sm btn-primary">
+                        Düzenle
+                    </a>
+                    <a asp-controller="OrdersUI" asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-secondary">
+                        Görüntüle
+                    </a>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td>@item.Id</td>
-                    <td>@item.CustomerName</td>
-                    <td>@item.ProductName</td>
-                    <td>@item.Quantity</td>
-                    <td>
-                        @if (item.Status == "Tamamlandı")
-                        {
-                            <span class="status success">Teslim Edildi</span>
-                        }
-                        else if (item.Status == "Hazırlanıyor")
-                        {
-                            <span class="status warning">Hazırlanıyor</span>
-                        }
-                        else
-                        {
-                            <span class="status danger">İptal</span>
-                        }
-                    </td>
-                    <td>@item.OrderDate.ToString("dd/MM/yyyy")</td>
-                    <td>
-                        <a class="btn btn-primary" asp-action="Edit" asp-route-id="@item.Id">Düzenle</a>
-                        <a class="btn btn-danger" asp-action="Delete" asp-route-id="@item.Id">Sil</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
+        }
+    </tbody>
+</table>
+
+@section Styles {
+    <style>
+        .new-order {
+            background-color: #fff9d6 !important;
+            transition: background-color 1s ease;
+        }
+
+        .updated-order {
+            background-color: #e6f7ff !important;
+            transition: background-color 1s ease;
+        }
+
+        table {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th {
+            background-color: #f8f9fa;
+        }
+    </style>
+}

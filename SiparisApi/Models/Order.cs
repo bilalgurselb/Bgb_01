@@ -20,6 +20,7 @@ namespace SiparisApi.Models
         public bool IsApprovedBySales { get; set; } = false;   // Satış onayı
         public bool IsChanged { get; set; } = false;        // Değişiklik işareti
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;  // Oluşturulma zamanı
+        public string Status { get; internal set; }
     }
 }
 

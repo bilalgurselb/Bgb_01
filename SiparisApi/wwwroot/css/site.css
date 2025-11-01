@@ -481,4 +481,93 @@ input[type=text], input[type=password], select {
             background: #168CBF;
         }
 
+/* ========== MOBİL UYUMLULUK ========== */
+
+@media (max-width: 768px) {
+
+    /* Navbar */
+    header.navbar {
+        flex-wrap: wrap;
+        text-align: center;
+    }
+
+    header .navbar-brand {
+        font-size: 1.1rem;
+        flex: 1 1 100%;
+        margin-bottom: 5px;
+    }
+
+    header .btn {
+        padding: 4px 10px;
+        font-size: 0.85rem;
+    }
+
+    /* Menü */
+    nav.navbar {
+        font-size: 0.9rem;
+    }
+
+    .nav-link {
+        padding: 8px 12px !important;
+    }
+
+    /* Tabloyu kart haline getiriyoruz */
+    table.table {
+        border: none !important;
+    }
+
+        table.table thead {
+            display: none;
+        }
+
+        table.table tbody tr {
+            display: block;
+            background-color: #fff;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+        }
+
+        table.table tbody td {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 10px;
+            border: none !important;
+            font-size: 0.9rem;
+        }
+
+            table.table tbody td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #333;
+            }
+
+    /* Etiketler */
+    .badge {
+        font-size: 0.8rem;
+        padding: 4px 8px;
+    }
+
+    /* Butonlar */
+    .btn-sm {
+        font-size: 0.8rem;
+        padding: 4px 8px;
+        margin-top: 5px;
+    }
+
+    /* Renkli satır arka planları */
+    .new-order {
+        border-left: 6px solid #e6a700;
+    }
+
+    .updated-order {
+        border-left: 6px solid #007BFF;
+    }
+
+    /* Sayfa içi boşluk */
+    .container {
+        padding: 10px;
+    }
+}
 

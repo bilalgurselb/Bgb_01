@@ -6,6 +6,19 @@
     <Configurations>Debug;Release;Bilal Yapılandırma</Configurations>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Docs\**" />
+    <Content Remove="Docs\**" />
+    <EmbeddedResource Remove="Docs\**" />
+    <None Remove="Docs\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Controllers\OrdersUIController.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Controllers\Controllers.zip" />
+    <None Remove="Migrations\Migrations.zip" />
+    <None Remove="Migrations\Migrations2.zip" />
+    <None Remove="Models\Models.zip" />
     <None Remove="SiparisApi.zip" />
   </ItemGroup>
   <ItemGroup>
