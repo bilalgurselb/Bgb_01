@@ -1,9 +1,24 @@
-﻿@using System.Security.Claims
+﻿@using Microsoft.AspNetCore.Identity
+@inject IHttpContextAccessor HttpContextAccessor
+
 @{
-    var userName = User.FindFirst("name")?.Value ?? "Ziyaretçi";
-    var userRole = User.FindFirst("role")?.Value ?? "User";
-    var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
-    var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
+    var isAuthenticated = HttpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false;
+    string userName = "";
+    string userRole = "";
+
+    if (isAuthenticated)
+    {
+        // Kullanıcı adı ve rol bilgilerini User.Claims üzerinden çekiyoruz
+        userName = HttpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "NameSurname")?.Value
+            ?? HttpContextAccessor.HttpContext.User.Identity?.Name
+            ?? "";
+
+        userRole = HttpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Role")?.Value ?? "";
+
+        // Saat bazlı selamlama
+        var hour = DateTime.Now.Hour;
+        ViewBag.Greeting = hour < 12 ? "Günaydın" : hour < 18 ? "Merhaba" : "İyi akşamlar";
+    }
 }
 
 <!DOCTYPE html>
@@ -11,23 +26,20 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>@ViewData["Title"] - SINTAN CHEMICALS Kimya</title>
-
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <title>@ViewData["Title"] - SINTAN CHEMICALS</title>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-
 <body>
     <header class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm px-3">
         <a class="navbar-brand fw-bold text-white" asp-controller="OrdersUIList" asp-action="Index">
-            🧾 Sintan Kimya
+            🧾 SINTAN CHEMICALS
         </a>
 
         <div class="ms-auto d-flex align-items-center text-white">
             @if (isAuthenticated)
             {
                 <span class="me-3">
-                    Hoş geldiniz <strong>@userName</strong> <small>(@userRole)</small>
+                    @ViewBag.Greeting <strong>@userName</strong> <small>(@userRole)</small>
                 </span>
                 <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
                     <button type="submit" class="btn btn-sm btn-light text-dark">Çıkış</button>
@@ -40,72 +52,15 @@
         </div>
     </header>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom shadow-sm">
-        <div class="container-fluid">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link" asp-controller="OrdersUIList" asp-action="Index">📦 Sipariş Listesi</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" asp-controller="OrdersUI" asp-action="Create">➕ Yeni Sipariş</a>
-                </li>
-
-                @if (userRole == "Admin" || userRole == "Yönetici")
-                {
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="AdminUI" asp-action="Dashboard">⚙️ Yönetim Paneli</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="AdminUI" asp-action="Logs">🪵 Loglar</a>
-                    </li>
-                }
-
-                @if (userRole == "Admin")
-                {
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="UsersUI" asp-action="Manage">👤 Kullanıcı Yönetimi</a>
-                    </li>
-                }
-            </ul>
-
-            @if (isAuthenticated)
-            {
-                <div class="d-flex align-items-center">
-                    <span id="orderBadge" class="badge bg-warning text-dark me-2" style="display:none;">
-                        🔔 Yeni güncellemeler var
-                    </span>
-                </div>
-            }
-        </div>
-    </nav>
-
-    <div class="container py-4">
+    <div class="container mt-4">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="footer bg-light border-top py-3 mt-auto">
-        <div class="container text-center">
-            <small class="text-muted">© @DateTime.Now.Year SINTAN CHEMICALS | Sipariş Yönetim Sistemi</small>
-        </div>
+    <footer class="border-top footer text-muted text-center py-2">
+        © 2025 SINTAN CHEMICALS — <small>Bilal Börekci</small>
     </footer>
-
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-        // 🔔 Basit ön bildirim (demo amaçlı) — istersen API'den dinamik hale getirebiliriz.
-        document.addEventListener("DOMContentLoaded", function () {
-            fetch('/api/orders/list')
-                .then(r => r.ok ? r.json() : [])
-                .then(data => {
-                    if (data && data.some(o => o.isNew || o.isUpdated)) {
-                        document.getElementById("orderBadge").style.display = "inline-block";
-                    }
-                })
-                .catch(err => console.log("Bildirim kontrol hatası:", err));
-        });
-    </script>
 
     @RenderSection("Scripts", required: false)
 </body>
