@@ -569,5 +569,36 @@ input[type=text], input[type=password], select {
     .container {
         padding: 10px;
     }
+    /* === LOGIN RESPONSIVE FIX === */
+    @media (max-width: 768px) {
+
+        .login-container {
+            width: 100%;
+            max-width: 95%;
+            margin: 0 auto;
+            padding: 0 10px;
+        }
+
+            .login-container form {
+                width: 100%;
+            }
+
+            .login-container input[type="text"],
+            .login-container input[type="email"],
+            .login-container input[type="password"] {
+                width: 100% !important;
+                box-sizing: border-box;
+                padding: 12px;
+                font-size: 1rem;
+            }
+
+            .login-container button {
+                width: 100%;
+                padding: 12px;
+                font-size: 1rem;
+                border-radius: 6px;
+            }
+    }
+
 }
 
