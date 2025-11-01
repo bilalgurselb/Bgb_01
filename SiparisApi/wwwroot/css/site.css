@@ -667,6 +667,10 @@ input[type=text], input[type=password], select {
             font-size: 1rem;
             padding: 12px;
             border-radius: 6px;
+
+            background-color: #0078D4; /* Sintan mavisi */
+            color: white;
+            border: none;
         }
 
     }
