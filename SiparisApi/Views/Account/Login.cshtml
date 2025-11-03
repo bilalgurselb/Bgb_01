@@ -1,226 +1,136 @@
-﻿@using Microsoft.AspNetCore.Identity
-@inject IHttpContextAccessor HttpContextAccessor
-
-@{
-    var isAuthenticated = HttpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false;
-    string userName = "";
-    string userRole = "";
-    string currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
-    string currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
-
-    if (isAuthenticated)
-    {
-        userName = HttpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "NameSurname")?.Value
-            ?? HttpContextAccessor.HttpContext.User.Identity?.Name
-            ?? "";
-
-        userRole = HttpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Role")?.Value ?? "";
-
-        var hour = DateTime.Now.Hour;
-        ViewBag.Greeting = hour < 12 ? "Günaydın" : hour < 18 ? "Merhaba" : "İyi akşamlar";
-    }
+﻿@{
+    ViewData["Title"] = "Giriş Yap";
+    Layout = null;
 }
 
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>@ViewData["Title"] - SINTAN CHEMICALS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Giriş Yap - SINTAN CHEMICALS</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+</head>
 
-    <!-- Bootstrap & FontAwesome -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+@{
+            // Razor derleyicisinin <body> etiketini "TagHelper" sanmaması için string olarak verdik.
+            string bodyStyle = "background:#fff; display:flex; justify-content:center; align-items:center; height:100vh;";
+}
 
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Inter', sans-serif;
-            padding-bottom: 70px; /* alt menü için boşluk bırak */
-        }
+<body style="@bodyStyle">
+    <div style="width:100%; max-width:360px; text-align:center;">
+        <img src="~/images/logo_login.png" alt="SINTAN CHEMICALS" style="width:200px; margin-bottom:20px;" />
+        <h2 style="margin-bottom:20px;">Sipariş Yönetim Sistemi</h2>
 
-        .navbar-brand {
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
+        <form id="loginForm" method="post" action="/Account/Login">
+            <input type="text" name="Email" placeholder="E-posta" autocomplete="email" required />
+            <input type="password" name="Password" placeholder="Şifre" autocomplete="current-password" required />
 
-        /* 🔹 Aktif menü vurgusu */
-        .nav-link.active {
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 6px;
-        }
 
-        footer {
-            border-top: 1px solid #ddd;
-            font-size: 0.85rem;
-            color: #777;
-            margin-top: 40px;
-        }
+            <!-- 🔹 Bu alan başlangıçta gizli olacak -->
+            <input type="password" name="ConfirmPassword" id="confirmPassword" placeholder="Şifre (Tekrar)" style="display:none;" />
 
-        /* 📱 Mobil optimize */
-        @@media (max-width: 768px) {
-            .navbar-brand
+            <button type="submit" class="btn btn-primary" style="width:100%;">Giriş Yap</button>
+        </form>
 
+        @if (ViewBag.Error != null)
         {
-            font-size: 1rem;
+            <div style="color:red; margin-top:15px;">@ViewBag.Error</div>
         }
 
-        .greeting-text {
-            display: block;
-            font-size: 0.85rem;
-            text-align: right;
-        }
+        <p style="margin-top:20px; font-size:13px; color:#777;">
+            © @DateTime.Now.Year SINTAN CHEMICALS by Bilal Borekci
+        </p>
+    </div>
 
-        .navbar .btn {
-            padding: 6px 10px;
-            font-size: 0.85rem;
-        }
+    <script>
+        // --- LOGIN ---
+        async function login() {
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value.trim();
 
-        }
-
-        /* 🔹 Mobil alt menü */
-        .mobile-nav {
-            display: none;
-        }
-
-        @@media (max-width: 768px) {
-            .mobile-nav
-
-        {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 60px;
-            background-color: #0d6efd;
-            box-shadow: 0 -2px 6px rgba(0,0,0,0.15);
-            z-index: 9999;
-        }
-
-        .mobile-nav a {
-            color: white;
-            text-align: center;
-            font-size: 0.8rem;
-            text-decoration: none;
-            flex: 1;
-        }
-
-            .mobile-nav a.active {
-                color: #ffd966;
+            if (!email || !password) {
+                alert("E-posta ve şifre boş olamaz!");
+                return;
             }
 
-        .mobile-nav i {
-            font-size: 1.3rem;
-            display: block;
+            try {
+                const response = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    sessionStorage.setItem("AccessToken", data.token);
+                    window.location.href = '@Url.Action("Index", "OrdersUIList")';
+                } else {
+                    const errorText = await response.text();
+                    alert(`Giriş başarısız: ${errorText}`);
+                }
+            } catch (err) {
+                alert("Sunucuya bağlanılamadı: " + err.message);
+            }
         }
 
+        // --- SIGNUP ---
+        async function signup() {
+            const email = document.getElementById("signupEmail").value.trim();
+            const password = document.getElementById("signupPassword").value.trim();
+            const password2 = document.getElementById("signupPassword2").value.trim();
+
+            if (!email || !password || !password2) {
+                alert("Tüm alanları doldurmalısınız!");
+                return;
+            }
+
+            if (password !== password2) {
+                alert("Şifreler eşleşmiyor!");
+                return;
+            }
+
+            try {
+                const response = await fetch("/api/auth/signup", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (response.ok) {
+                    alert("Kayıt işlemi tamamlandı. Artık giriş yapabilirsiniz.");
+                    // Formu sıfırla ve login moduna dön
+                    document.getElementById("signupForm").reset();
+                    toggleForms("login");
+                } else {
+                    const errorText = await response.text();
+                    alert(`Kayıt başarısız: ${errorText}`);
+                }
+            } catch (err) {
+                alert("Sunucuya bağlanılamadı: " + err.message);
+            }
         }
-    </style>
-</head>
-<body>
-    <!-- 🔹 ÜST NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm px-3">
-        <div class="container-fluid">
-            <a class="navbar-brand text-white" asp-controller="OrdersUIList" asp-action="Index">
-                🧾 SINTAN CHEMICALS
-            </a>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Menüyü Aç/Kapat">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+        // --- FORM GEÇİŞİ (Login <-> Signup) ---
+        function toggleForms(target) {
+            const loginForm = document.getElementById("loginForm");
+            const signupForm = document.getElementById("signupForm");
 
-            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                <ul class="navbar-nav align-items-lg-center">
-                    <li class="nav-item">
-                        <a class="nav-link text-white @(currentController == "OrdersUIList" && currentAction == "Index" ? "active" : "")"
-                           asp-controller="OrdersUIList" asp-action="Index">
-                            <i class="fas fa-list"></i> Siparişler
-                        </a>
-                    </li>
+            if (target === "signup") {
+                loginForm.style.display = "none";
+                signupForm.style.display = "block";
+            } else {
+                signupForm.style.display = "none";
+                loginForm.style.display = "block";
+            }
+        }
+    </script>
 
-                    <li class="nav-item">
-                        <a class="nav-link text-white @(currentController == "OrdersUIList" && currentAction == "Create" ? "active" : "")"
-                           asp-controller="OrdersUIList" asp-action="Create">
-                            <i class="fas fa-plus-circle"></i> Yeni Sipariş
-                        </a>
-                    </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link text-white @(currentController == "UsersUI" ? "active" : "")"
-                           asp-controller="UsersUI" asp-action="Manage">
-                            <i class="fas fa-user"></i> Kullanıcı
-                        </a>
-                    </li>
-
-                    @if (isAuthenticated)
-                    {
-                        <li class="nav-item ms-lg-3 text-white greeting-text">
-                            @ViewBag.Greeting <strong>@userName</strong> <small>(@userRole)</small>
-                        </li>
-                        <li class="nav-item">
-                            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-light ms-2 text-dark">
-                                    <i class="fas fa-sign-out-alt"></i> Çıkış
-                                </button>
-                            </form>
-                        </li>
-                    }
-                    else
-                    {
-                        <li class="nav-item">
-                            <a asp-controller="Account" asp-action="Login" class="btn btn-sm btn-light text-dark">
-                                <i class="fas fa-sign-in-alt"></i> Giriş Yap
-                            </a>
-                        </li>
-                    }
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- 🔹 ANA İÇERİK -->
-    <div class="container mt-4">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <!-- 🔹 ALT SABİT MOBİL MENÜ -->
-    <div class="mobile-nav">
-        <a asp-controller="OrdersUIList" asp-action="Index"
-           class="@(currentController == "OrdersUIList" && currentAction == "Index" ? "active" : "")">
-            <i class="fas fa-list"></i>
-            <span>Liste</span>
-        </a>
-
-        <a asp-controller="OrdersUIList" asp-action="Create"
-           class="@(currentController == "OrdersUIList" && currentAction == "Create" ? "active" : "")">
-            <i class="fas fa-plus-circle"></i>
-            <span>Yeni</span>
-        </a>
-
-        <a asp-controller="UsersUI" asp-action="Manage"
-           class="@(currentController == "UsersUI" ? "active" : "")">
-            <i class="fas fa-user"></i>
-            <span>Hesap</span>
-        </a>
-
-        <a asp-controller="Account" asp-action="Logout">
-            <i class="fas fa-sign-out-alt"></i>
-            <span>Çıkış</span>
-        </a>
-    </div>
-
-    <footer class="footer text-muted text-center py-2">
-        © @DateTime.Now.Year SINTAN CHEMICALS — <small>Bilal Börekci</small>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    @RenderSection("Scripts", required: false)
 </body>
 </html>
