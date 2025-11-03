@@ -83,7 +83,7 @@ app.Use(async (context, next) =>
 
     // API veya yönetim ekranlarına doğrudan erişim denemelerini engelle
     if (string.IsNullOrEmpty(token) &&
-        (path!.StartsWith("/api/") || path!.StartsWith("/admin") || path!.StartsWith("/ordersui")))
+        (path!.StartsWith("/api/") || path!.StartsWith("/admin") || path!.StartsWith("/ordersui") || path!.StartsWith("/ordersuilist")))
     {
         if (!path.StartsWith("/account/login") && !path.StartsWith("/api/auth"))
         {
