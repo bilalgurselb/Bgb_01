@@ -44,70 +44,92 @@
     </div>
 
     <script>
-        const form = document.getElementById('loginForm');
-        const confirmPasswordInput = document.getElementById('confirmPassword');
-
-        form.addEventListener('submit', async function (e) {
-            e.preventDefault();
-
-            const email = form.querySelector('[name="Email"]').value.trim();
-            const password = form.querySelector('[name="Password"]').value.trim();
-            const confirmPassword = confirmPasswordInput.value.trim();
+        // --- LOGIN ---
+        async function login() {
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value.trim();
 
             if (!email || !password) {
-                alert("E-posta ve şifre zorunludur.");
-                return;
-            }
-
-            // Eğer ikinci kutu görünüyorsa ve şifreler uyuşmuyorsa
-            if (confirmPasswordInput.style.display !== "none" && password !== confirmPassword) {
-                alert("Şifreler uyuşmuyor!");
+                alert("E-posta ve şifre boş olamaz!");
                 return;
             }
 
             try {
-                // 🔹 Kullanıcı sistemde kayıtlı mı kontrol et
-                const check = await fetch(`https://bilalgurseliparis-eyehgshwhfg4a7ew.northeurope-01.azurewebsites.net/api/Auth/checkuser?email=${encodeURIComponent(email)}`);
+                const response = await fetch("/api/auth/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ email, password })
+                });
 
-                // 🔹 Allowed listede ama kayıtlı değil → ikinci kutuyu göster
-                if (check.status === 404) {
-                    if (confirmPasswordInput.style.display === "none") {
-                        confirmPasswordInput.style.display = "block";
-                        alert("Bu e-posta kayıt listesinde, lütfen şifrenizi iki kez girerek kayıt olun.");
-                        return;
-                    } else {
-                        // 🔹 Kullanıcı iki şifreyi girdi → signup çağrısı yap
-                        const signupRes = await fetch(`https://bilalgurseliparis-eyehgshwhfg4a7ew.northeurope-01.azurewebsites.net/api/Auth/signup`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ Email: email, Password: password })
-                        });
-
-                        if (signupRes.ok) {
-                            alert("Kayıt başarılı! Sisteme giriş yapılıyor...");
-                            form.submit(); // Girişe devam
-                        } else {
-                            alert("Kayıt başarısız: " + signupRes.status);
-                        }
-                        return;
-                    }
+                if (response.ok) {
+                    const data = await response.json();
+                    sessionStorage.setItem("AccessToken", data.token);
+                    window.location.href = "/OrdersUIList/Index";
+                } else {
+                    const errorText = await response.text();
+                    alert(`Giriş başarısız: ${errorText}`);
                 }
-
-                // 🔹 Hiç Allowed listede değilse
-                if (check.status === 400) {
-                    alert("Bu e-posta sistemde tanımlı değil.");
-                    return;
-                }
-
-                // 🔹 Kayıtlı kullanıcı → normal login işlemi
-                form.submit();
-
             } catch (err) {
-                console.error(err);
-                alert("Sunucuya ulaşılamadı. Lütfen tekrar deneyin.");
+                alert("Sunucuya bağlanılamadı: " + err.message);
             }
-        });
+        }
+
+        // --- SIGNUP ---
+        async function signup() {
+            const email = document.getElementById("signupEmail").value.trim();
+            const password = document.getElementById("signupPassword").value.trim();
+            const password2 = document.getElementById("signupPassword2").value.trim();
+
+            if (!email || !password || !password2) {
+                alert("Tüm alanları doldurmalısınız!");
+                return;
+            }
+
+            if (password !== password2) {
+                alert("Şifreler eşleşmiyor!");
+                return;
+            }
+
+            try {
+                const response = await fetch("/api/auth/signup", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (response.ok) {
+                    alert("Kayıt işlemi tamamlandı. Artık giriş yapabilirsiniz.");
+                    // Formu sıfırla ve login moduna dön
+                    document.getElementById("signupForm").reset();
+                    toggleForms("login");
+                } else {
+                    const errorText = await response.text();
+                    alert(`Kayıt başarısız: ${errorText}`);
+                }
+            } catch (err) {
+                alert("Sunucuya bağlanılamadı: " + err.message);
+            }
+        }
+
+        // --- FORM GEÇİŞİ (Login <-> Signup) ---
+        function toggleForms(target) {
+            const loginForm = document.getElementById("loginForm");
+            const signupForm = document.getElementById("signupForm");
+
+            if (target === "signup") {
+                loginForm.style.display = "none";
+                signupForm.style.display = "block";
+            } else {
+                signupForm.style.display = "none";
+                loginForm.style.display = "block";
+            }
+        }
     </script>
+
 
 </body>
 </html>
