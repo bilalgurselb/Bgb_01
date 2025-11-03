@@ -318,4 +318,23 @@ select {
     .footer {
         font-size: 0.8rem;
     }
+    /* Navbar logusu */
+    .brand-logo {
+        height: 28px;
+        width: auto;
+    }
+
+    @media (max-width: 768px) {
+        .brand-logo {
+            height: 24px;
+        }
+    }
+
+    /* Login logusu */
+    .login-logo {
+        width: 180px;
+        max-width: 60vw;
+        height: auto;
+    }
+
 }
