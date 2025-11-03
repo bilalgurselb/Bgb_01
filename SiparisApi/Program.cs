@@ -76,6 +76,7 @@ app.UseCors("Default");
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+/*
 // 🚫 Login olmadan doğrudan erişimi engelle
 app.Use(async (context, next) =>
 {
@@ -156,7 +157,7 @@ button:hover {
 
     await next();
 });
-
+*/
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();

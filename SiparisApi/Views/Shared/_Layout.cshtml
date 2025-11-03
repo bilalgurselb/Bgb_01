@@ -71,45 +71,77 @@
         }
 
         }
+
+        .navbar {
+            min-height: 50px;
+            padding-top: 6px;
+            padding-bottom: 6px;
+        }
+
+        .navbar-brand {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .navbar-nav .nav-link {
+            font-size: 0.9rem;
+            padding: 6px 10px;
+            transition: color 0.2s ease-in-out;
+        }
+
+            .navbar-nav .nav-link:hover {
+                color: #ffd966 !important;
+            }
+
+        @@media (max-width: 768px) {
+            .navbar-brand
+
+        {
+            justify-content: center;
+            margin: auto;
+        }
+
+        .navbar img {
+            height: 26px;
+        }
+
+        }
     </style>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm px-3">
-            <div class="container-fluid">
-                <a class="navbar-brand text-white" asp-controller="OrdersUIList" asp-action="Index">
-                    🧾 SINTAN CHEMICALS
+        <nav class="navbar navbar-expand-lg navbar-dark shadow-sm px-2" style="background-color:#0054A6;">
+            <div class="container-fluid d-flex justify-content-between align-items-center">
+                <a class="navbar-brand d-flex align-items-center mx-auto mx-lg-0 text-white" asp-controller="OrdersUIList" asp-action="Index">
+                    <img src="~/images/sintan-logo.png" alt="Sintan Logo" class="me-2" style="height:28px;">
+                    <span class="fw-semibold d-none d-sm-inline" style="letter-spacing:0.5px;">SINTAN CHEMICALS</span>
                 </a>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                         aria-controls="navbarNav" aria-expanded="false" aria-label="Menüyü Aç/Kapat">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                     <ul class="navbar-nav align-items-lg-center">
-
                         <li class="nav-item">
                             <a class="nav-link text-white" asp-controller="OrdersUIList" asp-action="Index">
                                 <i class="fas fa-list"></i> Siparişler
                             </a>
                         </li>
-
                         <li class="nav-item">
                             <a class="nav-link text-white" asp-controller="OrdersUIList" asp-action="Create">
-                                <i class="fas fa-plus-circle"></i> Yeni Sipariş
+                                <i class="fas fa-plus-circle" style="color:#F47C20;"></i> Yeni Sipariş
                             </a>
                         </li>
-
                         <li class="nav-item">
                             <a class="nav-link text-white" asp-controller="UsersUI" asp-action="Manage">
-                                <i class="fas fa-user"></i> Kullanıcı
+                                <i class="fas fa-user" style="color:#5BB85D;"></i> Kullanıcı
                             </a>
                         </li>
-
                         @if (isAuthenticated)
                         {
-                            <li class="nav-item ms-lg-3 text-white greeting-text">
+                            <li class="nav-item ms-lg-3 text-white greeting-text small">
                                 @ViewBag.Greeting <strong>@userName</strong> <small>(@userRole)</small>
                             </li>
                             <li class="nav-item">
@@ -132,6 +164,7 @@
                 </div>
             </div>
         </nav>
+
     </header>
 
     <div class="container mt-4">
