@@ -1,91 +1,71 @@
 ﻿@model IEnumerable<SiparisApi.Models.OrderHeader>
-
 @using System.Security.Claims
-@if (ViewBag.EmptyMessage != null)
-{
-    <div class="alert alert-info text-center">
-        @ViewBag.EmptyMessage
-    </div>
-}
 @{
     ViewData["Title"] = "Sipariş Listesi";
+    Layout = "_Layout"; 
     var userRole = User.FindFirst("role")?.Value ?? "User";
-    var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+    var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
 }
 
+@if (ViewBag.EmptyMessage != null)
+{
+    <!-- 📱 Mobil uyumlu ortalanmış boş liste ekranı -->
+    <div class="d-flex justify-content-center align-items-center text-center" style="height:70vh;">
+        <div>
+            <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+            <h4 class="fw-normal text-secondary">@ViewBag.EmptyMessage</h4>
 
-
-<h2 class="mb-3">📦 Sipariş Listesi</h2>
-
-<table class="table table-hover align-middle shadow-sm">
-    <thead class="table-light">
-        <tr>
-            <th>ID</th>
-            <th>Müşteri</th>
-            <th>Durum</th>
-            <th>Oluşturan</th>
-            <th>Oluşturulma</th>
-            <th>Güncelleme</th>
-            <th>Fiyat</th>
-            <th>İşlem</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var order in Model)
-        {
-            var rowClass = order.IsNew ? "new-order" :
-            order.IsUpdated ? "updated-order" : "";
-
-            <tr class="@rowClass">
-                <td>
-                    @if (order.IsNew)
+            <div class="mt-4">
+                <a asp-controller="OrdersUIList" asp-action="Create" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Yeni Sipariş Oluştur
+                </a>
+            </div>
+        </div>
+    </div>
+}
+else{<!-- 🧾 Sadece sipariş varsa tabloyu göster -->
+    <div class="container mt-4">
+        <h3 class="mb-3 text-center">📦 Sipariş Listesi</h3>
+        <div class="table-responsive shadow-sm">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Müşteri</th>
+                        <th>Durum</th>
+                        <th>Oluşturan</th>
+                        <th>Oluşturulma</th>
+                        <th>Güncelleme</th>
+                        <th>Fiyat</th>
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model)
                     {
-                        <span class="badge bg-warning text-dark me-1">Yeni</span>
+                        <tr>
+                            <td>@order.Id</td>
+                            <td>@order.CustomerId</td>
+                            <td>
+                                <span class="badge rounded-pill" style="background-color:@order.StatusColor;">@order.Status</span>
+                            </td>
+                            <td>@order.CreatedBy?.AllowedEmail?.NameSurname</td>
+                            <td>@order.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>@order.UpdatedAt?.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>@order.Items?.Sum(i => i.Price * i.Quantity).ToString("C2")</td>
+                            <td>
+                                <a asp-controller="OrdersUIList" asp-action="Edit" asp-route-id="@order.Id" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>
                     }
-                    else if (order.IsUpdated)
-                    {
-                        <span class="badge bg-info text-dark me-1">Güncellendi</span>
-                    }
-                    @order.Id
-                </td>
-                <td>@order.CustomerId</td>
-                <td>
-                    <span class="badge rounded-pill"
-                          style="background-color:@order.StatusColor; color:white;">
-                        @order.Status
-                    </span>
-                </td>
-                <td>@order.CreatedBy?.AllowedEmail?.NameSurname</td>
-                <td>@order.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
-                <td>@order.UpdatedAt?.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
-
-                <td>
-                    @if (userRole == "Admin" || userRole == "Yönetici")
-                    {
-                        <span>@order.Items?.Sum(i => i.Price * i.Quantity).ToString("C2")</span>
-                    }
-                    else if (order.CreatedBy?.Email == userEmail)
-                    {
-                        <span>@order.Items?.Sum(i => i.Price * i.Quantity).ToString("C2")</span>
-                    }
-                    else
-                    {
-                        <span class="text-muted">-</span>
-                    }
-                </td>
-
-                <td>
-                    <a asp-controller="OrdersUIList" asp-action="Edit" asp-route-id="@order.Id" class="btn btn-sm btn-primary">
-                        Düzenle
-                    </a>
-                    <a asp-controller="OrdersUIList" asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-secondary">
-                        Görüntüle
-                    </a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+   
 
 @section Styles {
     <style>
