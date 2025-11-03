@@ -21,7 +21,7 @@ namespace SiparisApi.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var token = HttpContext.Session.GetString("AccessToken") ?? Request.Cookies["AccessToken"];
+            var token = HttpContext.Session.GetString("AccessToken");
             if (token == null)
                 return RedirectToAction("Login", "Account");
 
@@ -29,18 +29,28 @@ namespace SiparisApi.Controllers
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             var baseUrl = _config["ApiSettings:BaseUrl"];
 
-            // API tarafında mevcut olan endpoint
             var response = await client.GetAsync($"{baseUrl}/api/orders/list");
-            if (!response.IsSuccessStatusCode)
-                return View("IndexO", Enumerable.Empty<OrderHeader>());
-
             var json = await response.Content.ReadAsStringAsync();
 
-            // View'in beklediği tipe uyduruyoruz (IndexO.cshtml -> IEnumerable<OrderHeader>)
-            var orders = JsonSerializer.Deserialize<List<OrderHeader>>(json, new JsonSerializerOptions
+            List<OrderViewModel> orders = new();
+
+            if (response.IsSuccessStatusCode && !string.IsNullOrWhiteSpace(json))
             {
-                PropertyNameCaseInsensitive = true
-            }) ?? new List<OrderHeader>();
+                try
+                {
+                    orders = JsonSerializer.Deserialize<List<OrderViewModel>>(json,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<OrderViewModel>();
+                }
+                catch
+                {
+                    orders = new List<OrderViewModel>();
+                }
+            }
+
+            if (orders == null || !orders.Any())
+            {
+                ViewBag.EmptyMessage = "Şu anda kayıtlı sipariş bulunmamaktadır.";
+            }
 
             return View("IndexO", orders);
         }

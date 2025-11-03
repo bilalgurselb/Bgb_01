@@ -1,11 +1,18 @@
 ﻿@model IEnumerable<SiparisApi.Models.OrderHeader>
 @using System.Security.Claims
-
+@if (ViewBag.EmptyMessage != null)
+{
+    <div class="alert alert-info text-center">
+        @ViewBag.EmptyMessage
+    </div>
+}
 @{
     ViewData["Title"] = "Sipariş Listesi";
     var userRole = User.FindFirst("role")?.Value ?? "User";
     var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
 }
+
+
 
 <h2 class="mb-3">📦 Sipariş Listesi</h2>
 
