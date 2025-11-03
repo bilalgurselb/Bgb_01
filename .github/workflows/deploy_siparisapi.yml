@@ -28,9 +28,18 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      # 📦 Bağımlılıkları yükle
+     # ⚡ NuGet paketlerini cache'le
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+  # 📦 Bağımlılıkları yükle
       - name: Restore dependencies
         run: dotnet restore "${{ env.PROJECT_PATH }}"
+
 
       # 🧹 Yayın klasörünü SİL ve oluştur
       - name: Clean up old publish artifacts
@@ -51,6 +60,7 @@ jobs:
         run: >
           dotnet publish "${{ env.PROJECT_PATH }}" 
           --configuration Release 
+          --no-restore 
           --output "SiparisApi/publish"
 
 
