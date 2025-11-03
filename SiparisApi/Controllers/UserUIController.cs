@@ -2,6 +2,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using SiparisApi.Models;
 
 namespace SiparisApi.Controllers
 {
@@ -28,7 +29,7 @@ namespace SiparisApi.Controllers
 
             var response = await client.GetAsync($"{baseUrl}/api/users");
             var json = await response.Content.ReadAsStringAsync();
-            var users = JsonSerializer.Deserialize<List<UserViewModel>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var users = JsonSerializer.Deserialize<List<User>>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             return View(users);
         }
@@ -58,11 +59,5 @@ namespace SiparisApi.Controllers
         }
     }
 
-    public class UserViewModel
-    {
-        public int Id { get; set; }
-        public string Email { get; set; }
-        public string Role { get; set; }
-        public bool IsActive { get; set; }
-    }
+   
 }

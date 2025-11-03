@@ -1,8 +1,11 @@
-﻿@model SiparisApi.Controllers.OrderViewModel
+﻿@model SiparisApi.Models.OrderHeader
+
 @{
     ViewData["Title"] = "Sipariş Düzenle";
     Layout = "_Layout";
+    var items = Model.Items?.ToList() ?? new List<SiparisApi.Models.OrderItem>();
 }
+
 @if (TempData["Success"] != null)
 {
     <div class="alert alert-success">@TempData["Success"]</div>
@@ -11,6 +14,7 @@
 {
     <div class="alert alert-danger">@TempData["Error"]</div>
 }
+
 <div class="page-header d-flex justify-content-between align-items-center mb-3">
     <h3 class="page-title"><i class="fas fa-edit text-primary"></i> Sipariş Düzenle</h3>
     <a asp-action="Index" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Listeye Dön</a>
@@ -22,33 +26,87 @@
 
         <div class="form-group mb-3">
             <label>Müşteri</label>
-            <input type="text" id="customer" class="form-control" value="@Model.Customer" required />
-        </div>
-
-        <div class="form-group mb-3">
-            <label>Ürün</label>
-            <input type="text" id="product" class="form-control" value="@Model.Product" required />
-        </div>
-
-        <div class="form-group mb-3">
-            <label>Miktar</label>
-            <input type="number" id="quantity" step="0.01" class="form-control" value="@Model.Quantity" required />
-        </div>
-
-        <div class="form-group mb-3">
-            <label>Fiyat</label>
-            <input type="number" id="price" step="0.01" class="form-control" value="@Model.Price" required />
+            <input type="text" class="form-control" value="@Model.Customer?.CARI_ISIM" readonly />
         </div>
 
         <div class="form-group mb-3">
             <label>Durum</label>
             <select id="status" class="form-select">
-                <option value="0" @(Model.Status == 0 ? "selected" : "")>🟡 Onay Bekleniyor</option>
-                <option value="1" @(Model.Status == 1 ? "selected" : "")>🟢 Onaylandı / Üretimde</option>
-                <option value="2" @(Model.Status == 2 ? "selected" : "")>🔵 Üretildi</option>
-                <option value="3" @(Model.Status == 3 ? "selected" : "")>🟣 Teslim Edildi</option>
-                <option value="4" @(Model.Status == 4 ? "selected" : "")>🔴 İptal</option>
+                <option value="Onay Bekleniyor" selected="@((Model.Status ?? "") == "Onay Bekleniyor")">🟡 Onay Bekleniyor</option>
+                <option value="Onaylandı / Üretimde" selected="@((Model.Status ?? "") == "Onaylandı / Üretimde")">🟢 Onaylandı / Üretimde</option>
+                <option value="Üretildi" selected="@((Model.Status ?? "") == "Üretildi")">🔵 Üretildi</option>
+                <option value="Tamamlandı / Teslim Edildi" selected="@((Model.Status ?? "") == "Tamamlandı / Teslim Edildi")">🟣 Teslim Edildi</option>
+                <option value="İptal" selected="@((Model.Status ?? "") == "İptal")">🔴 İptal</option>
             </select>
+        </div>
+
+        <h5 class="mt-4 mb-2">🧾 Ürün Detayları</h5>
+
+        <table class="table table-bordered align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Ürün</th>
+                    <th>Miktar</th>
+                    <th>Fiyat</th>
+                    <th>Not</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (items.Count > 0)
+                {
+                    for (int i = 0; i < items.Count; i++)
+                    {
+                        <tr>
+                            <td>@(i + 1)</td>
+
+                            <td>
+                                <!-- Ürün adı alanın yoksa şimdilik ProductId gösteriyoruz -->
+                                <!-- Daha sonra SintanStok'tan ad çekmek için burayı güncelleriz -->
+                                <span class="text-muted">ProductId:</span> @items[i].ProductId
+                                <input type="hidden" name="Items[@i].Id" value="@items[i].Id" />
+                                <input type="hidden" name="Items[@i].ProductId" value="@items[i].ProductId" />
+                            </td>
+
+                            <td>
+                                <input type="number"
+                                       name="Items[@i].Quantity"
+                                       step="0.01"
+                                       value="@items[i].Quantity"
+                                       class="form-control" />
+                            </td>
+
+                            <td>
+                                <input type="number"
+                                       name="Items[@i].Price"
+                                       step="0.01"
+                                       value="@items[i].Price"
+                                       class="form-control" />
+                            </td>
+
+                            <td>
+                                <input type="text"
+                                       name="Items[@i].Description"
+                                       value="@items[i].Description"
+                                       class="form-control" />
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">
+                            Bu siparişe ait ürün detayı bulunamadı.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="form-group mb-3">
+            <label>Teslim Yeri</label>
+            <input type="text" id="placeOfDelivery" class="form-control" value="@Model.PlaceOfDelivery" />
         </div>
 
         <button type="submit" class="btn btn-success w-100">
@@ -68,16 +126,36 @@
                 return;
             }
 
+            const orderId = parseInt(document.getElementById("orderId").value);
+            const status = document.getElementById("status").value;
+            const placeOfDelivery = document.getElementById("placeOfDelivery").value;
+
+            // Ürün satırlarını oku (Id ve ProductId dahil!)
+            const rows = Array.from(document.querySelectorAll("tbody tr"));
+            const items = rows.map((row, idx) => {
+                const q = row.querySelector(`input[name="Items[${idx}].Quantity"]`);
+                const p = row.querySelector(`input[name="Items[${idx}].Price"]`);
+                const d = row.querySelector(`input[name="Items[${idx}].Description"]`);
+                const id = row.querySelector(`input[name="Items[${idx}].Id"]`);
+                const pid = row.querySelector(`input[name="Items[${idx}].ProductId"]`);
+
+                return {
+                    id: id ? parseInt(id.value) : 0,
+                    productId: pid ? parseInt(pid.value) : 0,
+                    quantity: q ? parseFloat(q.value) : 0,
+                    price: p ? parseFloat(p.value) : 0,
+                    description: d ? d.value : ""
+                };
+            });
+
             const order = {
-                Id: parseInt(document.getElementById("orderId").value),
-                Customer: document.getElementById("customer").value,
-                Product: document.getElementById("product").value,
-                Quantity: parseFloat(document.getElementById("quantity").value),
-                Price: parseFloat(document.getElementById("price").value),
-                Status: parseInt(document.getElementById("status").value)
+                id: orderId,
+                status: status,
+                placeOfDelivery: placeOfDelivery,
+                items: items
             };
 
-            const response = await fetch("/OrdersUIList/Edit", {
+            const response = await fetch(`/OrdersUIList/Edit/${orderId}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

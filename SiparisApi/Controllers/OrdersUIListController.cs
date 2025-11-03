@@ -32,18 +32,18 @@ namespace SiparisApi.Controllers
             var response = await client.GetAsync($"{baseUrl}/api/orders/list");
             var json = await response.Content.ReadAsStringAsync();
 
-            List<OrderViewModel> orders = new();
+            List<OrderHeader> orders = new();
 
             if (response.IsSuccessStatusCode && !string.IsNullOrWhiteSpace(json))
             {
                 try
                 {
-                    orders = JsonSerializer.Deserialize<List<OrderViewModel>>(json,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<OrderViewModel>();
+                    orders = JsonSerializer.Deserialize<List<OrderHeader>>(json,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<OrderHeader>();
                 }
                 catch
                 {
-                    orders = new List<OrderViewModel>();
+                    orders = new List<OrderHeader>();
                 }
             }
 
@@ -173,17 +173,6 @@ namespace SiparisApi.Controllers
         }
     }
 
-    // 🔹 UI ViewModel (gerekirse kullanırsın; IndexO şu an OrderHeader bekliyor)
-    public class OrderViewModel
-    {
-        public int Id { get; set; }
-        public string? Customer { get; set; }
-        public string? Product { get; set; }
-        public decimal Quantity { get; set; }
-        public decimal? Price { get; set; }
-        public string? CreatedBy { get; set; }
-        public int Status { get; set; }
-        public bool IsApprovedByFactory { get; set; }
-        public bool IsApprovedBySales { get; set; }
-    }
+    
+   
 }
