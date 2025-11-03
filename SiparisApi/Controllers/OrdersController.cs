@@ -209,5 +209,40 @@ namespace SiparisApi.Controllers
 
             return Ok(orders);
         }
+        // 🔹 Tekil Sipariş Getir (Order Detail)
+        [Authorize]
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetOrder(int id)
+        {
+            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+            var user = await _context.Users
+                .Include(u => u.AllowedEmail)
+                .FirstOrDefaultAsync(u => u.Email == userEmail);
+
+            if (user == null)
+                return Unauthorized();
+
+            var order = await _context.OrderHeaders
+                .Include(o => o.CreatedBy)
+                .Include(o => o.Items)
+                .FirstOrDefaultAsync(o => o.Id == id);
+
+            if (order == null)
+                return NotFound("Sipariş bulunamadı.");
+
+            // Log kaydı
+            _context.Logs.Add(new Log
+            {
+                UserId = user.Id,
+                Action = "GetOrder",
+                Endpoint = $"/api/orders/{id}",
+                Details = $"{user.Email} sipariş detayını görüntüledi (ID: {id})",
+                Timestamp = DateTime.UtcNow
+            });
+            await _context.SaveChangesAsync();
+
+            return Ok(order);
+        }
+
     }
 }

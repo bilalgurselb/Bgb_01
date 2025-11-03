@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SiparisApi.Models;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -16,7 +17,7 @@ namespace SiparisApi.Controllers
             _config = config;
         }
 
-        // 🔹 SİPARİŞ LİSTESİ
+        // 🔹 SİPARİŞ LİSTESİ (API: /api/orders/list)
         [HttpGet]
         public async Task<IActionResult> Index()
         {
@@ -28,22 +29,116 @@ namespace SiparisApi.Controllers
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             var baseUrl = _config["ApiSettings:BaseUrl"];
 
-            var response = await client.GetAsync($"{baseUrl}/api/orders");
+            // API tarafında mevcut olan endpoint
+            var response = await client.GetAsync($"{baseUrl}/api/orders/list");
+            if (!response.IsSuccessStatusCode)
+                return View("IndexO", Enumerable.Empty<OrderHeader>());
+
             var json = await response.Content.ReadAsStringAsync();
 
-            var orders = JsonSerializer.Deserialize<List<OrderViewModel>>(json, new JsonSerializerOptions
+            // View'in beklediği tipe uyduruyoruz (IndexO.cshtml -> IEnumerable<OrderHeader>)
+            var orders = JsonSerializer.Deserialize<List<OrderHeader>>(json, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
-            });
+            }) ?? new List<OrderHeader>();
 
             return View("IndexO", orders);
         }
 
-        // 🔹 ONAY / ONAY KALDIR
+        // 🔹 Yeni Sipariş Formu (GET)
+        [HttpGet]
+        public IActionResult Create()
+        {
+            return View("Create");
+        }
+
+        // 🔹 Yeni Sipariş Kaydetme (POST)  (API: /api/orders/create)
+        [HttpPost]
+        public async Task<IActionResult> Create(OrderHeader model)
+        {
+            var token = HttpContext.Session.GetString("AccessToken");
+            if (token == null)
+                return RedirectToAction("Login", "Account");
+
+            var client = _httpClientFactory.CreateClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var baseUrl = _config["ApiSettings:BaseUrl"];
+
+            var json = JsonSerializer.Serialize(model);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await client.PostAsync($"{baseUrl}/api/orders/create", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["Success"] = "Yeni sipariş başarıyla oluşturuldu.";
+                return RedirectToAction("Index");
+            }
+
+            TempData["Error"] = "Sipariş oluşturulamadı. Lütfen bilgileri kontrol edin.";
+            return View("Create", model);
+        }
+
+        // 🔹 Sipariş Düzenleme (GET)  (Not: API'de /api/orders/{id} yoksa eklenecek)
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var token = HttpContext.Session.GetString("AccessToken");
+            if (token == null)
+                return RedirectToAction("Login", "Account");
+
+            var client = _httpClientFactory.CreateClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var baseUrl = _config["ApiSettings:BaseUrl"];
+
+            // Eğer API'de GET /api/orders/{id} yoksa, lütfen ekleyelim.
+            var response = await client.GetAsync($"{baseUrl}/api/orders/{id}");
+            if (!response.IsSuccessStatusCode)
+                return RedirectToAction("Index");
+
+            var json = await response.Content.ReadAsStringAsync();
+            var order = JsonSerializer.Deserialize<OrderHeader>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            return View("Edit", order);
+        }
+
+        // 🔹 Sipariş Güncelleme (POST)  (API: /api/orders/update/{id})
+        [HttpPost]
+        public async Task<IActionResult> Edit(int id, OrderHeader model)
+        {
+            var token = HttpContext.Session.GetString("AccessToken");
+            if (token == null)
+                return RedirectToAction("Login", "Account");
+
+            var client = _httpClientFactory.CreateClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var baseUrl = _config["ApiSettings:BaseUrl"];
+
+            var json = JsonSerializer.Serialize(model);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await client.PutAsync($"{baseUrl}/api/orders/update/{id}", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                TempData["Success"] = "Sipariş başarıyla güncellendi.";
+                return RedirectToAction("Index");
+            }
+
+            TempData["Error"] = "Sipariş güncellenemedi. Lütfen tekrar deneyin.";
+            return View("Edit", model);
+        }
+
+        // 🔹 ONAY / ONAY KALDIR (mevcutla aynı kaldı)
         [HttpPost]
         public async Task<IActionResult> Approve(int id)
         {
             var token = HttpContext.Session.GetString("AccessToken");
+            if (token == null)
+                return RedirectToAction("Login", "Account");
+
             var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             var baseUrl = _config["ApiSettings:BaseUrl"];
@@ -56,6 +151,9 @@ namespace SiparisApi.Controllers
         public async Task<IActionResult> RevokeApproval(int id)
         {
             var token = HttpContext.Session.GetString("AccessToken");
+            if (token == null)
+                return RedirectToAction("Login", "Account");
+
             var client = _httpClientFactory.CreateClient();
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             var baseUrl = _config["ApiSettings:BaseUrl"];
@@ -63,89 +161,9 @@ namespace SiparisApi.Controllers
             await client.PutAsync($"{baseUrl}/api/orders/{id}/revoke", null);
             return RedirectToAction("Index");
         }
-
-        // 🔹 YENİ SİPARİŞ SAYFASI
-        [HttpGet]
-        public IActionResult Create()
-        {
-            return View("Create");
-        }
-
-        // 🔹 YENİ SİPARİŞ POST (API'ye JSON gönder)
-        [HttpPost]
-        public async Task<IActionResult> Create(OrderViewModel model)
-        {
-            var token = HttpContext.Session.GetString("AccessToken");
-            if (token == null)
-                return RedirectToAction("Login", "Account");
-
-            var client = _httpClientFactory.CreateClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            var baseUrl = _config["ApiSettings:BaseUrl"];
-
-            var json = JsonSerializer.Serialize(model);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await client.PostAsync($"{baseUrl}/api/orders", content);
-
-            if (response.IsSuccessStatusCode)
-                TempData["Success"] = "Yeni sipariş başarıyla oluşturuldu.";
-            else
-                TempData["Error"] = "Sipariş oluşturulamadı.";
-
-            return RedirectToAction("Index");
-        }
-
-        // 🔹 SİPARİŞ DÜZENLEME SAYFASI
-        [HttpGet]
-        public async Task<IActionResult> Edit(int id)
-        {
-            var token = HttpContext.Session.GetString("AccessToken");
-            if (token == null)
-                return RedirectToAction("Login", "Account");
-
-            var client = _httpClientFactory.CreateClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            var baseUrl = _config["ApiSettings:BaseUrl"];
-
-            var response = await client.GetAsync($"{baseUrl}/api/orders/{id}");
-            if (!response.IsSuccessStatusCode)
-                return RedirectToAction("Index");
-
-            var json = await response.Content.ReadAsStringAsync();
-            var order = JsonSerializer.Deserialize<OrderViewModel>(json, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-
-            return View("Edit", order);
-        }
-
-        // 🔹 SİPARİŞ DÜZENLEME (API'ye PUT)
-        [HttpPost]
-        public async Task<IActionResult> Edit(OrderViewModel model)
-        {
-            var token = HttpContext.Session.GetString("AccessToken");
-            if (token == null)
-                return RedirectToAction("Login", "Account");
-
-            var client = _httpClientFactory.CreateClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            var baseUrl = _config["ApiSettings:BaseUrl"];
-
-            var json = JsonSerializer.Serialize(model);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await client.PutAsync($"{baseUrl}/api/orders/{model.Id}", content);
-
-            if (response.IsSuccessStatusCode)
-                TempData["Success"] = "Sipariş başarıyla güncellendi.";
-            else
-                TempData["Error"] = "Güncelleme sırasında hata oluştu.";
-
-            return RedirectToAction("Index");
-        }
     }
 
-    // 🔹 ViewModel — UI tarafı sadece gösterim ve API transferi için
+    // 🔹 UI ViewModel (gerekirse kullanırsın; IndexO şu an OrderHeader bekliyor)
     public class OrderViewModel
     {
         public int Id { get; set; }
