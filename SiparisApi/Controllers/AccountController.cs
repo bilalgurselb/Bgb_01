@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 
@@ -66,12 +69,14 @@ namespace SiparisApi.Controllers
             }
 
             var responseBody = await response.Content.ReadAsStringAsync();
+            var jsonDoc = JsonDocument.Parse(responseBody);
+
+            string? token = jsonDoc.RootElement.GetProperty("token").GetString();
+            string? name = jsonDoc.RootElement.TryGetProperty("nameSurname", out var n) ? n.GetString() : email;
+            string? role = jsonDoc.RootElement.TryGetProperty("role", out var r) ? r.GetString() : "Kullanıcı";
 
             try
-            {
-                var jsonDoc = JsonDocument.Parse(responseBody);
-                string token = null;
-
+            { 
                 if (jsonDoc.RootElement.TryGetProperty("token", out var tokenProp))
                     token = tokenProp.GetString();
                 else if (jsonDoc.RootElement.TryGetProperty("access_token", out var accessTokenProp))
@@ -91,11 +96,34 @@ namespace SiparisApi.Controllers
                 return View();
             }
 
-            // 🔹 Başarılı giriş veya otomatik kayıt sonrası yönlendirme
-            // return RedirectToAction("Create", "OrdersUI");
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, email),
+                new Claim("NameSurname", name ?? email),
+                new Claim("Role", role ?? "")
+            };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            // 🔹 Kullanıcıyı giriş yapmış olarak işaretle
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimsIdentity),
+                new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    ExpiresUtc = DateTime.UtcNow.AddHours(8)
+                });
+
             return RedirectToAction("Index", "OrdersUIList");
         }
-
+        [HttpPost]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            HttpContext.Session.Clear();
+            return RedirectToAction("Login", "Account");
+        }
     }
 }
 
