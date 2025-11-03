@@ -15,7 +15,7 @@ env:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest   # ✅ Linux runner çok daha hızlı (~%30)
+    runs-on: ubuntu-latest   
 
     steps:
       # 🧭 Repo çek
@@ -36,33 +36,35 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
-
       # 🧹 Yayın klasörünü temizle
       - name: Clean old publish artifacts
         run: |
-          rm -rf ${{ env.PUBLISH_DIR }}
-          mkdir -p ${{ env.PUBLISH_DIR }}
-
+          rm -rf SiparisApi/publish
+          mkdir -p SiparisApi/publish
       # 🏗️ Build + Publish tek adımda (no-restore ile cache'den)
       - name: Build and publish in Release mode
         run: |
           dotnet publish "${{ env.PROJECT_PATH }}" \
             --configuration Release \
             --no-restore \
-            --output "${{ env.PUBLISH_DIR }}"
-
+            --output "SiparisApi/publish"
       # ☁️ Azure App Service’e yükle
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: "bilalgurseliparis"
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
-          package: ${{ env.PUBLISH_DIR }}
+          package: SiparisApi/publish
 
       # 🌡️ Free plan için warm-up isteği (SQL uyanması)
       - name: Warm-up Azure Web App
         run: |
-          echo "Warming up Azure App Service..."
-          curl -m 10 -s -o /dev/null -w "%{http_code}" \
-            https://bilalgurseliparis-eyehgshwhfg4a7ew.northeurope-01.azurewebsites.net/Account/Login \
-            || echo "Warm-up skipped or failed."
+         try {
+            $response = Invoke-WebRequest -Uri "https://bilalgurseliparis-eyehgshwhfg4a7ew.northeurope-01.azurew
+            Write-Host "Warm-up completed with status code $($response.StatusCode)"
+          } catch {
+            Write-Host "Warm-up skipped or failed."
+          }
+         
+         
+         
