@@ -1,0 +1,92 @@
+name: Build & Deploy SiparisApi to Azure App Service
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: "9.0.x"
+  PROJECT_PATH: "SiparisApi/SiparisApi.csproj"
+  PUBLISH_DIR: "SiparisApi/publish"
+
+jobs:
+  build-and-deploy:
+    runs-on: windows-latest
+
+    steps:
+      # 🧭 Repo çek
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ⚙️ .NET ortamını kur
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      # 📦 Bağımlılıkları yükle
+      - name: Restore dependencies
+        run: dotnet restore "${{ env.PROJECT_PATH }}"
+
+      # 🧹 Yayın klasörünü SİL ve oluştur
+      - name: Clean up old publish artifacts
+        shell: pwsh
+        run: |
+          if (Test-Path "SiparisApi/publish") {
+            Remove-Item -Recurse -Force "SiparisApi/publish"
+          }
+          New-Item -ItemType Directory -Force -Path "SiparisApi/publish"
+
+      # 🏗️ Derleme (Release)
+      - name: Build in Release mode
+        run: dotnet build "${{ env.PROJECT_PATH }}" --configuration Release --no-restore
+     
+
+      # 🚀 Yayın klasörünü oluştur
+      - name: Publish Web API
+        run: >
+          dotnet publish "${{ env.PROJECT_PATH }}" 
+          --configuration Release 
+          --output "SiparisApi/publish"
+
+
+      # 📁 wwwroot içeriğini üst dizine taşı
+      #- name: Flatten wwwroot into publish root
+       # shell: pwsh
+      #  working-directory: SiparisApi/publish
+       # run: |
+        #  $src = "wwwroot"
+        #  if (Test-Path $src) {
+        #    Get-ChildItem -Path $src | ForEach-Object {
+        #      Move-Item -Path $_.FullName -Destination .
+        ##      }
+        #   Remove-Item -Recurse -Force $src
+        #    Write-Host "✔ Flattened wwwroot into publish root"
+      # } else {
+         #   Write-Host "⚠ wwwroot not found"
+         #  }
+
+
+      # ☁️ Azure App Service’e yükle
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: "bilalgurseliparis"
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          package: SiparisApi/publish
+          
+
+      # 🌡️ Free plan için warm-up isteği (SQL uyanması)
+      - name: Warm-up Azure Web App
+        shell: pwsh
+        run: |
+          try {
+            $response = Invoke-WebRequest -Uri "https://bilalgurseliparis-eyehgshwhfg4a7ew.northeurope-01.azurewebsites.net/Account/Login" -UseBasicParsing -TimeoutSec 15
+            Write-Host "Warm-up completed with status code $($response.StatusCode)"
+          } catch {
+            Write-Host "Warm-up skipped or failed."
+          }
