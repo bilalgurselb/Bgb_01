@@ -1,21 +1,21 @@
-﻿/* === 🔹 SINTAN CHEMICALS Kurumsal Tema === */
+﻿/* === 🔹 SINTAN CHEMICALS Kurumsal Tema (temiz) === */
 :root {
-    --sintan-blue: #1C9AD6; /* Kurumsal mavi */
-    --sintan-orange: #F47C20; /* Logodaki turuncu */
-    --sintan-green: #27AE60; /* Logodaki yeşil ton */
+    --sintan-blue: #1C9AD6; /* mavi */
+    --sintan-orange: #F47C20; /* turuncu */
+    --sintan-green: #27AE60; /* yeşil */
     --sintan-red: #E84C3D;
     --text-dark: #1B1B1B;
     --text-light: #FFFFFF;
     --bg-white: #FFFFFF;
     --bg-light: #F8F9FA;
     --border-gray: #E6E6E6;
-    --shadow: rgba(0, 0, 0, 0.05);
+    --shadow: rgba(0,0,0,0.05);
 }
 
-/* === Genel Ayarlar === */
+/* === Genel === */
 body {
-    font-family: 'Inter', sans-serif;
-    background-color: var(--bg-light);
+    font-family: 'Inter',sans-serif;
+    background: var(--bg-light);
     color: var(--text-dark);
     margin: 0;
     padding: 0;
@@ -27,7 +27,7 @@ h1, h2, h3 {
 
 /* === Navbar === */
 .navbar {
-    background-color: var(--sintan-blue);
+    background: var(--sintan-blue);
     min-height: 52px;
     padding: 6px 10px;
     box-shadow: 0 2px 4px var(--shadow);
@@ -39,23 +39,26 @@ h1, h2, h3 {
     font-weight: 600;
     color: var(--text-light) !important;
     text-decoration: none;
+    cursor: pointer;
+    padding: 6px 10px;
 }
 
     .navbar-brand img {
-        height: 28px;
+        height: 38px;
+        width: auto;
         margin-right: 8px;
     }
 
     .navbar-brand span {
-        letter-spacing: 0.4px;
+        letter-spacing: .4px;
         font-size: 1rem;
     }
 
 .navbar-nav .nav-link {
     color: var(--text-light) !important;
     padding: 6px 10px;
-    font-size: 0.9rem;
-    transition: color 0.2s ease-in-out;
+    font-size: .9rem;
+    transition: color .2s;
 }
 
     .navbar-nav .nav-link:hover {
@@ -74,28 +77,26 @@ h1, h2, h3 {
 
 /* === Butonlar === */
 .btn-primary {
-    background-color: var(--sintan-blue);
+    background: var(--sintan-blue);
     color: var(--text-light);
 }
 
     .btn-primary:hover {
-        background-color: #1392c9;
+        background: #1392c9;
     }
 
 .btn-success {
-    background-color: var(--sintan-green);
-    color: var(--text-light);
+    background: var(--sintan-green);
+    color: #fff;
 }
 
 .btn-danger {
-    background-color: var(--sintan-red);
-    color: var(--text-light);
+    background: var(--sintan-red);
+    color: #fff;
 }
 
 /* === Formlar === */
-input[type=text],
-input[type=password],
-select {
+input[type=text], input[type=password], select {
     width: 100%;
     padding: 10px;
     border: 1px solid var(--border-gray);
@@ -105,8 +106,7 @@ select {
     box-sizing: border-box;
 }
 
-    input:focus,
-    select:focus {
+    input:focus, select:focus {
         border-color: var(--sintan-blue);
         outline: none;
     }
@@ -127,8 +127,7 @@ select {
     font-size: 14px;
 }
 
-    .data-table th,
-    .data-table td {
+    .data-table th, .data-table td {
         padding: 12px 10px;
         border-bottom: 1px solid var(--border-gray);
         text-align: left;
@@ -136,7 +135,7 @@ select {
     }
 
     .data-table th {
-        background-color: #f9f9f9;
+        background: #f9f9f9;
         color: #333;
         font-weight: 600;
         position: sticky;
@@ -144,7 +143,7 @@ select {
     }
 
     .data-table tr:hover {
-        background-color: #f2faff;
+        background: #f2faff;
     }
 
 /* === Durum Etiketleri === */
@@ -172,11 +171,21 @@ select {
     }
 
 /* === Login Sayfası === */
+body.login-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #fff;
+}
+
 .login-container {
+    width: 100%;
     max-width: 380px;
-    margin: 0 auto;
     text-align: center;
     padding: 40px 20px;
+    margin: 0 auto;
 }
 
     .login-container img {
@@ -184,8 +193,7 @@ select {
         margin-bottom: 20px;
     }
 
-    .login-container input[type="email"],
-    .login-container input[type="password"] {
+    .login-container input[type="email"], .login-container input[type="password"] {
         width: 100%;
         box-sizing: border-box;
         margin-bottom: 10px;
@@ -193,23 +201,27 @@ select {
 
     .login-container button {
         width: 100%;
-        padding: 12px;
+        min-height: 48px;
+        padding: 14px 0;
         font-size: 1rem;
+        font-weight: 500;
         border-radius: 6px;
-        background-color: var(--sintan-blue);
-        color: white;
         border: none;
-        transition: background 0.2s;
+        line-height: 1.4rem;
+        box-sizing: border-box;
+        background: var(--sintan-blue);
+        color: #fff;
+        transition: background .2s;
     }
 
         .login-container button:hover {
-            background-color: #1392c9;
+            background: #1392c9;
         }
 
 /* === Dashboard Kartları === */
 .card-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit,minmax(180px,1fr));
     gap: 15px;
     margin-bottom: 30px;
 }
@@ -241,38 +253,39 @@ select {
 .access-denied {
     background: var(--bg-white);
     border-radius: 10px;
-    padding: 40px;
+    padding: 40px 30px;
     max-width: 420px;
     margin: 100px auto;
     text-align: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 15px rgba(0,0,0,.08);
 }
 
     .access-denied h2 {
         color: var(--sintan-blue);
         margin-bottom: 10px;
+        font-weight: 600;
     }
 
     .access-denied p {
         color: #555;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
     }
 
     .access-denied .btn {
         background: var(--sintan-blue);
-        color: white;
-        padding: 8px 18px;
-        border-radius: 5px;
+        color: #fff;
+        padding: 10px 22px;
+        border-radius: 6px;
         border: none;
-        cursor: pointer;
+        font-weight: 500;
     }
 
         .access-denied .btn:hover {
-            background: #168CBF;
+            background: #1392c9;
         }
 
-/* === 📱 Mobil Uyum === */
-@media (max-width: 768px) {
+/* === 📱 Mobil Uyum (tek blok) === */
+@media (max-width:768px) {
     .navbar {
         padding-top: 4px !important;
         padding-bottom: 4px !important;
@@ -286,7 +299,7 @@ select {
     }
 
         .navbar-brand img {
-            height: 24px;
+            height: 34px;
         }
 
     .navbar-toggler {
@@ -295,8 +308,7 @@ select {
         top: 8px;
     }
 
-    .data-table th,
-    .data-table td {
+    .data-table th, .data-table td {
         font-size: 13px;
         padding: 8px;
     }
@@ -309,6 +321,7 @@ select {
         width: 100%;
         max-width: 95%;
         padding: 0 10px;
+        margin-top: -40px;
     }
 
         .login-container button {
@@ -316,129 +329,18 @@ select {
         }
 
     .footer {
-        font-size: 0.8rem;
+        font-size: .8rem;
     }
-    /* Navbar logusu */
-    .brand-logo {
-        height: 28px;
-        width: auto;
-    }
+}
 
-    @media (max-width: 768px) {
-        .brand-logo {
-            height: 24px;
-        }
-    }
+/* Login ve navbar için yardımcı sınıflar (ihtiyaç olursa) */
+.brand-logo {
+    height: 38px;
+    width: auto;
+}
 
-    /* Login logusu */
-    .login-logo {
-        width: 180px;
-        max-width: 60vw;
-        height: auto;
-    }
-    /* === 🔹 LOGIN FORM DİKEY MERKEZLEME === */
-    body.login-page {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        background-color: #fff;
-    }
-
-    .login-container {
-        width: 100%;
-        max-width: 380px;
-        text-align: center;
-        padding: 20px;
-        margin-top: -60px; /* biraz yukarı alır */
-    }
-
-        .login-container h2,
-        .login-container h3 {
-            margin-top: 10px;
-            margin-bottom: 25px;
-        }
-
-        /* === 🔹 GİRİŞ YAP BUTONU SABİT YÜKSEKLİK === */
-        .login-container button {
-            width: 100%;
-            padding: 14px;
-            font-size: 1rem;
-            font-weight: 500;
-            border-radius: 6px;
-            background-color: var(--sintan-blue);
-            color: white;
-            border: none;
-            box-sizing: border-box;
-            line-height: 1.4rem;
-            min-height: 44px; /* incelme sorununu önler */
-            transition: background-color 0.2s ease;
-        }
-
-            .login-container button:hover {
-                background-color: #1392c9;
-            }
-
-    /* === 🔹 NAVBAR LOGO BOYUTU & TIKLANABİLİR ALAN === */
-    .navbar-brand {
-        cursor: pointer;
-        padding: 6px 10px;
-    }
-
-        .navbar-brand img {
-            height: 38px;
-            width: auto;
-        }
-
-    @media (max-width: 768px) {
-        .navbar-brand img {
-            height: 34px;
-        }
-    }
-
-    /* === 🔹 NAVBAR ALANI TIKLANABİLİR (MOBİLDE) === */
-    @media (max-width: 768px) {
-        .navbar {
-            position: relative;
-        }
-
-            .navbar .navbar-toggler {
-                position: absolute;
-                right: 12px;
-                top: 6px;
-            }
-
-        .navbar-brand {
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-            .navbar-brand,
-            .navbar-brand img {
-                cursor: pointer;
-            }
-
-        /* Mavi alan tıklanınca da menü açılır */
-        .navbar {
-            position: relative;
-        }
-
-            .navbar:active .navbar-collapse,
-            .navbar:focus-within .navbar-collapse {
-                display: block !important;
-            }
-        .navbar-click-area {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-
-    }
-
+.login-logo {
+    width: 180px;
+    max-width: 60vw;
+    height: auto;
 }

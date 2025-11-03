@@ -43,8 +43,7 @@
                     <img src="~/images/logo_nav.png" alt="SINTAN" class="brand-logo me-2"/>
                     <span class="fw-semibold d-none d-sm-inline" style="letter-spacing:0.5px;">SINTAN CHEMICALS</span>
                 </a>
-                <div class="navbar-click-area" data-bs-toggle="collapse" data-bs-target="#navbarNav"></div>
-
+               
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                         aria-controls="navbarNav" aria-expanded="false" aria-label="Menüyü Aç/Kapat">
                     <span class="navbar-toggler-icon"></span>
@@ -70,7 +69,9 @@
                         @if (isAuthenticated)
                         {
                             <li class="nav-item ms-lg-3 text-white greeting-text small">
+                                <span>
                                 @ViewBag.Greeting <strong>@userName</strong> <small>(@userRole)</small>
+                                </span>
                             </li>
                             <li class="nav-item">
                                 <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
