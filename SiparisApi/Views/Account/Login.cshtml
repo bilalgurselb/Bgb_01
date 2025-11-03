@@ -8,7 +8,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Giriş Yap - SINTAN Chemicals</title>
+    <title>Giriş Yap - SINTAN CHEMICALS</title>
     <link rel="stylesheet" href="~/css/site.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
 </head>
@@ -66,7 +66,7 @@
                 if (response.ok) {
                     const data = await response.json();
                     sessionStorage.setItem("AccessToken", data.token);
-                    window.location.href = "/OrdersUIListController/Index";
+                    window.location.href = '@Url.Action("Index", "OrdersUIList")';
                 } else {
                     const errorText = await response.text();
                     alert(`Giriş başarısız: ${errorText}`);
