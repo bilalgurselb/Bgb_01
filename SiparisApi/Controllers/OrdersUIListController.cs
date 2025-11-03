@@ -52,7 +52,7 @@ namespace SiparisApi.Controllers
                 ViewBag.EmptyMessage = "Şu anda kayıtlı sipariş bulunmamaktadır.";
             }
 
-            return View("IndexO", orders);
+            return View("TableList", orders);
         }
 
         // 🔹 Yeni Sipariş Formu (GET)
