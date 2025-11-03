@@ -332,6 +332,24 @@ body.login-page {
         font-size: .8rem;
     }
 }
+/* === 🔹 Login Buton Kalınlık Fix === */
+.login-container button,
+.login-container .btn,
+button[type="submit"].btn-primary {
+    display: block;
+    width: 100%;
+    min-height: 52px !important; /* email alanıyla eşit */
+    padding: 14px 0 !important;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 6px;
+    border: none;
+    background-color: var(--sintan-blue) !important;
+    color: #fff !important;
+    line-height: 1.4rem !important;
+    box-sizing: border-box;
+}
+
 
 /* Login ve navbar için yardımcı sınıflar (ihtiyaç olursa) */
 .brand-logo {

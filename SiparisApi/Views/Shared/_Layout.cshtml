@@ -2,20 +2,23 @@
 @inject IHttpContextAccessor HttpContextAccessor
 
 @{
-    var isAuthenticated = HttpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false;
+    var httpContext = HttpContextAccessor?.HttpContext;
+    var user = httpContext?.User;
+    var isAuthenticated = user?.Identity?.IsAuthenticated ?? false;
+
     string userName = "";
     string userRole = "";
 
     if (isAuthenticated)
     {
-        userName = HttpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "NameSurname")?.Value
-            ?? HttpContextAccessor.HttpContext.User.Identity?.Name
-            ?? "";
-
-        userRole = HttpContextAccessor.HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Role")?.Value ?? "";
+        userName = user?.Claims?.FirstOrDefault(c => c.Type == "NameSurname")?.Value
+           ?? user?.Identity?.Name
+           ?? "";
+        userRole = user?.Claims?.FirstOrDefault(c => c.Type == "Role")?.Value ?? "";
 
         var hour = DateTime.Now.Hour;
-        ViewBag.Greeting = hour < 12 ? "Günaydın" : hour < 18 ? "Merhaba" : "İyi akşamlar";
+        ViewBag.Greeting = hour < 12 ? "Günaydın" :
+                           hour < 18 ? "Merhaba" : "İyi akşamlar";
     }
 }
 
