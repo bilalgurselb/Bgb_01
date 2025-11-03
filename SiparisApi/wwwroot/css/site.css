@@ -1,122 +1,78 @@
-﻿/* === SINTAN UI Kurumsal Tema === */
+﻿/* === 🔹 SINTAN CHEMICALS Kurumsal Tema === */
 :root {
-    --sintan-blue: #1CA7E1;
+    --sintan-blue: #1C9AD6; /* Kurumsal mavi */
+    --sintan-orange: #F47C20; /* Logodaki turuncu */
+    --sintan-green: #27AE60; /* Logodaki yeşil ton */
     --sintan-red: #E84C3D;
-    --sintan-green: #27AE60;
-    --text-dark: #000000;
-    --text-light: #ffffff;
-    --bg-white: #ffffff;
-    --border-gray: #e6e6e6;
+    --text-dark: #1B1B1B;
+    --text-light: #FFFFFF;
+    --bg-white: #FFFFFF;
+    --bg-light: #F8F9FA;
+    --border-gray: #E6E6E6;
     --shadow: rgba(0, 0, 0, 0.05);
 }
 
+/* === Genel Ayarlar === */
 body {
     font-family: 'Inter', sans-serif;
-    background-color: var(--bg-white);
+    background-color: var(--bg-light);
+    color: var(--text-dark);
     margin: 0;
     padding: 0;
-    color: var(--text-dark);
-}
-
-/* === Navbar === */
-.navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--bg-white);
-    box-shadow: 0 1px 4px var(--shadow);
-    padding: 10px 20px;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.nav-left {
-    display: flex;
-    align-items: center;
-}
-
-.nav-logo {
-    width: 48px;
-    height: auto;
-    margin-right: 10px;
-}
-
-.menu-toggle {
-    display: none;
-    font-size: 26px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--sintan-blue);
-}
-
-/* === Menü === */
-.nav-menu {
-    display: flex;
-    gap: 18px;
-}
-
-.nav-item {
-    color: var(--text-dark);
-    text-decoration: none;
-    font-weight: 500;
-    transition: 0.2s;
-}
-
-    .nav-item:hover {
-        color: var(--sintan-blue);
-    }
-
-.logout {
-    color: var(--sintan-red);
-}
-
-    .logout:hover {
-        color: #ff6655;
-    }
-
-/* === Mobil Menü === */
-@media (max-width: 768px) {
-    .menu-toggle {
-        display: block;
-    }
-
-    .nav-menu {
-        display: none;
-        flex-direction: column;
-        background: var(--bg-white);
-        position: absolute;
-        top: 60px;
-        left: 0;
-        right: 0;
-        padding: 10px 0;
-        box-shadow: 0 4px 8px var(--shadow);
-    }
-
-        .nav-menu.active {
-            display: flex;
-        }
-}
-
-/* === Genel İçerik === */
-.main-content {
-    padding: 20px;
 }
 
 h1, h2, h3 {
     color: var(--text-dark);
 }
 
-button, .btn {
-    border: none;
-    border-radius: 6px;
-    padding: 10px 20px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: 0.2s;
+/* === Navbar === */
+.navbar {
+    background-color: var(--sintan-blue);
+    min-height: 52px;
+    padding: 6px 10px;
+    box-shadow: 0 2px 4px var(--shadow);
 }
 
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    color: var(--text-light) !important;
+    text-decoration: none;
+}
+
+    .navbar-brand img {
+        height: 28px;
+        margin-right: 8px;
+    }
+
+    .navbar-brand span {
+        letter-spacing: 0.4px;
+        font-size: 1rem;
+    }
+
+.navbar-nav .nav-link {
+    color: var(--text-light) !important;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    transition: color 0.2s ease-in-out;
+}
+
+    .navbar-nav .nav-link:hover {
+        color: var(--sintan-orange) !important;
+    }
+
+/* === Footer === */
+.footer {
+    text-align: center;
+    padding: 15px;
+    font-size: 13px;
+    color: #666;
+    border-top: 1px solid var(--border-gray);
+    margin-top: 30px;
+}
+
+/* === Butonlar === */
 .btn-primary {
     background-color: var(--sintan-blue);
     color: var(--text-light);
@@ -137,39 +93,120 @@ button, .btn {
 }
 
 /* === Formlar === */
-input[type=text], input[type=password], select {
+input[type=text],
+input[type=password],
+select {
     width: 100%;
     padding: 10px;
     border: 1px solid var(--border-gray);
     border-radius: 6px;
     margin-bottom: 10px;
     font-size: 14px;
+    box-sizing: border-box;
 }
 
-    input:focus, select:focus {
+    input:focus,
+    select:focus {
         border-color: var(--sintan-blue);
         outline: none;
     }
 
-/* === Footer === */
-.footer {
-    text-align: center;
+/* === Tablo === */
+.table-wrapper {
+    background: var(--bg-white);
+    box-shadow: 0 1px 4px var(--shadow);
+    border-radius: 10px;
+    overflow-x: auto;
     padding: 15px;
-    font-size: 13px;
-    color: #666;
-    border-top: 1px solid var(--border-gray);
-}
-/* === Dashboard === */
-.dashboard-container {
-    padding: 20px;
+    margin-bottom: 30px;
 }
 
-.page-title {
-    font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 20px;
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
 }
 
+    .data-table th,
+    .data-table td {
+        padding: 12px 10px;
+        border-bottom: 1px solid var(--border-gray);
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    .data-table th {
+        background-color: #f9f9f9;
+        color: #333;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+    }
+
+    .data-table tr:hover {
+        background-color: #f2faff;
+    }
+
+/* === Durum Etiketleri === */
+.status {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: #fff;
+}
+
+    .status.info {
+        background: var(--sintan-blue);
+    }
+
+    .status.success {
+        background: var(--sintan-green);
+    }
+
+    .status.warning {
+        background: #F39C12;
+    }
+
+    .status.danger {
+        background: var(--sintan-red);
+    }
+
+/* === Login Sayfası === */
+.login-container {
+    max-width: 380px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+    .login-container img {
+        max-width: 160px;
+        margin-bottom: 20px;
+    }
+
+    .login-container input[type="email"],
+    .login-container input[type="password"] {
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+    }
+
+    .login-container button {
+        width: 100%;
+        padding: 12px;
+        font-size: 1rem;
+        border-radius: 6px;
+        background-color: var(--sintan-blue);
+        color: white;
+        border: none;
+        transition: background 0.2s;
+    }
+
+        .login-container button:hover {
+            background-color: #1392c9;
+        }
+
+/* === Dashboard Kartları === */
 .card-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -200,254 +237,7 @@ input[type=text], input[type=password], select {
         font-weight: 600;
     }
 
-    .card.info .icon {
-        color: var(--sintan-blue);
-    }
-
-    .card.success .icon {
-        color: var(--sintan-green);
-    }
-
-    .card.warning .icon {
-        color: #F39C12;
-    }
-
-    .card.danger .icon {
-        color: var(--sintan-red);
-    }
-
-/* === Tablo Genel === */
-.table-wrapper {
-    background: var(--bg-white);
-    box-shadow: 0 1px 4px var(--shadow);
-    border-radius: 10px;
-    overflow-x: auto;
-    padding: 10px;
-}
-
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-}
-
-    .data-table th, .data-table td {
-        padding: 12px 10px;
-        border-bottom: 1px solid var(--border-gray);
-        text-align: left;
-    }
-
-    .data-table th {
-        background-color: #f9f9f9;
-        color: #333;
-        font-weight: 600;
-    }
-
-.status {
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    color: #fff;
-}
-
-    .status.success {
-        background: var(--sintan-green);
-    }
-
-    .status.warning {
-        background: #F39C12;
-    }
-
-    .status.danger {
-        background: var(--sintan-red);
-    }
-
-/* === Responsive === */
-@media (max-width: 768px) {
-    .data-table th, .data-table td {
-        font-size: 13px;
-        padding: 8px;
-    }
-
-    .card-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-}
-/* === Index & Logs Ortak Yapı === */
-.table-wrapper {
-    background: var(--bg-white);
-    box-shadow: 0 1px 4px var(--shadow);
-    border-radius: 10px;
-    overflow-x: auto;
-    padding: 15px;
-    margin-bottom: 30px;
-}
-
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-}
-
-    .data-table th, .data-table td {
-        padding: 12px 10px;
-        border-bottom: 1px solid var(--border-gray);
-        text-align: left;
-        vertical-align: middle;
-    }
-
-    .data-table th {
-        background-color: #f9f9f9;
-        color: #333;
-        font-weight: 600;
-        position: sticky;
-        top: 0;
-    }
-
-    .data-table tr:hover {
-        background-color: #f2faff;
-    }
-
-/* === Log Renk Kodları === */
-.log-danger {
-    background-color: rgba(232, 76, 61, 0.05);
-}
-
-.log-warning {
-    background-color: rgba(243, 156, 18, 0.05);
-}
-
-.log-success {
-    background-color: rgba(39, 174, 96, 0.05);
-}
-
-.log-info {
-    background-color: rgba(28, 167, 225, 0.05);
-}
-
-.status.info {
-    background: var(--sintan-blue);
-}
-
-.status.success {
-    background: var(--sintan-green);
-}
-
-.status.warning {
-    background: #F39C12;
-    color: #fff;
-}
-
-.status.danger {
-    background: var(--sintan-red);
-}
-
-@media (max-width: 768px) {
-    .data-table th, .data-table td {
-        font-size: 13px;
-        padding: 8px;
-    }
-}
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-}
-
-    .page-header .btn i {
-        margin-right: 6px;
-    }
-
-/* Yönetim Paneli tablosu */
-.data-table th:nth-child(1),
-.data-table td:nth-child(1) {
-    width: 50px;
-    text-align: center;
-}
-
-.data-table td:nth-child(6),
-.data-table td:nth-child(7) {
-    text-align: center;
-}
-
-.btn-success i, .btn-danger i {
-    margin: 0;
-}
-/* === Form Tasarımı (Create & Edit) === */
-.form-card {
-    background: var(--bg-white);
-    box-shadow: 0 2px 6px var(--shadow);
-    border-radius: 10px;
-    padding: 20px;
-    max-width: 600px;
-    margin: auto;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-    .form-group label {
-        font-weight: 500;
-        display: block;
-        margin-bottom: 5px;
-    }
-
-.form-control {
-    width: 100%;
-    border: 1px solid var(--border-gray);
-    border-radius: 6px;
-    padding: 10px;
-    font-size: 14px;
-    transition: border-color 0.2s;
-}
-
-    .form-control:focus {
-        border-color: var(--sintan-blue);
-        outline: none;
-    }
-
-.btn-secondary {
-    background-color: #6c757d;
-    color: #fff;
-}
-
-    .btn-secondary:hover {
-        background-color: #5a6268;
-    }
-
-/* === İkonlu Başlık === */
-.page-title i {
-    color: var(--sintan-blue);
-    margin-right: 6px;
-}
-
-/* === Responsive === */
-@media (max-width: 768px) {
-    .form-card {
-        padding: 15px;
-    }
-}
-/* Kullanıcı Yönetimi - Arama kutusu stili */
-.page-header input[type=text] {
-    border: 1px solid var(--border-gray);
-    border-radius: 6px;
-    padding: 8px;
-    font-size: 13px;
-}
-/* === Global Renk Paleti === */
-:root {
-    --sintan-blue: #1C9AD6;
-    --sintan-red: #E84C3D;
-    --sintan-green: #27AE60;
-    --text-dark: #1B1B1B;
-    --bg-white: #FFFFFF;
-    --bg-light: #F8F9FA;
-}
-
-/* === Erişim Engellendi Sayfası === */
+/* === Erişim Engellendi === */
 .access-denied {
     background: var(--bg-white);
     border-radius: 10px;
@@ -481,221 +271,51 @@ input[type=text], input[type=password], select {
             background: #168CBF;
         }
 
-/* ========== MOBİL UYUMLULUK ========== */
-
+/* === 📱 Mobil Uyum === */
 @media (max-width: 768px) {
+    .navbar {
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+        min-height: 48px !important;
+    }
 
-    /* Navbar */
-    header.navbar {
-        flex-wrap: wrap;
+    .navbar-brand {
+        justify-content: center;
+        width: 100%;
         text-align: center;
     }
 
-    header .navbar-brand {
-        font-size: 1.1rem;
-        flex: 1 1 100%;
-        margin-bottom: 5px;
-    }
-
-    header .btn {
-        padding: 4px 10px;
-        font-size: 0.85rem;
-    }
-
-    /* Menü */
-    nav.navbar {
-        font-size: 0.9rem;
-    }
-
-    .nav-link {
-        padding: 8px 12px !important;
-    }
-
-    /* Tabloyu kart haline getiriyoruz */
-    table.table {
-        border: none !important;
-    }
-
-        table.table thead {
-            display: none;
+        .navbar-brand img {
+            height: 24px;
         }
 
-        table.table tbody tr {
-            display: block;
-            background-color: #fff;
-            margin-bottom: 12px;
-            border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-            padding: 10px;
-        }
-
-        table.table tbody td {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 10px;
-            border: none !important;
-            font-size: 0.9rem;
-        }
-
-            table.table tbody td::before {
-                content: attr(data-label);
-                font-weight: 600;
-                color: #333;
-            }
-
-    /* Etiketler */
-    .badge {
-        font-size: 0.8rem;
-        padding: 4px 8px;
+    .navbar-toggler {
+        position: absolute;
+        right: 12px;
+        top: 8px;
     }
 
-    /* Butonlar */
-    .btn-sm {
-        font-size: 0.8rem;
-        padding: 4px 8px;
-        margin-top: 5px;
+    .data-table th,
+    .data-table td {
+        font-size: 13px;
+        padding: 8px;
     }
 
-    /* Renkli satır arka planları */
-    .new-order {
-        border-left: 6px solid #e6a700;
+    .card-grid {
+        grid-template-columns: 1fr 1fr;
     }
 
-    .updated-order {
-        border-left: 6px solid #007BFF;
+    .login-container {
+        width: 100%;
+        max-width: 95%;
+        padding: 0 10px;
     }
-
-    /* Sayfa içi boşluk */
-    .container {
-        padding: 10px;
-    }
-    /* === LOGIN RESPONSIVE FIX === */
-    @media (max-width: 768px) {
-
-        .login-container {
-            width: 100%;
-            max-width: 95%;
-            margin: 0 auto;
-            padding: 0 10px;
-        }
-
-            .login-container form {
-                width: 100%;
-            }
-
-            .login-container input[type="text"],
-            .login-container input[type="email"],
-            .login-container input[type="password"] {
-                width: 100% !important;
-                box-sizing: border-box;
-                padding: 12px;
-                font-size: 1rem;
-            }
-
-            .login-container button {
-                width: 100%;
-                padding: 12px;
-                font-size: 1rem;
-                border-radius: 6px;
-            }
-        /* === LOGIN RESPONSIVE FIX v2 === */
-        @media (max-width: 768px) {
-            html, body {
-                overflow-x: hidden; /* sağa kaymayı engeller */
-                margin: 0;
-                padding: 0;
-                width: 100%;
-            }
-
-            .login-container {
-                width: 100%;
-                max-width: 100%;
-                padding: 0 10px;
-                box-sizing: border-box;
-            }
-
-                .login-container form {
-                    width: 100%;
-                    margin: 0 auto;
-                }
-
-            input[type="text"],
-            input[type="email"],
-            input[type="password"] {
-                width: 100%;
-                max-width: 100%;
-                box-sizing: border-box;
-                font-size: 1rem;
-            }
-
-            button {
-                width: 100%;
-                padding: 12px;
-                font-size: 1rem;
-                border-radius: 6px;
-            }
-            /* === LOGIN BUTTON WIDTH FIX === */
-.login-container input[type="email"],
-.login-container input[type="password"] {
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.login-container button {
-    width: 100%;
-    box-sizing: border-box;
-    display: block;
-    margin-top: 8px;
-    font-size: 1rem;
-    padding: 12px;
-    border-radius: 6px;
-}
-
-        }
-        /* === LOGIN BUTTON WIDTH FIX === */
-        .login-container input[type="email"],
-        .login-container input[type="password"] {
-            width: 100%;
-            box-sizing: border-box;
-        }
 
         .login-container button {
             width: 100%;
-            box-sizing: border-box;
-            display: block;
-            margin-top: 8px;
-            font-size: 1rem;
-            padding: 12px;
-            border-radius: 6px;
-
-            background-color: #0078D4; /* Sintan mavisi */
-            color: white;
-            border: none;
-        }
-        .navbar .ms-auto span {
-            font-size: 0.95rem;
-            white-space: nowrap;
         }
 
-        .navbar .ms-auto small {
-            font-size: 0.8rem;
-            opacity: 0.85;
-        }
-
-        @media (max-width: 768px) {
-            .navbar .ms-auto {
-                flex-direction: column;
-                align-items: flex-end;
-                text-align: right;
-            }
-
-                .navbar .ms-auto span {
-                    margin-bottom: 6px;
-                    font-size: 0.9rem;
-                }
-        }
-
+    .footer {
+        font-size: 0.8rem;
     }
-
 }
-
