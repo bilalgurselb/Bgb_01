@@ -66,7 +66,7 @@
                 if (response.ok) {
                     const data = await response.json();
                     sessionStorage.setItem("AccessToken", data.token);
-                    window.location.href = "/OrdersUIList/Index";
+                    window.location.href = "/OrdersUIListController/Index";
                 } else {
                     const errorText = await response.text();
                     alert(`Giriş başarısız: ${errorText}`);
