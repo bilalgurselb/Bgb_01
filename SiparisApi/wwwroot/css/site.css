@@ -336,5 +336,109 @@ select {
         max-width: 60vw;
         height: auto;
     }
+    /* === 🔹 LOGIN FORM DİKEY MERKEZLEME === */
+    body.login-page {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background-color: #fff;
+    }
+
+    .login-container {
+        width: 100%;
+        max-width: 380px;
+        text-align: center;
+        padding: 20px;
+        margin-top: -60px; /* biraz yukarı alır */
+    }
+
+        .login-container h2,
+        .login-container h3 {
+            margin-top: 10px;
+            margin-bottom: 25px;
+        }
+
+        /* === 🔹 GİRİŞ YAP BUTONU SABİT YÜKSEKLİK === */
+        .login-container button {
+            width: 100%;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: 6px;
+            background-color: var(--sintan-blue);
+            color: white;
+            border: none;
+            box-sizing: border-box;
+            line-height: 1.4rem;
+            min-height: 44px; /* incelme sorununu önler */
+            transition: background-color 0.2s ease;
+        }
+
+            .login-container button:hover {
+                background-color: #1392c9;
+            }
+
+    /* === 🔹 NAVBAR LOGO BOYUTU & TIKLANABİLİR ALAN === */
+    .navbar-brand {
+        cursor: pointer;
+        padding: 6px 10px;
+    }
+
+        .navbar-brand img {
+            height: 38px;
+            width: auto;
+        }
+
+    @media (max-width: 768px) {
+        .navbar-brand img {
+            height: 34px;
+        }
+    }
+
+    /* === 🔹 NAVBAR ALANI TIKLANABİLİR (MOBİLDE) === */
+    @media (max-width: 768px) {
+        .navbar {
+            position: relative;
+        }
+
+            .navbar .navbar-toggler {
+                position: absolute;
+                right: 12px;
+                top: 6px;
+            }
+
+        .navbar-brand {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+            .navbar-brand,
+            .navbar-brand img {
+                cursor: pointer;
+            }
+
+        /* Mavi alan tıklanınca da menü açılır */
+        .navbar {
+            position: relative;
+        }
+
+            .navbar:active .navbar-collapse,
+            .navbar:focus-within .navbar-collapse {
+                display: block !important;
+            }
+        .navbar-click-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+    }
 
 }
