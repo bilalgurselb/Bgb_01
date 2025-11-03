@@ -93,7 +93,7 @@ namespace SiparisApi.Controllers
 
             // 🔹 Başarılı giriş veya otomatik kayıt sonrası yönlendirme
             // return RedirectToAction("Create", "OrdersUI");
-            return RedirectToAction("TableList", "OrdersUIList");
+            return RedirectToAction("Index", "OrdersUIList");
         }
 
     }
