@@ -36,6 +36,10 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
+  # 📦 Bağımlılıkları yükle
+      - name: Restore dependencies
+        run: dotnet restore "${{ env.PROJECT_PATH }}"
+
 
       # 🧹 Yayın klasörünü SİL ve oluştur
       - name: Clean up old publish artifacts
