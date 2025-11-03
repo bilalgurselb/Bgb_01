@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
@@ -95,12 +96,24 @@ namespace SiparisApi.Controllers
                 ViewBag.Error = "Yanıt çözümleme hatası oluştu.";
                 return View();
             }
+            var handler = new JwtSecurityTokenHandler();
+            var jwt = handler.ReadJwtToken(token);
 
+            string nameSurname =
+                jwt.Claims.FirstOrDefault(c => c.Type == "NameSurname")?.Value
+                ?? jwt.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value
+                ?? email;
+
+            string _role =
+                jwt.Claims.FirstOrDefault(c => c.Type == "Role")?.Value
+                ?? jwt.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value
+                ?? "User";
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, email),
-                new Claim("NameSurname", name ?? email),
-                new Claim("Role", role ?? "")
+                new Claim("NameSurname", nameSurname),
+                new Claim("Role", _role),
+                new Claim(ClaimTypes.Role,_role)
             };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

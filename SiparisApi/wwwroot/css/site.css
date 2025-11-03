@@ -362,3 +362,39 @@ button[type="submit"].btn-primary {
     max-width: 60vw;
     height: auto;
 }
+/* === 🔹 Kullanıcı Selamlama Alanı (Navbar Altı) === */
+.greeting-banner {
+    background-color: #f8f9fa;
+    color: #333;
+    text-align: left;
+    font-size: 0.9rem;
+    padding: 6px 14px;
+    border-bottom: 1px solid #e6e6e6;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 36px;
+}
+
+    .greeting-banner strong {
+        color: #1C9AD6;
+        font-weight: 600;
+    }
+
+    .greeting-banner small {
+        font-size: 0.8rem;
+        opacity: 0.8;
+    }
+
+/* 📱 Mobil uyum */
+@media (max-width: 768px) {
+    .greeting-banner {
+        font-size: 0.85rem;
+        padding: 6px 10px;
+        height: 34px;
+    }
+}
+

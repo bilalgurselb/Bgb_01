@@ -52,7 +52,10 @@ namespace SiparisApi.Controllers
             user.IsActive = allowed.IsActive;
 
             // 5️⃣ Token oluştur
-            var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]);
+            var _key = _config["Jwt:Key"];
+            if (string.IsNullOrEmpty(_key))
+                throw new InvalidOperationException("❌ JWT anahtarı (Jwt:Key) appsettings.json içinde tanımlı olmalı.");
+               var key = Encoding.UTF8.GetBytes(_key);
             var claims = new[]
             {
                 new Claim(ClaimTypes.Email, user.Email),
@@ -74,7 +77,7 @@ namespace SiparisApi.Controllers
 
             return Ok(new
             {
-                Token = tokenHandler.WriteToken(token),
+                token = tokenHandler.WriteToken(token),
                 User = new
                 {
                     user.Email,
