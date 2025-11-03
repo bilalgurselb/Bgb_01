@@ -24,8 +24,9 @@
         <h2 style="margin-bottom:20px;">Sipariş Yönetim Sistemi</h2>
 
         <form id="loginForm" method="post" action="/Account/Login">
-            <input type="text" name="Email" placeholder="E-posta" required />
-            <input type="password" name="Password" placeholder="Şifre" required />
+            <input type="text" name="Email" placeholder="E-posta" autocomplete="email" required />
+            <input type="password" name="Password" placeholder="Şifre" autocomplete="current-password" required />
+            
 
             <!-- 🔹 Bu alan başlangıçta gizli olacak -->
             <input type="password" name="ConfirmPassword" id="confirmPassword" placeholder="Şifre (Tekrar)" style="display:none;" />
