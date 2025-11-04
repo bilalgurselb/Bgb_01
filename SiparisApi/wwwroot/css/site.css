@@ -397,4 +397,17 @@ button[type="submit"].btn-primary {
         height: 34px;
     }
 }
+.navbar-greeting {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+    .navbar-greeting {
+        left: 8px !important;
+        bottom: 2px !important;
+        max-width: 120px;
+    }
+}
+
 

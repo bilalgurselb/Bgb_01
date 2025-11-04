@@ -9,17 +9,16 @@
     string userName = "";
     string userRole = "";
 
-    if (isAuthenticated)
-    {
+   
         userName = user?.Claims?.FirstOrDefault(c => c.Type == "NameSurname")?.Value
            ?? user?.Identity?.Name
            ?? "";
         userRole = user?.Claims?.FirstOrDefault(c => c.Type == "Role")?.Value ?? "";
 
         var hour = DateTime.Now.Hour;
-        ViewBag.Greeting = hour < 12 ? "Günaydın" :
+        var greeting = hour < 12 ? "Günaydın" :
                            hour < 18 ? "Merhaba" : "İyi akşamlar";
-    }
+    
 }
 
 <!DOCTYPE html>
@@ -46,7 +45,13 @@
                     <img src="~/images/logo_nav.png" alt="SINTAN" class="brand-logo me-2"/>
                     <span class="fw-semibold d-none d-sm-inline" style="letter-spacing:0.5px;">SINTAN CHEMICALS</span>
                 </a>
-               
+                @if (isAuthenticated)
+                {
+                    <div class="navbar-greeting text-white small d-none d-lg-block position-absolute"
+                         style="left:12px; bottom:4px; max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        @greeting <strong>@userName</strong>
+                    </div>
+                }
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                         aria-controls="navbarNav" aria-expanded="false" aria-label="Menüyü Aç/Kapat">
                     <span class="navbar-toggler-icon"></span>
@@ -66,15 +71,15 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-white" asp-controller="UsersUI" asp-action="Manage">
-                                <i class="fas fa-user" style="color:#5BB85D;"></i> Kullanıcı
+                                <i class="fas fa-user-shield" style="color:#5BB85D;"></i>
+                                @(userRole == "Admin" ? "Yönetim Paneli" : "Kullanıcı Bilgilerim")
                             </a>
                         </li>
                         @if (isAuthenticated)
                         {
-                            <li class="nav-item d-block text-white-50 small mt-2">
-                                Rol: <span class="badge bg-light text-dark ms-1">
-                                    @(User.IsInRole("Admin") ? "Admin" : userRole)
-                                </span>
+                            <li class="nav-item mt-2 text-white small text-end"
+                                style="opacity:0.9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">
+                                @greeting <strong>@userName</strong>
                             </li>
                             <li class="nav-item">
                                 <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">

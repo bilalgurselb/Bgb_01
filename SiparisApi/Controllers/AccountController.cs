@@ -133,8 +133,7 @@ namespace SiparisApi.Controllers
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            HttpContext.Session.Clear();
+            HttpContext.Session.Clear(); 
             return RedirectToAction("Login", "Account");
         }
     }

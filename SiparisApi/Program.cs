@@ -149,6 +149,19 @@ button {
 button:hover {
     background-color: #8f1a1f;
 }
+/* 📱 Mobil uyum */
+@media (max-width: 768px) {
+    body {
+        padding: 20px;
+        justify-content: center;
+        align-items: center;
+    }
+    .card {
+        width: 100%;
+        padding: 30px 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+}
 </style>
 </head>
 <body>
