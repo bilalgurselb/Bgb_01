@@ -116,6 +116,29 @@ function loadShipFrom() {
         </div>
     `;
 }
+// Product //
+function loadProducts(select) {
+    if (!select) return;
+    select.innerHTML = `<option value="">Loading...</option>`;
+
+    // örnek simülasyon (ileride SQL’den API’ye geçecek)
+    const products = [
+        { id: 1, name: "TURAX PH (25*40) P", net: 1000, gross: 1035 },
+        { id: 2, name: "TURAX DLM (25*42) P", net: 1050, gross: 1085 },
+        { id: 3, name: "TURAX LQ (IBC)", net: 1000, gross: 1040 }
+    ];
+
+    select.innerHTML = `<option value="">Seçiniz...</option>`;
+    products.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = p.name;
+        opt.dataset.net = p.net;
+        opt.dataset.gross = p.gross;
+        select.appendChild(opt);
+    });
+}
+
 
 // === 🔹 PARA BİRİMLERİ ===
 function loadCurrencies() {
@@ -126,7 +149,7 @@ function loadCurrencies() {
 // === 🔹 ÖLÇÜ BİRİMLERİ ===
 function loadUnits(selectId = null) {
     const list = ["pieces", "pallets", "IBC"];
-    if (selectId) fillSelect(selectId, list);
+    if (!target) fillSelect(selectId, list);
     else fillSelect("unit", list);
 }
 

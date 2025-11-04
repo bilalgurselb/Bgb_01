@@ -89,7 +89,7 @@
             <h5><i class="fas fa-box text-success"></i> Products</h5>
             <div id="itemsContainer"></div>
             <button type="button" id="addItem" class="btn btn-sm btn-success mt-2">
-                <i class="fas fa-plus"></i> + Add Product
+                <i class="fas fa-plus"></i> Add Product
             </button>
         </div>
 
@@ -127,7 +127,7 @@
 </div>
 
 @section Scripts {
-    <script src="~/js/lookups.js"></script>
+    <script src="/js/lookups.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             loadLookups();
@@ -142,10 +142,11 @@
             row.classList.add("row", "border", "p-2", "rounded", "mb-2", "item-row", "position-relative");
             row.innerHTML = `
                 <span class="badge bg-primary position-absolute top-0 start-0 m-2 row-number">#${rowCount}</span>
-                <button type="button" class="btn btn-sm btn-outline-danger position-absolute top-0 end-0 m-2 remove-item">
-                    <i class="fas fa-times"></i>
-                </button>
-
+              <button type="button"
+                class="btn btn-outline-danger remove-item"
+                aria-label="Remove">
+            <i class="fas fa-times"></i>
+        </button>
                 <div class="col-md-4 mb-2">
                     <label>Product</label>
                     <select class="form-control product-select" required></select>
@@ -153,7 +154,12 @@
 
                 <div class="col-md-2 mb-2">
                     <label>Quantity</label>
-                    <input type="number" class="form-control quantity" inputmode="decimal" step="0.01" required placeholder="Enter quantity"/>
+                    <input type="number" 
+                            class="form-control quantity"
+                            inputmode="decimal"
+                            step="0.01" 
+                            required 
+                            placeholder="Enter quantity"/>
                 </div>
 
                 <div class="col-md-2 mb-2">
@@ -163,7 +169,12 @@
 
                 <div class="col-md-2 mb-2">
                     <label>Price</label>
-                    <input type="number" class="form-control price" inputmode="decimal" step="0.0001" required placeholder="Enter price"/>
+                    <input type="number" 
+                            class="form-control price" 
+                            inputmode="decimal" 
+                            step="0.0001" 
+                            required
+                            placeholder="Enter price"/>
                 </div>
             `;
             container.appendChild(row);
@@ -174,7 +185,11 @@
             row.querySelector(".remove-item").addEventListener("click", () => {
                 row.remove();
                 updateRowNumbers();
+                calculateGrandTotal?.();
             });
+             setTimeout(() => row.querySelector(".quantity")?.focus(), 0);
+
+            updateRowNumbers();
         }
 
         function updateRowNumbers() {
@@ -247,9 +262,10 @@
                 } else showToast("Kayıt başarısız.");
             };
         });
-
-        window.addEventListener("pageshow", e => {
+         
+          window.addEventListener("pageshow", e => {
             if (e.persisted) console.log("Sayfa cache'den yüklendi.");
         });
+        document.getElementById("addItem").addEventListener("click", addOrderItemRow);
     </script>
 }

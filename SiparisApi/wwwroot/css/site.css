@@ -536,6 +536,33 @@ button[type="submit"].btn-primary {
         border: 2px solid #dc3545 !important;
         box-shadow: 0 0 4px rgba(220, 53, 69, 0.5);
     }
+    /* Ürün satırı sil butonu – mobilde taşmaması ve sabit köşe */
+    .item-row {
+        position: relative;
+    }
+
+        .item-row .remove-item {
+            position: absolute;
+            top: .35rem;
+            right: .35rem;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            z-index: 2;
+        }
+
+            .item-row .remove-item i {
+                pointer-events: none;
+            }
+
+            /* iOS’ta butonun full-width’e yayılmasını engelle */
+            .item-row .remove-item.btn {
+                display: inline-flex !important;
+            }
 
 }
 
