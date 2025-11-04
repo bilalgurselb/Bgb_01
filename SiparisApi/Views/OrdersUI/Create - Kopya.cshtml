@@ -1,0 +1,406 @@
+﻿@{
+    ViewData["Title"] = "Yeni Sipariş Oluştur";
+    Layout = "_Layout";
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="page-header d-flex justify-content-between align-items-center mb-3">
+  <!--  <h3 class="page-title">
+        <i class="fas fa-plus-circle text-primary"></i> Yeni Sipariş
+    </h3>
+    <a asp-action="Index" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Listeye Dön
+    </a>  -->
+</div>
+<div class="form-card bg-white shadow-sm p-3 rounded">
+    <form id="createOrderForm">
+        <!-- 🔹 MÜŞTERİ SEÇİMİ -->
+        document.getElementById("customerSelect").addEventListener("change", function () {
+        const selectedId = this.value;
+        const customer = customers.find(c => c.id == selectedId);
+        if (customer) {
+        document.getElementById("customerInfo").innerHTML = `
+        <small>
+            <b>City:</b> ${customer.city || '-'} |
+            <b>Country:</b> ${customer.country || '-'} |
+            <b>Phone:</b> ${customer.phone || '-'}
+        </small>
+        `;
+        } else {
+        document.getElementById("customerInfo").innerHTML = "";
+        }
+        });
+
+
+        <!-- 🔹 SATIŞ TEMSİLCİSİ -->
+        <div class="form-group mb-3">
+            <label>Representative</label>
+            <select id="salesRepSelect" class="form-control" required></select>
+        </div>
+
+        <!-- 🔹 TARİHLER -->
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Order Date</label>
+                <input type="date" id="orderDate" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Delivery Date</label>
+                <input type="date" id="deliveryDate" class="form-control" />
+            </div>
+        </div>
+
+        <!-- 🔹 ÖDEME & TAŞIMA ŞARTLARI -->
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Payment Term</label>
+                <select id="paymentTerm" class="form-control" required></select>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Transport Type</label>
+                <select id="transport" class="form-control" required></select>
+            </div>
+        </div>
+
+        <!-- 🔹 TESLİMAT BİLGİLERİ -->
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Port of Delivery</label>
+                <select id="portOfDelivery" class="form-control" required></select>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Place of Delivery</label>
+                <select id="placeOfDelivery" class="form-control" required></select>
+            </div>
+            <div class="form-group mb-3">
+                <label>Delivery Term</label>
+                <select id="deliveryTerm" class="form-select" required>
+                    <option value="">Choose...</option>
+                    <option value="CFR">CFR (Cost and Freight)</option>
+                    <option value="CIF">CIF (Cost, Insurance and Freight)</option>
+                    <option value="FOB">FOB (Free on Board)</option>
+                    <option value="DAP">DAP (Delivered At Place)</option>
+                </select>
+            </div>
+            <div class="form-group mb-3">
+                <label for="dueDays">Due Date (Days)</label>
+                <input type="number" id="dueDays" class="form-control" inputmode="numeric" min="0" step="1" placeholder="örnek: 30" />
+            </div>
+        </div>
+
+        <!-- 🔹 PARA BİRİMİ -->
+        <div class="form-group mb-3">
+            <label>Cash Unit</label>
+            <select id="currency" class="form-control" required></select>
+        </div>
+
+        <!-- 🔹 ÜRÜN SATIRLARI -->
+        <div class="mt-4">
+            <h5><i class="fas fa-box text-success"></i> Ürünler</h5>
+            <div id="itemsContainer"></div>
+            <button type="button" id="addItem" class="btn btn-sm btn-success mt-2">
+                <i class="fas fa-plus"></i> +Add Product
+            </button>
+        </div>
+
+        <!-- 🔹 KAYDET -->
+        <button type="submit" class="btn btn-primary w-100 mt-4">
+            <i class="fas fa-save"></i> Kaydet
+        </button>
+    </form>
+    <!-- 🔹 Eksik veri uyarısı (Toast) -->
+    <div class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1080">
+        <div id="toastWarning" class="toast align-items-center text-bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    ⚠️ Eksik veya hatalı bilgi var. Lütfen kontrol edin.
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔹 Sipariş Özeti Onay Penceresi -->
+    <div class="modal fade" id="orderSummaryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Sipariş Özeti</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="orderSummaryBody">
+                    <!-- JS ile doldurulacak -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-success" id="confirmSaveBtn">Kaydet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="~/js/lookups.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            loadLookups(); // lookup.js çağırılır
+            addOrderItemRow(); // varsayılan 1 satır
+        });
+
+        // --- Ürün Satırı Ekle ---
+        function addOrderItemRow() {
+            const container = document.getElementById("itemsContainer");
+            const index = container.children.length + 1;
+
+            const row = document.createElement("div");
+            row.classList.add("row", "border", "p-2", "rounded", "mb-2", "position-relative", "item-row");
+            row.innerHTML = `
+            <span class="badge bg-primary position-absolute top-0 start-0 m-2 row-number">#${rowNumber}</span>
+                button type="button" class="btn btn-sm btn-outline-danger position-absolute top-0 end-0 m-2 remove-item">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="col-md-4 mb-2">
+                    <label>Product</label>
+                    <select class="form-control product-select" required></select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label>Quantity</label>
+                    <input  type="number" id="quantity" class="form-control" inputmode="decimal" step="0.01"
+        required placeholder="Enter quantity"/>
+                </div>
+
+                <div class="col-md-2 mb-2">
+                    <label>Unit</label>
+                    <select class="form-control unit-select"></select>
+                </div>
+
+                      <div class="col-md-2 mb-2">
+                <label>Price</label>
+                <input type="number"
+                       class="form-control price"
+                       inputmode="decimal"
+                       step="0.0001"
+                       required
+                       placeholder="Enter price" />
+            </div>
+            
+            container.appendChild(row);
+            loadProducts(row.querySelector(".product-select"));
+            loadUnits(row.querySelector(".unit-select"));
+
+            row.querySelector(".remove-item").addEventListener("click", () => {
+                row.remove();
+                 updateRowNumbers();
+            calculateGrandTotal();
+            });
+            updateRowNumbers();
+        }           
+        
+        function updateRowNumbers() {
+            const rows = document.querySelectorAll("#itemsContainer .item-row");
+            rows.forEach((row, index) => {
+                const badge = row.querySelector(".row-number");
+                if (badge) badge.textContent = `#${index + 1}`;
+            });
+            rowNumber = rows.length + 1;
+        }
+
+        // Tek satır hesaplaması (Net/Gross/LineTotal) — UI'ye yazmıyoruz; submit'te JSON'a koyacağız
+        function calculateLine(row) {
+            const productSel = row.querySelector(".product-select");
+            const qty = parseFloat(row.querySelector(".quantity")?.value) || 0;
+            const price = parseFloat(row.querySelector(".price")?.value) || 0;
+
+            // Ürün option'larında data-net (pallet net kg), data-gross (pallet gross kg) bekliyoruz.
+            // loadProducts bu data-* alanları dolduruyorsa direkt kullanılır:
+            const netPerUnit = parseFloat(productSel?.selectedOptions?.[0]?.dataset?.net || "0");   // ör: 1000
+            const grossPerUnit = parseFloat(productSel?.selectedOptions?.[0]?.dataset?.gross || "0"); // ör: 1035
+
+            // Hatasız hesap (cent yöntemi; 2 hane)
+            const netWeight = Math.round(qty * netPerUnit * 100) / 100;     // kg
+            const grossWeight = Math.round(qty * grossPerUnit * 100) / 100; // kg
+            const lineTotal = Math.round(netWeight * price * 100) / 100;    // € (kg fiyatı)
+
+            // Eğer DOM'da göstermek istersen ileride:
+            // const lt = row.querySelector(".line-total");
+            // if (lt) lt.value = lineTotal.toFixed(2);
+
+            return { netWeight, grossWeight, lineTotal };
+        }
+
+        // Tüm satırlardan genel toplam (€)
+        function calculateGrandTotal() {
+            let grand = 0;
+            document.querySelectorAll("#itemsContainer .item-row").forEach(row => {
+                const { lineTotal } = calculateLine(row);
+                if (!isNaN(lineTotal)) grand += lineTotal;
+            });
+            // DOM'da göstermek istersen:
+            // document.getElementById("grandTotal").textContent = grand.toFixed(2) + " €";
+            return grand;
+        }
+
+        // Input değişimlerinde satır hesapla + genel toplamı güncelle
+        document.addEventListener("input", (e) => {
+            if (
+                e.target.classList.contains("quantity") ||
+                e.target.classList.contains("price") ||
+                e.target.classList.contains("product-select")
+            ) {
+                const row = e.target.closest(".item-row");
+                if (row) {
+                    calculateLine(row);
+                    calculateGrandTotal();
+                }
+            }
+        });        
+           document.querySelectorAll("#itemsContainer .item-row").forEach((row, index) => {
+        const { netWeight, grossWeight, lineTotal } = calculateLine(row);
+
+        const item = {
+            RowNumber: index + 1, // SQL'deki RowNumber kolonu
+            ProductId: row.querySelector(".product-select").value,
+            Quantity: parseFloat(row.querySelector(".quantity").value) || 0,
+            Price: parseFloat(row.querySelector(".price").value) || 0,
+            NetWeight: netWeight,
+            GrossWeight: grossWeight
+            // İstersen backend'e LineTotal da gönderebilirsin:
+            // LineTotal: lineTotal
+        };
+
+        order.Items.push(item);
+    });
+            async function saveOrder() {
+            const order = {
+                CustomerId: document.getElementById("customerSelect").value,
+                SalesRepId: document.getElementById("salesRepSelect").value,
+                OrderDate: document.getElementById("orderDate").value,
+                DeliveryDate: document.getElementById("deliveryDate").value,
+                PaymentTerm: document.getElementById("paymentTerm").value,
+                Transport: document.getElementById("transport").value,
+                PortOfDelivery: document.getElementById("portOfDelivery").value,
+                PlaceOfDelivery: document.getElementById("placeOfDelivery").value,
+                Currency: document.getElementById("currency").value,
+                Items: []
+            };
+
+            // === 🧩 Boş veri kontrolü ===
+            if (!order.CustomerId || !order.Currency) {
+                showToast("Lütfen müşteri ve para birimini seçiniz.");
+                return;
+            }
+
+            const itemRows = document.querySelectorAll("#itemsContainer .item-row");
+            if (itemRows.length === 0) {
+                showToast("En az bir ürün satırı eklemelisiniz.");
+                return;
+            }
+
+            let isValid = true;
+            itemRows.forEach((row, index) => {
+                const productId = row.querySelector(".product-select").value;
+                const quantity = parseFloat(row.querySelector(".quantity").value);
+                const price = parseFloat(row.querySelector(".price").value);
+
+                if (!productId || isNaN(quantity) || quantity <= 0 || isNaN(price) || price <= 0) {
+                    row.classList.add("border-danger");
+                    isValid = false;
+                } else {
+                    row.classList.remove("border-danger");
+                }
+
+                order.Items.push({
+                    RowNumber: index + 1,
+                    ProductId: productId,
+                    Quantity: quantity,
+                    Price: price
+                });
+            });
+
+            if (!isValid) {
+                showToast("Lütfen tüm ürün satırlarında geçerli miktar ve fiyat giriniz.");
+                return;
+            }
+
+            // === 🧩 Sipariş Özeti Göster ===
+            let summaryHtml = `
+                <p><strong>Müşteri:</strong> ${document.getElementById("customerSelect").selectedOptions[0]?.text}</p>
+                <p><strong>Para Birimi:</strong> ${order.Currency}</p>
+                <p><strong>Toplam Satır:</strong> ${order.Items.length}</p>
+                <table class="table table-sm table-bordered">
+                    <thead><tr><th>#</th><th>Ürün</th><th>Miktar</th><th>Fiyat</th><th>Tutar</th></tr></thead>
+                    <tbody>
+            `;
+            let total = 0;
+            order.Items.forEach((item, i) => {
+                const productName = document.querySelectorAll(".product-select")[i].selectedOptions[0]?.text;
+                const subtotal = item.Quantity * item.Price;
+                total += subtotal;
+                summaryHtml += `
+                    <tr>
+                        <td>${item.RowNumber}</td>
+                        <td>${productName}</td>
+                        <td>${item.Quantity}</td>
+                        <td>${item.Price.toFixed(2)}</td>
+                        <td>${subtotal.toFixed(2)}</td>
+                    </tr>`;
+            });
+            summaryHtml += `</tbody></table>
+                <p class="text-end fw-bold">Toplam: ${total.toFixed(2)} ${order.Currency}</p>`;
+
+            document.getElementById("orderSummaryBody").innerHTML = summaryHtml;
+            const modal = new bootstrap.Modal(document.getElementById("orderSummaryModal"));
+            modal.show();
+
+            // === 🧩 Onayla butonuna tıklanınca gerçekten kaydet ===
+            document.getElementById("confirmSaveBtn").onclick = async () => {
+                modal.hide();
+
+                try {
+                    const response = await fetch("/api/orders/create", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(order)
+                    });
+
+                    if (response.ok) {
+                        alert("✅ Sipariş başarıyla kaydedildi!");
+                        window.location.href = "/OrdersUIList/Index";
+                    } else {
+                        const text = await response.text();
+                        showToast("Kayıt başarısız: " + text);
+                    }
+                } catch (err) {
+                    showToast("Sunucuya bağlanılamadı: " + err.message);
+                }
+            };
+        }
+                function showToast(message) {
+            const toastEl = document.getElementById("toastWarning");
+            toastEl.querySelector(".toast-body").innerText = message;
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        }
+
+   
+               window.addEventListener("pageshow", function (event) {
+            if (event.persisted) {
+                // bfcache'ten geldi — formu olduğu gibi koru
+                console.log("Sayfa cache'den yüklendi, form korunuyor.");
+            }
+               });
+    </script>
+    <div id="customerInfo" class="text-muted small mt-1"></div>
+
+}
+

@@ -12,45 +12,30 @@
     <div class="alert alert-danger">@TempData["Error"]</div>
 }
 
-<div class="page-header d-flex justify-content-between align-items-center mb-3">
-    <h3 class="page-title">
-        <i class="fas fa-plus-circle text-primary"></i> Yeni Sipariş
-    </h3>
-    <a asp-action="Index" class="btn btn-secondary">
-        <i class="fas fa-arrow-left"></i> Listeye Dön
-    </a>
-</div>
-
 <div class="form-card bg-white shadow-sm p-3 rounded">
     <form id="createOrderForm">
+
         <!-- 🔹 MÜŞTERİ SEÇİMİ -->
         <div class="form-group mb-3">
             <label>Müşteri</label>
             <select id="customerSelect" class="form-control" required></select>
-        </div>
-
-        <!-- 🔹 OTO DOLAN ALANLAR -->
-        <div id="customerDetails" class="border rounded p-2 bg-light mb-3" style="display:none;">
-            <small><b>Adres:</b> <span id="custAddress"></span></small><br />
-            <small><b>İl:</b> <span id="custCity"></span></small><br />
-            <small><b>Vergi Dairesi:</b> <span id="custTax"></span></small><br />
-            <small><b>Telefon:</b> <span id="custPhone"></span></small>
+            <div id="customerInfo" class="text-muted small mt-1"></div>
         </div>
 
         <!-- 🔹 SATIŞ TEMSİLCİSİ -->
         <div class="form-group mb-3">
-            <label>Satış Temsilcisi</label>
+            <label>Representative</label>
             <select id="salesRepSelect" class="form-control" required></select>
         </div>
 
         <!-- 🔹 TARİHLER -->
         <div class="row">
             <div class="col-md-6 mb-3">
-                <label>Sipariş Tarihi</label>
-                <input type="date" id="orderDate" class="form-control" required />
+                <label>Order Date</label>
+                <input type="date" id="orderDate" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
             </div>
             <div class="col-md-6 mb-3">
-                <label>Teslim Tarihi</label>
+                <label>Delivery Date</label>
                 <input type="date" id="deliveryDate" class="form-control" />
             </div>
         </div>
@@ -58,11 +43,11 @@
         <!-- 🔹 ÖDEME & TAŞIMA ŞARTLARI -->
         <div class="row">
             <div class="col-md-6 mb-3">
-                <label>Ödeme Şekli</label>
+                <label>Payment Term</label>
                 <select id="paymentTerm" class="form-control" required></select>
             </div>
             <div class="col-md-6 mb-3">
-                <label>Taşıma Tipi</label>
+                <label>Transport Type</label>
                 <select id="transport" class="form-control" required></select>
             </div>
         </div>
@@ -77,20 +62,34 @@
                 <label>Place of Delivery</label>
                 <select id="placeOfDelivery" class="form-control" required></select>
             </div>
+            <div class="form-group mb-3">
+                <label>Delivery Term</label>
+                <select id="deliveryTerm" class="form-select" required>
+                    <option value="">Choose...</option>
+                    <option value="CFR">CFR (Cost and Freight)</option>
+                    <option value="CIF">CIF (Cost, Insurance and Freight)</option>
+                    <option value="FOB">FOB (Free on Board)</option>
+                    <option value="DAP">DAP (Delivered At Place)</option>
+                </select>
+            </div>
+            <div class="form-group mb-3">
+                <label for="dueDays">Due Date (Days)</label>
+                <input type="number" id="dueDays" class="form-control" inputmode="numeric" min="0" step="1" placeholder="örnek: 30" />
+            </div>
         </div>
 
         <!-- 🔹 PARA BİRİMİ -->
         <div class="form-group mb-3">
-            <label>Para Birimi</label>
+            <label>Currency</label>
             <select id="currency" class="form-control" required></select>
         </div>
 
         <!-- 🔹 ÜRÜN SATIRLARI -->
         <div class="mt-4">
-            <h5><i class="fas fa-box text-success"></i> Ürünler</h5>
+            <h5><i class="fas fa-box text-success"></i> Products</h5>
             <div id="itemsContainer"></div>
-            <button type="button" id="addItem" class="btn btn-outline-primary mt-2">
-                <i class="fas fa-plus"></i> Ürün Ekle
+            <button type="button" id="addItem" class="btn btn-sm btn-success mt-2">
+                <i class="fas fa-plus"></i> + Add Product
             </button>
         </div>
 
@@ -101,42 +100,70 @@
     </form>
 </div>
 
+<!-- 🔹 TOAST & MODAL -->
+<div class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1080">
+    <div id="toastWarning" class="toast align-items-center text-bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">⚠️ Eksik veya hatalı bilgi var. Lütfen kontrol edin.</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="orderSummaryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Sipariş Özeti</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="orderSummaryBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-success" id="confirmSaveBtn">Kaydet</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="~/js/lookups.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            loadLookups(); // lookup.js çağırılır
-            addOrderItemRow(); // varsayılan 1 satır
+            loadLookups();
+            addOrderItemRow();
         });
 
-        // --- Ürün Satırı Ekle ---
+        // 🔹 ÜRÜN SATIRI EKLE
         function addOrderItemRow() {
             const container = document.getElementById("itemsContainer");
-            const index = container.children.length + 1;
-
+            const rowCount = container.children.length + 1;
             const row = document.createElement("div");
-            row.classList.add("row", "border", "p-2", "rounded", "mb-2");
+            row.classList.add("row", "border", "p-2", "rounded", "mb-2", "item-row", "position-relative");
             row.innerHTML = `
+                <span class="badge bg-primary position-absolute top-0 start-0 m-2 row-number">#${rowCount}</span>
+                <button type="button" class="btn btn-sm btn-outline-danger position-absolute top-0 end-0 m-2 remove-item">
+                    <i class="fas fa-times"></i>
+                </button>
+
                 <div class="col-md-4 mb-2">
-                    <label>Ürün</label>
+                    <label>Product</label>
                     <select class="form-control product-select" required></select>
                 </div>
+
                 <div class="col-md-2 mb-2">
-                    <label>Miktar</label>
-                    <input type="number" class="form-control quantity" min="0" step="0.01" required />
+                    <label>Quantity</label>
+                    <input type="number" class="form-control quantity" inputmode="decimal" step="0.01" required placeholder="Enter quantity"/>
                 </div>
+
                 <div class="col-md-2 mb-2">
-                    <label>Birim</label>
+                    <label>Unit</label>
                     <select class="form-control unit-select"></select>
                 </div>
+
                 <div class="col-md-2 mb-2">
-                    <label>Birim Fiyat</label>
-                    <input type="number" class="form-control price" min="0" step="0.01" />
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="button" class="btn btn-danger btn-sm remove-item w-100">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <label>Price</label>
+                    <input type="number" class="form-control price" inputmode="decimal" step="0.0001" required placeholder="Enter price"/>
                 </div>
             `;
             container.appendChild(row);
@@ -146,19 +173,28 @@
 
             row.querySelector(".remove-item").addEventListener("click", () => {
                 row.remove();
+                updateRowNumbers();
             });
         }
 
-        document.getElementById("addItem").addEventListener("click", addOrderItemRow);
+        function updateRowNumbers() {
+            const rows = document.querySelectorAll("#itemsContainer .item-row");
+            rows.forEach((row, index) => {
+                const badge = row.querySelector(".row-number");
+                if (badge) badge.textContent = `#${index + 1}`;
+            });
+        }
 
-        // --- Kaydetme ---
+        // 🔹 TOAST
+        function showToast(msg) {
+            const toastEl = document.getElementById("toastWarning");
+            toastEl.querySelector(".toast-body").innerText = msg;
+            new bootstrap.Toast(toastEl).show();
+        }
+
+        // 🔹 KAYDET
         document.getElementById("createOrderForm").addEventListener("submit", async (e) => {
             e.preventDefault();
-
-            const token = sessionStorage.getItem("AccessToken");
-            if (!token) return alert("Oturum süresi dolmuş. Lütfen yeniden giriş yapın.");
-
-            // Sipariş başlığı
             const order = {
                 CustomerId: document.getElementById("customerSelect").value,
                 SalesRepId: document.getElementById("salesRepSelect").value,
@@ -168,35 +204,52 @@
                 Transport: document.getElementById("transport").value,
                 PortOfDelivery: document.getElementById("portOfDelivery").value,
                 PlaceOfDelivery: document.getElementById("placeOfDelivery").value,
+                DeliveryTerm: document.getElementById("deliveryTerm").value,
+                DueDays: parseInt(document.getElementById("dueDays").value) || 0,
                 Currency: document.getElementById("currency").value,
                 Items: []
             };
 
-            // Ürün satırları
-            document.querySelectorAll("#itemsContainer .row").forEach(row => {
-                const item = {
-                    ProductId: row.querySelector(".product-select").value,
-                    Quantity: parseFloat(row.querySelector(".quantity").value),
-                    Price: parseFloat(row.querySelector(".price").value)
-                };
-                order.Items.push(item);
+            if (!order.CustomerId) return showToast("Lütfen müşteri seçin.");
+
+            document.querySelectorAll("#itemsContainer .item-row").forEach((row, index) => {
+                const productId = row.querySelector(".product-select").value;
+                const quantity = parseFloat(row.querySelector(".quantity").value);
+                const price = parseFloat(row.querySelector(".price").value);
+                if (productId && quantity > 0 && price > 0) {
+                    order.Items.push({ RowNumber: index + 1, ProductId: productId, Quantity: quantity, Price: price });
+                }
             });
 
-            const response = await fetch("/OrdersUIList/Create", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer " + token
-                },
-                body: JSON.stringify(order)
-            });
+            if (order.Items.length === 0) return showToast("En az bir ürün satırı eklemelisiniz.");
 
-            if (response.ok) {
-                alert("Sipariş başarıyla oluşturuldu!");
-                window.location.href = "/OrdersUIList/Index";
-            } else {
-                alert("Bir hata oluştu. Lütfen tekrar deneyin.");
-            }
+            // Sipariş özeti modal
+            let summary = `<table class="table table-sm"><thead><tr><th>#</th><th>Ürün</th><th>Miktar</th><th>Fiyat</th></tr></thead><tbody>`;
+            order.Items.forEach(i => {
+                const name = document.querySelector(`.product-select option[value='${i.ProductId}']`)?.text || "-";
+                summary += `<tr><td>${i.RowNumber}</td><td>${name}</td><td>${i.Quantity}</td><td>${i.Price}</td></tr>`;
+            });
+            summary += `</tbody></table>`;
+            document.getElementById("orderSummaryBody").innerHTML = summary;
+            const modal = new bootstrap.Modal(document.getElementById("orderSummaryModal"));
+            modal.show();
+
+            document.getElementById("confirmSaveBtn").onclick = async () => {
+                modal.hide();
+                const res = await fetch("/api/orders/create", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(order)
+                });
+                if (res.ok) {
+                    alert("✅ Sipariş başarıyla kaydedildi!");
+                    window.location.href = "/OrdersUIList/Index";
+                } else showToast("Kayıt başarısız.");
+            };
+        });
+
+        window.addEventListener("pageshow", e => {
+            if (e.persisted) console.log("Sayfa cache'den yüklendi.");
         });
     </script>
 }
