@@ -130,8 +130,8 @@ namespace SiparisApi.Controllers
 
             return RedirectToAction("Index", "OrdersUIList");
         }
-        [HttpPost]
-        public async Task<IActionResult> Logout()
+        [HttpGet]
+        public IActionResult Logout()
         {
             HttpContext.Session.Clear(); 
             return RedirectToAction("Login", "Account");

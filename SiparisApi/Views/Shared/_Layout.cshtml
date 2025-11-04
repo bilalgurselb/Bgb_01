@@ -39,19 +39,23 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark shadow-sm px-2" style="background-color:#0054A6;">
+        <nav class="navbar navbar-expand-lg navbar-dark shadow-sm px-2" style="background-color:#0054A6; position: relative;">
             <div class="container-fluid d-flex justify-content-between align-items-center">
-                <a class="navbar-brand d-flex align-items-center mx-auto mx-lg-0 text-white" asp-controller="OrdersUIList" asp-action="Index">
-                    <img src="~/images/logo_nav.png" alt="SINTAN" class="brand-logo me-2"/>
-                    <span class="fw-semibold d-none d-sm-inline" style="letter-spacing:0.5px;">SINTAN CHEMICALS</span>
-                </a>
-                @if (isAuthenticated)
-                {
-                    <div class="navbar-greeting text-white small d-none d-lg-block position-absolute"
-                         style="left:12px; bottom:4px; max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                        @greeting <strong>@userName</strong>
-                    </div>
-                }
+                <div class="d-flex align-items-center">
+                    <a class="navbar-brand d-flex align-items-center text-white" asp-controller="OrdersUIList" asp-action="Index">
+                        <img src="~/images/logo_nav.png" alt="Sintan Logo" style="height:32px; margin-right:8px;">
+                        <span class="fw-semibold">SINTAN CHEMICALS</span>
+                    </a>
+
+                    @if (isAuthenticated)
+                    {
+                        <div class="text-white small ms-3 d-none d-lg-block"
+                             style="opacity:0.9; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">
+                            @greeting <strong>@userName</strong>
+                        </div>
+                    }
+                </div>
+
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                         aria-controls="navbarNav" aria-expanded="false" aria-label="Menüyü Aç/Kapat">
                     <span class="navbar-toggler-icon"></span>
@@ -77,16 +81,16 @@
                         </li>
                         @if (isAuthenticated)
                         {
-                            <li class="nav-item mt-2 text-white small text-end"
+                            <!-- 🔹 SADECE MOBİL MENÜ AÇILDIĞINDA GÖRÜNÜR -->
+                            <li class="nav-item mt-3 text-white small text-end d-lg-none"
                                 style="opacity:0.9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">
                                 @greeting <strong>@userName</strong>
                             </li>
+
                             <li class="nav-item">
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-light ms-2 text-dark">
-                                        <i class="fas fa-sign-out-alt"></i> Çıkış
-                                    </button>
-                                </form>
+                                <a asp-controller="Account" asp-action="Logout" class="btn btn-sm btn-light text-dark">
+                                    <i class="fas fa-sign-out-alt"></i> Çıkış
+                                </a>
                             </li>
                         }
                         else

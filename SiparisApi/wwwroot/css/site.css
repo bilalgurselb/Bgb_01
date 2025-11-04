@@ -401,6 +401,11 @@ button[type="submit"].btn-primary {
     font-size: 0.85rem;
     opacity: 0.9;
 }
+@media (max-width: 768px) {
+    .navbar .text-white.small.ms-3 {
+        display: none !important;
+    }
+}
 
 @media (max-width: 768px) {
     .navbar-greeting {
@@ -409,5 +414,6 @@ button[type="submit"].btn-primary {
         max-width: 120px;
     }
 }
+
 
 
