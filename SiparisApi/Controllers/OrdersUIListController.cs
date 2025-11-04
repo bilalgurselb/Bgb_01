@@ -62,7 +62,7 @@ namespace SiparisApi.Controllers
             var token = HttpContext.Session.GetString("AccessToken");
             if (token == null)
                 return RedirectToAction("Login", "Account");            
-            return View("Create");
+            return View("~/Views/OrdersUI/Create.cshtml");
         }
 
         // 🔹 Yeni Sipariş Kaydetme (POST)  (API: /api/orders/create)

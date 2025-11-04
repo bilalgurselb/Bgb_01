@@ -69,7 +69,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-white" asp-controller="OrdersUIList" asp-action="Create">
+                            <a class="nav-link text-white" href="@Url.Action("Create", "OrdersUIList")">
                                 <i class="fas fa-plus-circle" style="color:#F47C20;"></i> Yeni Sipariş
                             </a>
                         </li>
@@ -80,12 +80,10 @@
                             </a>
                         </li>
                         @if (isAuthenticated)
-                        {
-                            <!-- 🔹 SADECE MOBİL MENÜ AÇILDIĞINDA GÖRÜNÜR -->
-                            
+                        {                           
 
                             <li class="nav-item">
-                                <a asp-controller="Account" asp-action="Logout" class="btn btn-sm btn-light text-dark">
+                                <a href="@Url.Action("Logout", "Account")" class="btn btn-sm btn-light text-dark">
                                     <i class="fas fa-sign-out-alt"></i> Çıkış
                                 </a>
                             </li>
@@ -101,13 +99,7 @@
                                     <i class="fas fa-sign-in-alt"></i> Giriş Yap
                                 </a>
                             </li>
-                        }
-                        @if (isAuthenticated)
-                        {
-                            <li class="nav-item d-lg-none mobile-footer text-white small text-end">
-                                @greeting <strong>@userName</strong>
-                            </li>
-                        }
+                        }                    
                     </ul>
                 </div>
             </div>
