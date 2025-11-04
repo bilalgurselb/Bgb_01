@@ -414,6 +414,97 @@ button[type="submit"].btn-primary {
         max-width: 120px;
     }
 }
+/* === 🔹 NAVBAR GENEL === */
+.sintan-navbar {
+    background-color: #0059b3;
+    padding: 6px 10px;
+}
+
+/* === 🔹 LOGO === */
+.brand-logo {
+    height: 32px;
+    width: auto;
+}
+
+@media (max-width: 768px) {
+    .brand-logo {
+        height: 36px;
+    }
+}
+
+/* === 🔹 Desktop greet (logo altı) === */
+.brand-text {
+    color: white;
+    line-height: 1.2;
+}
+
+.brand-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.brand-greeting {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+/* === 🔹 Mobil greet (açılır menü altı) === */
+.mobile-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    margin-top: 10px;
+    padding-top: 8px;
+}
+
+    .mobile-footer .btn {
+        background-color: #fff;
+        color: #000;
+        font-weight: 500;
+    }
+
+        .mobile-footer .btn:hover {
+            background-color: #f2f2f2;
+        }
+
+.greeting-truncate {
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* === 🔹 Mobil navbar kapalı durum === */
+@media (max-width: 768px) {
+    .sintan-navbar .container-fluid {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Kapalıyken sol: selamlama, ortada logo, sağda menü */
+    .sintan-navbar .mobile-logo {
+        order: 2;
+        flex-grow: 1;
+        display: flex;
+        justify-content: center;
+    }
+
+    .sintan-navbar .navbar-toggler {
+        order: 3;
+    }
+
+    .sintan-navbar::before {
+        content: attr(data-greeting);
+        position: absolute;
+        left: 10px;
+        color: #fff;
+        font-size: 0.9rem;
+        font-weight: 500;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
 
 
 
