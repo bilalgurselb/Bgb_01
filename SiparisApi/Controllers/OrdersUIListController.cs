@@ -59,6 +59,9 @@ namespace SiparisApi.Controllers
         [HttpGet]
         public IActionResult Create()
         {
+            var token = HttpContext.Session.GetString("AccessToken");
+            if (token == null)
+                return RedirectToAction("Login", "Account");            
             return View("Create");
         }
 

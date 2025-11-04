@@ -133,7 +133,8 @@ namespace SiparisApi.Controllers
         [HttpGet]
         public IActionResult Logout()
         {
-            HttpContext.Session.Clear(); 
+            HttpContext.Session.Clear();
+            Response.Cookies.Delete("AccessToken");
             return RedirectToAction("Login", "Account");
         }
     }
