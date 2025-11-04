@@ -1,35 +1,142 @@
-﻿// === 🔹 Lookup.js — SINTAN CHEMICALS ===
+﻿// === 🔹 Lookup.js — SINTAN CHEMICALS (v2) ===
 
-// --- Tüm dropdown’ları yükler ---
+// --- Ana yükleyici ---
 async function loadLookups() {
-    loadCurrencies();
-    loadUnits();
-    loadTransports();
-    loadPaymentTerms();
-    loadDeliveryTerms();
-    loadPorts("portOfDelivery");
-    loadPorts("placeOfDelivery");
+    await Promise.all([
+        loadCustomers(),
+        loadSalesReps(),
+        loadCurrencies(),
+        loadUnits(),
+        loadTransports(),
+        loadPaymentTerms(),
+        loadDeliveryTerms(),
+        loadShipFrom(),
+        loadPorts("portOfDelivery"),
+        loadPorts("placeOfDelivery")
+    ]);
 }
 
-// --- Para Birimleri ---
+// === 🔹 MÜŞTERİLER (API'den veya cache'ten) ===
+async function loadCustomers() {
+    const select = document.getElementById("customerSelect");
+    if (!select) return;
+
+    select.disabled = true;
+    select.innerHTML = `<option>Loading...</option>`;
+
+    try {
+        const cacheKey = "sintan_customers";
+        let customers = JSON.parse(localStorage.getItem(cacheKey));
+
+        if (!customers) {
+            const res = await fetch("/api/lookups/customers");
+            customers = await res.json();
+            localStorage.setItem(cacheKey, JSON.stringify(customers));
+        }
+
+        select.innerHTML = `<option value="">Select Customer...</option>`;
+        customers.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.id;
+            opt.textContent = `${c.name} (${c.city}, ${c.country})`;
+            opt.dataset.city = c.city;
+            opt.dataset.country = c.country;
+            opt.dataset.phone = c.phone;
+            select.appendChild(opt);
+        });
+
+        // müşteri bilgisi gösterimi
+        select.addEventListener("change", function () {
+            const option = this.selectedOptions[0];
+            if (option && option.value) {
+                document.getElementById("customerInfo").innerHTML = `
+                    <small>
+                        <b>City:</b> ${option.dataset.city || '-'} |
+                        <b>Country:</b> ${option.dataset.country || '-'} |
+                        <b>Phone:</b> ${option.dataset.phone || '-'}
+                    </small>`;
+            } else {
+                document.getElementById("customerInfo").innerHTML = "";
+            }
+        });
+    } catch (err) {
+        console.error("❌ Müşteri listesi yüklenemedi:", err);
+        select.innerHTML = `<option>Error loading</option>`;
+    } finally {
+        select.disabled = false;
+    }
+}
+
+// === 🔹 SATIŞ TEMSİLCİLERİ ===
+async function loadSalesReps() {
+    const select = document.getElementById("salesRepSelect");
+    if (!select) return;
+
+    select.disabled = true;
+    select.innerHTML = `<option>Loading...</option>`;
+
+    try {
+        const cacheKey = "sintan_salesreps";
+        let reps = JSON.parse(localStorage.getItem(cacheKey));
+
+        if (!reps) {
+            const res = await fetch("/api/lookups/salesreps");
+            reps = await res.json();
+            localStorage.setItem(cacheKey, JSON.stringify(reps));
+        }
+
+        select.innerHTML = `<option value="">Select Representative...</option>`;
+        reps.forEach(r => {
+            const opt = document.createElement("option");
+            opt.value = r.id;
+            opt.textContent = r.name;
+            select.appendChild(opt);
+        });
+    } catch (err) {
+        console.error("❌ Satış temsilcileri yüklenemedi:", err);
+        select.innerHTML = `<option>Error loading</option>`;
+    } finally {
+        select.disabled = false;
+    }
+}
+
+// === 🔹 SHIP FROM (Sabit, İzmir / İstanbul) ===
+function loadShipFrom() {
+    const container = document.getElementById("shipFromContainer");
+    if (!container) return;
+    container.innerHTML = `
+        <label class="form-label">Ship From:</label><br>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="shipFrom" id="shipFromIzmir" value="Sintan Kimya İzmir" checked>
+            <label class="form-check-label" for="shipFromIzmir">İzmir</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="shipFrom" id="shipFromIstanbul" value="Sintan Kimya İstanbul">
+            <label class="form-check-label" for="shipFromIstanbul">İstanbul</label>
+        </div>
+    `;
+}
+
+// === 🔹 PARA BİRİMLERİ ===
 function loadCurrencies() {
     const list = ["USD", "EURO", "RUBLE", "TL"];
     fillSelect("currency", list);
 }
 
-// --- Ölçü Birimleri ---
+// === 🔹 ÖLÇÜ BİRİMLERİ ===
 function loadUnits(selectId = null) {
     const list = ["pieces", "pallets", "IBC"];
     if (selectId) fillSelect(selectId, list);
+    else fillSelect("unit", list);
 }
 
-// --- Taşıma Türleri ---
+// === 🔹 TAŞIMA TÜRLERİ ===
 function loadTransports() {
     const list = ["Seaway", "Truck", "Airway", "Railway"];
     fillSelect("transport", list);
 }
 
-// --- Ödeme Şartları ---
+// === 🔹 ÖDEME ŞARTLARI ===
 function loadPaymentTerms() {
     const list = [
         "%30 Cash in Advance +%70 Cash Against Documents",
@@ -48,7 +155,7 @@ function loadPaymentTerms() {
     fillSelect("paymentTerm", list);
 }
 
-// --- Teslim Şartları ---
+// === 🔹 TESLİMAT ŞARTLARI ===
 function loadDeliveryTerms() {
     const list = [
         "CFR - Cost and Freight",
@@ -65,38 +172,44 @@ function loadDeliveryTerms() {
     fillSelect("deliveryTerm", list);
 }
 
-// --- Limanlar ---
+// === 🔹 LİMANLAR (ports.json’dan veya cache’ten) ===
 async function loadPorts(selectId) {
     const select = document.getElementById(selectId);
     if (!select) return;
 
     select.disabled = true;
-    select.innerHTML = `<option>Yükleniyor...</option>`;
+    select.innerHTML = `<option>Loading...</option>`;
 
     try {
-        const response = await fetch("/js/ports.json");
-        const ports = await response.json();
+        const cacheKey = "sintan_ports";
+        let ports = JSON.parse(localStorage.getItem(cacheKey));
 
-        select.innerHTML = `<option value="">Seçiniz...</option>`;
+        if (!ports) {
+            const response = await fetch("/js/ports.json");
+            ports = await response.json();
+            localStorage.setItem(cacheKey, JSON.stringify(ports));
+        }
+
+        select.innerHTML = `<option value="">Select Port...</option>`;
         ports.slice(0, 2000).forEach(port => {
             const opt = document.createElement("option");
-            opt.value = port.code;
-            opt.textContent = `${port.name} (${port.code})`;
+            opt.value = port.code || port.name;
+            opt.textContent = `${port.name} (${port.country})`;
             select.appendChild(opt);
         });
     } catch (err) {
-        console.error("Liman listesi yüklenemedi:", err);
-        select.innerHTML = `<option>Yüklenemedi</option>`;
+        console.error("❌ Liman listesi yüklenemedi:", err);
+        select.innerHTML = `<option>Error loading ports</option>`;
     } finally {
         select.disabled = false;
     }
 }
 
-// --- Genel Yardımcı ---
+// === 🔹 Genel Yardımcı ===
 function fillSelect(id, list) {
     const select = document.getElementById(id);
     if (!select) return;
-    select.innerHTML = `<option value="">Seçiniz...</option>`;
+    select.innerHTML = `<option value="">Select...</option>`;
     list.forEach(x => {
         const opt = document.createElement("option");
         opt.value = x;
