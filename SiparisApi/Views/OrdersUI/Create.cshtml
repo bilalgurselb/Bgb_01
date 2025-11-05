@@ -130,64 +130,57 @@
     <script src="/js/lookups.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+                    // --- Sayfa Yenilemeyi Engelle ---
+        window.addEventListener("beforeunload", function (e) {
+            
+            e.preventDefault();
+            e.returnValue = "";
+        });
+
             loadLookups();
             addOrderItemRow();
         });
 
         // 🔹 ÜRÜN SATIRI EKLE
-        function addOrderItemRow() {
+               function addOrderItemRow() {
             const container = document.getElementById("itemsContainer");
-            const rowCount = container.children.length + 1;
+            const rowIndex = container.children.length + 1;
+
             const row = document.createElement("div");
-            row.classList.add("row", "border", "p-2", "rounded", "mb-2", "item-row", "position-relative");
+            row.classList.add("item-row", "border", "p-2", "rounded", "mb-2", "bg-white", "shadow-sm");
+
             row.innerHTML = `
-                <span class="badge bg-primary position-absolute top-0 start-0 m-2 row-number">#${rowCount}</span>
-              <button type="button"
-                class="btn btn-outline-danger remove-item"
-                aria-label="Remove">
-            <i class="fas fa-times"></i>
-        </button>
-                <div class="col-md-4 mb-2">
-                    <label>Product</label>
-                    <select class="form-control product-select" required></select>
+                <div class="item-row-header d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge bg-primary">#${rowIndex}</span>
+                    <button type="button" class="btn btn-outline-danger btn-sm remove-item" aria-label="Remove">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
 
-                <div class="col-md-2 mb-2">
-                    <label>Quantity</label>
-                    <input type="number" 
-                            class="form-control quantity"
-                            inputmode="decimal"
-                            step="0.01" 
-                            required 
-                            placeholder="Enter quantity"/>
-                </div>
-
-                <div class="col-md-2 mb-2">
-                    <label>Unit</label>
-                    <select class="form-control unit-select"></select>
-                </div>
-
-                <div class="col-md-2 mb-2">
-                    <label>Price</label>
-                    <input type="number" 
-                            class="form-control price" 
-                            inputmode="decimal" 
-                            step="0.0001" 
-                            required
-                            placeholder="Enter price"/>
+                <div class="row">
+                    <div class="col-12 mb-2">
+                        <label>Product</label>
+                        <select class="form-control product-select" required></select>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <label>Quantity</label>
+                        <input type="number" class="form-control quantity" inputmode="decimal" step="0.01" placeholder="Enter quantity" required>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <label>Unit</label>
+                        <select class="form-control unit-select" required></select>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <label>Price</label>
+                        <input type="number" class="form-control price" inputmode="decimal" step="0.0001" placeholder="Enter price" required>
+                    </div>
                 </div>
             `;
+
             container.appendChild(row);
 
             loadProducts(row.querySelector(".product-select"));
             loadUnits(row.querySelector(".unit-select"));
-
-            row.querySelector(".remove-item").addEventListener("click", () => {
-                row.remove();
-                updateRowNumbers();
-                calculateGrandTotal?.();
-            });
-             setTimeout(() => row.querySelector(".quantity")?.focus(), 0);
 
             updateRowNumbers();
         }
@@ -198,6 +191,16 @@
                 const badge = row.querySelector(".row-number");
                 if (badge) badge.textContent = `#${index + 1}`;
             });
+                    document.addEventListener("click", function (e) {
+            if (e.target.closest(".remove-item")) {
+                const row = e.target.closest(".item-row");
+                if (row) {
+                    row.remove();
+                    updateRowNumbers();
+                }
+            }
+        });
+
         }
 
         // 🔹 TOAST
@@ -206,6 +209,9 @@
             toastEl.querySelector(".toast-body").innerText = msg;
             new bootstrap.Toast(toastEl).show();
         }
+                document.getElementById("createOrderForm").addEventListener("submit", function (e) {
+            e.preventDefault(); // Formun klasik gönderimini iptal eder
+        });
 
         // 🔹 KAYDET
         document.getElementById("createOrderForm").addEventListener("submit", async (e) => {

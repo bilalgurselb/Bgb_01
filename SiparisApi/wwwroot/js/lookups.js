@@ -227,6 +227,70 @@ async function loadPorts(selectId) {
         select.disabled = false;
     }
 }
+// --- Müşteriler ---
+async function loadCustomers() {
+    const select = document.getElementById("customerSelect");
+    if (!select) return;
+    select.disabled = true;
+    select.innerHTML = `<option>Loading...</option>`;
+
+    try {
+        // 🔹 Geçici sabit liste (API hazır olana kadar)
+        const customers = [
+            { id: 1, name: "MANAŞ DERİ GIDA VE İNŞ. SAN. TİC. LTD. ŞTİ.", city: "İzmir", country: "Türkiye", phone: "0232 483 79 26" },
+            { id: 2, name: "DERPA KİMYA SAN. VE TİC. A.Ş.", city: "İstanbul", country: "Türkiye", phone: "0216 365 44 88" },
+            { id: 3, name: "LEATHEREX INDIA PVT LTD", city: "Kolkata", country: "Hindistan", phone: "+91 33 2215 9000" }
+        ];
+
+        select.innerHTML = `<option value="">Seçiniz...</option>`;
+        customers.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.id;
+            opt.textContent = c.name;
+            opt.dataset.city = c.city;
+            opt.dataset.country = c.country;
+            opt.dataset.phone = c.phone;
+            select.appendChild(opt);
+        });
+
+        select.disabled = false;
+    } catch (err) {
+        console.error("Customer list failed:", err);
+        select.innerHTML = `<option>Error loading</option>`;
+        select.disabled = false;
+    }
+}
+
+// --- Satış Temsilcileri ---
+async function loadSalesReps() {
+    const select = document.getElementById("salesRepSelect");
+    if (!select) return;
+    select.disabled = true;
+    select.innerHTML = `<option>Loading...</option>`;
+
+    try {
+        // 🔹 Geçici sabit liste (ileride Users tablosundan gelecek)
+        const reps = [
+            { id: 12, name: "Cenk Erdem" },
+            { id: 13, name: "Bilal Börekci" },
+            { id: 14, name: "Seda Uğur" }
+        ];
+
+        select.innerHTML = `<option value="">Seçiniz...</option>`;
+        reps.forEach(r => {
+            const opt = document.createElement("option");
+            opt.value = r.id;
+            opt.textContent = r.name;
+            select.appendChild(opt);
+        });
+
+        select.disabled = false;
+    } catch (err) {
+        console.error("Sales reps list failed:", err);
+        select.innerHTML = `<option>Error loading</option>`;
+        select.disabled = false;
+    }
+}
 
 // === 🔹 Genel Yardımcı ===
 function fillSelect(id, list) {
