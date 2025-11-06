@@ -9,16 +9,18 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Giriş Yap - SINTAN CHEMICALS</title>
-    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="/css/site.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
 </head>
 
 @{
-            // Razor derleyicisinin <body> etiketini "TagHelper" sanmaması için string olarak verdik.
-            string bodyStyle = "background:#fff; display:flex; justify-content:center; align-items:center; height:100vh;";
+            
+                string bodyStyle = "background:#fff;";
+
 }
 
-<body style="@bodyStyle">
+<body class="login-page" style="@bodyStyle">
+
     <div style="width:100%; max-width:360px; text-align:center;">
         <img src="~/images/logo_login.png" alt="SINTAN CHEMICALS" class="login-logo" />
         <h2 style="margin-bottom:20px;">Sipariş Yönetim Sistemi</h2>
