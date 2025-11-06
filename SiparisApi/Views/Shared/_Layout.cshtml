@@ -125,5 +125,26 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     @RenderSection("Scripts", required: false)
+    <script>
+        // 🔹 Aşağı kaydırarak yenilemeyi engelle
+        let lastTouchY = 0;
+        let isPullingDown = false;
+
+        document.addEventListener("touchstart", function (e) {
+            if (e.touches.length !== 1) return;
+            lastTouchY = e.touches[0].clientY;
+            isPullingDown = (window.scrollY === 0);
+        });
+
+        document.addEventListener("touchmove", function (e) {
+            const currentY = e.touches[0].clientY;
+            const diffY = currentY - lastTouchY;
+
+            if (isPullingDown && diffY > 0) {
+                e.preventDefault(); // ⛔️ sayfa yenilemeyi engelle
+            }
+        }, { passive: false });
+    </script>
+
 </body>
 </html>
