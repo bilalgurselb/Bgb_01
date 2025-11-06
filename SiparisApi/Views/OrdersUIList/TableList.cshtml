@@ -16,7 +16,7 @@
             <h4 class="fw-normal text-secondary">@ViewBag.EmptyMessage</h4>
 
             <div class="mt-4">
-                <a asp-controller="OrdersUIList" asp-action="Create" class="btn btn-primary">
+                <a href="@Url.Action("Create", "OrdersUIList") class="btn btn-primary">
                     <i class="fas fa-plus"></i> Yeni Sipariş Oluştur
                 </a>
             </div>
