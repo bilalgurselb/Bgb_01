@@ -42,7 +42,7 @@
         <nav class="navbar navbar-expand-lg navbar-dark shadow-sm px-2" style="background-color:#0054A6; position: relative;">
             <div class="container-fluid d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center">
-                    <a class="navbar-brand d-flex align-items-center text-white" asp-controller="OrdersUIList" asp-action="Index">
+                    <a class="navbar-brand d-flex align-items-center text-white" asp-controller="OrdersUIList" asp-action="TableList">
                         <img src="/images/logo_nav.png" alt="Sintan Logo" style="height:32px; margin-right:8px;">
                         <span class="fw-semibold">SINTAN CHEMICALS</span>
                     </a>
@@ -56,12 +56,12 @@
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                     <ul class="navbar-nav align-items-lg-center">
                         <li class="nav-item">
-                            <a class="nav-link text-white" asp-controller="OrdersUIList" asp-action="Index">
+                            <a class="nav-link text-white" asp-controller="OrdersUIList" asp-action="TableList">
                                 <i class="fas fa-list"></i> Siparişler
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link nav-neworder text-white" asp-controller="OrdersUI" asp-action="Create">
+                            <a class="nav-link nav-neworder text-white" href="@Url.Action("Create", "OrdersUIList")">
                                 <i class="fas fa-plus-circle"></i> <strong>Yeni Sipariş</strong>
                             </a>
                         </li>
