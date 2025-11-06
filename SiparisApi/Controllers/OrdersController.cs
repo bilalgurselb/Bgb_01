@@ -253,6 +253,7 @@ namespace SiparisApi.Controllers
             try
             {
                 var list = _context.SintanCari
+                     .AsNoTracking()
                     .Select(c => new
                     {
                         id = c.Id,
@@ -277,6 +278,7 @@ namespace SiparisApi.Controllers
             try
             {
                 var list = _context.SintanStok
+                     .AsNoTracking()
                     .Select(s => new
                     {
                         id = s.Id,
@@ -303,6 +305,25 @@ namespace SiparisApi.Controllers
                         id = u.Id,
                         name = u.NameSurname
                     })
+                    .ToList();
+
+                return Ok(list);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+        [HttpGet("lookups/cities")]
+        public IActionResult GetCities()
+        {
+            try
+            {
+                var list = _context.SintanCari
+                    .Where(c => c.IL != null && c.IL.Trim() != "")
+                    .Select(c => c.IL.Trim())
+                    .Distinct()
+                    .OrderBy(c => c)
                     .ToList();
 
                 return Ok(list);

@@ -178,10 +178,17 @@
                                 step="0.0001"
                                 required
                                 placeholder="Enter price" />
-                            <span class="input-group-text price-symbol" style="min-width:40px;">€</span>
-                        </div>
+                                <span class="input-group-text price-symbol" style="min-width:40px;">€</span>
+                     </div>
                     </div>
-                </div>
+                           <div class="col-6 mb-2">
+          <label>Total</label>
+          <div class="input-group">
+            <span class="input-group-text total-symbol" style="min-width:40px;">€</span>
+            <input type="text" class="form-control total-amount" value="0.00" readonly>
+          </div>
+        </div>
+              </div>
             `;
 
             container.appendChild(row);

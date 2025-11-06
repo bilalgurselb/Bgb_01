@@ -13,7 +13,7 @@ async function loadLookups() {
         loadDeliveryTerms(),
         loadShipFrom(),
         loadPorts("portOfDelivery"),
-        loadPorts("placeOfDelivery")
+        loadCities("placeOfDelivery")
     ]);
 }
 
@@ -25,14 +25,19 @@ async function loadCustomers() {
     select.innerHTML = `<option>Loading customers...</option>`;
 
     try {
-        const cacheKey = "sintan_customers_v3";
+        const cacheKey = "sintan_customers_v4";
         let customers = JSON.parse(localStorage.getItem(cacheKey));
 
-        if (!customers) {
+        // cache yoksa veya 24 saati geçtiyse API'den al
+        const lastFetch = localStorage.getItem(cacheKey + "_time");
+        const expired = !lastFetch || Date.now() - parseInt(lastFetch) > 86400000;
+
+        if (!customers || expired) {
             const res = await fetch("/api/orders/lookups/customers");
             if (!res.ok) throw new Error("Failed to load customers");
             customers = await res.json();
             localStorage.setItem(cacheKey, JSON.stringify(customers));
+            localStorage.setItem(cacheKey + "_time", Date.now().toString());
         }
 
         select.innerHTML = `<option value="">Select Customer...</option>`;
@@ -46,7 +51,7 @@ async function loadCustomers() {
             select.appendChild(opt);
         });
 
-        // Bilgi gösterimi
+        // seçildiğinde müşteri bilgisi yazdır
         select.addEventListener("change", function () {
             const o = this.selectedOptions[0];
             document.getElementById("customerInfo").innerHTML = o?.value
@@ -94,29 +99,40 @@ async function loadSalesReps() {
     }
 }
 
-// === 🔹 STOKLAR (dbo.SintanStok) ===
+// === 🔹 ÜRÜNLER (dbo.SintanStok) ===
 async function loadProducts(selectElement = null) {
-    const cacheKey = "sintan_products_v3";
+    const cacheKey = "sintan_products_v4";
     let products = JSON.parse(localStorage.getItem(cacheKey));
 
+    const lastFetch = localStorage.getItem(cacheKey + "_time");
+    const expired = !lastFetch || Date.now() - parseInt(lastFetch) > 86400000;
+
     try {
-        if (!products) {
+        if (!products || expired) {
             const res = await fetch("/api/orders/lookups/products");
             if (!res.ok) throw new Error("Failed to load products");
             products = await res.json();
             localStorage.setItem(cacheKey, JSON.stringify(products));
+            localStorage.setItem(cacheKey + "_time", Date.now().toString());
         }
 
-        // Eğer belirli select verildiyse onu doldur
-        if (selectElement) {
-            fillSelectElement(selectElement, products.map(p => ({ value: p.id, text: p.name })));
-        } else {
-            const allProductSelects = document.querySelectorAll(".product-select");
-            allProductSelects.forEach(sel => fillSelectElement(sel, products.map(p => ({ value: p.id, text: p.name }))));
-        }
+        const targetSelects = selectElement
+            ? [selectElement]
+            : document.querySelectorAll(".product-select");
+
+        targetSelects.forEach(sel => {
+            sel.innerHTML = `<option value="">Select Product...</option>`;
+            products.forEach(p => {
+                const opt = document.createElement("option");
+                opt.value = p.id;
+                opt.textContent = p.name;
+                sel.appendChild(opt);
+            });
+        });
     } catch (err) {
         console.error("❌ Products failed:", err);
-        if (selectElement) selectElement.innerHTML = `<option>Error loading</option>`;
+        if (selectElement)
+            selectElement.innerHTML = `<option>Error loading products</option>`;
     }
 }
 
@@ -154,17 +170,24 @@ function loadUnits(selectElement = null) {
 function loadTransports() {
     const list = ["Seaway", "Truck", "Airway", "Railway"];
     fillSelect("transport", list);
+    const select = document.getElementById("transport");
+    if (select) select.value = "Seaway"; // 🔹 varsayılan seçili değer
 }
-
 // === 🔹 ÖDEME ŞARTLARI ===
 function loadPaymentTerms() {
     const list = [
-        "%30 Cash in Advance + %70 CAD",
-        "%40 Cash in Advance + %60 CAD",
-        "%50 Cash in Advance + %50 CAD",
+        "%30 Cash in Advance +%70 Cash Against Documents",
+        "%40 Cash in Advance +%60 Cash Against Documents",
+        "%50 Cash in Advance +%50 Cash Against Documents",
+        "%50 Cash in Advance +%50 Cash Against Goods",
+        "Acceptance Credit",
         "Cash Against Documents",
+        "Cash Against Goods",
+        "Cash in Advance",
+        "Free of Charge",
+        "Letter of Credit",
         "Letter of Credit at Sight",
-        "Free of Charge"
+        "Letter of Credit Deferred"
     ];
     fillSelect("paymentTerm", list);
 }
@@ -172,11 +195,16 @@ function loadPaymentTerms() {
 // === 🔹 TESLİMAT ŞARTLARI ===
 function loadDeliveryTerms() {
     const list = [
-        "CFR - Cost and Freight",
-        "CIF - Cost, Insurance and Freight",
-        "DAP - Delivered At Place",
-        "FOB - Free On Board",
-        "EXW - Ex Works"
+        "CFR--Cost and Freight",
+        "CIF--Cost, Insurance and Freigh",
+        "CIP--Carriage and Insured Paid To",
+        "CPT--Carriage Paid To",
+        "DAP--Delivered At Place",
+        "DDP--Delivered Duty Paid",
+        "EXW--Ex Works",
+        "FAS--Free Alongside Ship",
+        "FCA--Free Carrier",
+        "FOB--Free On Board"
     ];
     fillSelect("deliveryTerm", list);
 }
@@ -194,7 +222,7 @@ async function loadPorts(selectId) {
         let ports = JSON.parse(localStorage.getItem(cacheKey));
 
         if (!ports) {
-            const res = await fetch("/js/ports.json");
+            const res = await fetch("/js/ports.json", { cache: "no-store" });
             if (!res.ok) throw new Error("Ports not found");
             ports = await res.json();
             localStorage.setItem(cacheKey, JSON.stringify(ports));
@@ -204,9 +232,13 @@ async function loadPorts(selectId) {
         ports.forEach(p => {
             const opt = document.createElement("option");
             opt.value = p.code || p.name;
-            opt.textContent = `${p.name} (${p.country || '-'})`;
+            opt.textContent = `${p.name} (${p.country || "-"})`;
             select.appendChild(opt);
         });
+
+        // olası tema/kontrast sorunlarına karşı
+        select.style.color = "#000";
+        select.style.backgroundColor = "#fff";
     } catch (err) {
         console.error("❌ Ports failed:", err);
         select.innerHTML = `<option>Error loading ports</option>`;
@@ -214,6 +246,47 @@ async function loadPorts(selectId) {
         select.disabled = false;
     }
 }
+
+// === 🔹 PLACE OF DELIVERY (SQL: dbo.SintanCari.IL) ===
+async function loadCities(selectId = "placeOfDelivery") {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    select.disabled = true;
+    select.innerHTML = `<option>Loading cities...</option>`;
+
+    try {
+        const cacheKey = "sintan_cities_v4";
+        let cities = JSON.parse(localStorage.getItem(cacheKey));
+
+        const lastFetch = localStorage.getItem(cacheKey + "_time");
+        const expired = !lastFetch || Date.now() - parseInt(lastFetch) > 86400000;
+
+        if (!cities || expired) {
+            const res = await fetch("/api/orders/lookups/cities");
+            if (!res.ok) throw new Error("Cities not found");
+            cities = await res.json();
+            localStorage.setItem(cacheKey, JSON.stringify(cities));
+            localStorage.setItem(cacheKey + "_time", Date.now().toString());
+        }
+
+        select.innerHTML = `<option value="">Select City...</option>`;
+        cities.forEach(city => {
+            const opt = document.createElement("option");
+            opt.value = city;
+            opt.textContent = city;
+            select.appendChild(opt);
+        });
+
+        select.style.color = "#000";
+        select.style.backgroundColor = "#fff";
+    } catch (err) {
+        console.error("❌ Cities failed:", err);
+        select.innerHTML = `<option>Error loading cities</option>`;
+    } finally {
+        select.disabled = false;
+    }
+}
+
 
 // === 🔹 Genel Yardımcılar ===
 function fillSelect(id, list) {

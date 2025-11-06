@@ -59,11 +59,25 @@ h1, h2, h3 {
     color: var(--text-light) !important;
     font-size: 0.9rem;
     padding: 6px 10px;
-    transition: color .2s;
+    transition: all .2s ease-in-out;
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
     .navbar-nav .nav-link:hover {
         color: var(--sintan-orange) !important;
+    }
+.navbar-nav .nav-neworder {
+    background-color: var(--sintan-orange);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-weight: 600;
+}
+
+    .navbar-nav .nav-neworder:hover {
+        background-color: #d66b18;
+        color: #fff !important;
     }
 
 /* ============================================================
@@ -73,7 +87,12 @@ h1, h2, h3 {
     background: var(--sintan-blue);
     color: var(--text-light);
     border: none;
+    padding: 12px 0; 
+    font-weight: 600; 
+    font-size: 15px; 
+    border-radius: 6px; 
 }
+
 
     .btn-primary:hover {
         background: var(--sintan-blue-dark);
@@ -190,7 +209,7 @@ body.login-page {
 }
 
     .login-container img {
-        width: 180px;
+        width: 210px;
         height: auto;
         margin-bottom: 25px;
         display: block;

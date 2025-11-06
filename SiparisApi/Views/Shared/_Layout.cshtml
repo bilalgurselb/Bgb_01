@@ -46,15 +46,7 @@
                         <img src="/images/logo_nav.png" alt="Sintan Logo" style="height:32px; margin-right:8px;">
                         <span class="fw-semibold">SINTAN CHEMICALS</span>
                     </a>
-
-                    @if (isAuthenticated)
-                    {
-                        <div class="text-white small ms-3 d-none d-lg-block"
-                             style="opacity:0.9; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">
-                            @greeting <strong>@userName</strong>
-                        </div>
-                    }
-                </div>
+                    </div>
 
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                         aria-controls="navbarNav" aria-expanded="false" aria-label="Menüyü Aç/Kapat">
@@ -69,8 +61,8 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-white" href="@Url.Action("Create", "OrdersUIList")">
-                                <i class="fas fa-plus-circle" style="color:#F47C20;"></i> Yeni Sipariş
+                            <a class="nav-link nav-neworder text-white" asp-controller="OrdersUI" asp-action="Create">
+                                <i class="fas fa-plus-circle"></i> <strong>Yeni Sipariş</strong>
                             </a>
                         </li>
                         <li class="nav-item">
@@ -79,28 +71,13 @@
                                 @(userRole == "Admin" ? "Yönetim Paneli" : "Kullanıcı Bilgilerim")
                             </a>
                         </li>
-                        @if (isAuthenticated)
-                        {                           
-
-                            <li class="nav-item">
-                                <a href="@Url.Action("Logout", "Account")" class="btn btn-sm btn-light text-dark">
-                                    <i class="fas fa-sign-out-alt"></i> Çıkış
-                                </a>
-                            </li>
-                           // <li class="nav-item mt-3 text-white small text-end d-lg-none"
-                            //    style="opacity:0.9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">
-                            //    @greeting <strong>@userName</strong>
-                         //   </li>
-                        }
-                        else
-                        {
-                            <li class="nav-item">
-                                <a asp-controller="Account" asp-action="Login" class="btn btn-sm btn-light text-dark">
-                                    <i class="fas fa-sign-in-alt"></i> Giriş Yap
-                                </a>
-                            </li>
-                        }                    
+                        <li class="nav-item">
+                            <a href="@Url.Action("Logout", "Account")" class="btn btn-sm btn-light text-dark">
+                                <i class="fas fa-sign-out-alt"></i> Çıkış
+                            </a>
+                        </li>
                     </ul>
+
                 </div>
             </div>
         </nav>
