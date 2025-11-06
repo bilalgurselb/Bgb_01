@@ -16,18 +16,17 @@
          string bodyStyle = "background:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh;";
 
 }
-<body class="login-page" style="@bodyStyle">
+<body class="login-page">
 
-    <div style="width:100%; max-width:360px; text-align:center;">
+    <div class="login-container">
         <img src="~/images/logo_login.png" alt="SINTAN CHEMICALS" class="login-logo" />
-        <h2 style="margin-bottom:20px;">Sipariş Yönetim Sistemi</h2>
+        <h2>Sipariş Yönetim Sistemi</h2>
 
         <form id="loginForm" method="post" action="/Account/Login">
-            <input type="text" name="Email" placeholder="E-posta" autocomplete="email" required />
+            <input type="email" name="Email" placeholder="E-posta" autocomplete="email" required />
             <input type="password" name="Password" placeholder="Şifre" autocomplete="current-password" required />
 
-
-            <!-- 🔹 Bu alan başlangıçta gizli olacak -->
+            <!-- 🔹 Şifre Tekrar -->
             <input type="password" name="ConfirmPassword" id="confirmPassword" placeholder="Şifre (Tekrar)" style="display:none;" />
 
             <button type="submit" class="btn btn-primary" style="width:100%;">Giriş Yap</button>
@@ -42,7 +41,6 @@
             © @DateTime.Now.Year SINTAN CHEMICALS by Bilal Borekci
         </p>
     </div>
-
     <script>
         // --- LOGIN ---
         async function login() {
