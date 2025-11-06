@@ -167,42 +167,52 @@ select {
 /* ============================================================
    🔐 LOGIN SAYFASI
    ============================================================ */
+/* === 🔹 Login Sayfası Kurumsal Denge Ayarı === */
 body.login-page {
+    background-color: #ffffff;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: #fff;
 }
 
 .login-container {
+    text-align: center;
     width: 100%;
     max-width: 380px;
-    text-align: center;
-    padding: 40px 20px;
+    margin-top: -60px;
 }
 
-    .login-container img {
-        max-width: 160px;
-        margin-bottom: 20px;
+    .login-container input {
+        background: #f8f9fa;
+        border: 1px solid #d1d9e0;
+        border-radius: 6px;
+        padding: 10px;
+        font-size: 0.95rem;
     }
 
     .login-container button {
-        width: 100%;
-        min-height: 48px;
-        padding: 14px 0;
-        font-size: 1rem;
-        font-weight: 500;
-        border-radius: 6px;
-        border: none;
-        background: var(--sintan-blue);
+        background-color: #0054A6; /* 🔹 Kurumsal mavi */
         color: #fff;
-        transition: background .2s;
+        border: none;
+        border-radius: 6px;
+        padding: 10px 0;
+        font-weight: 500;
+        font-size: 1rem;
+        transition: background-color 0.2s;
     }
 
         .login-container button:hover {
-            background: var(--sintan-blue-dark);
+            background-color: #0b6cc3;
         }
+
+.footer {
+    font-size: 13px;
+    color: #555;
+    text-align: center;
+    margin-top: 20px;
+}
 
 /* ============================================================
    📦 ÜRÜN SATIRI (CREATE SAYFASI)
