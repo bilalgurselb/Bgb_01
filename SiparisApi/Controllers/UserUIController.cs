@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SiparisApi.Models;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using SiparisApi.Models;
 
 namespace SiparisApi.Controllers
 {
@@ -59,5 +59,5 @@ namespace SiparisApi.Controllers
         }
     }
 
-   
+
 }

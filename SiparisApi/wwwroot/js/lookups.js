@@ -29,7 +29,7 @@ async function loadCustomers() {
         let customers = JSON.parse(localStorage.getItem(cacheKey));
 
         if (!customers) {
-            const res = await fetch("/api/lookups/customers");
+            const res = await fetch("/api/orders/lookups/customers");
             if (!res.ok) throw new Error("Failed to load customers");
             customers = await res.json();
             localStorage.setItem(cacheKey, JSON.stringify(customers));
@@ -73,7 +73,7 @@ async function loadSalesReps() {
         let reps = JSON.parse(localStorage.getItem(cacheKey));
 
         if (!reps) {
-            const res = await fetch("/api/lookups/salesreps");
+            const res = await fetch("/api/orders/lookups/salesreps");
             if (!res.ok) throw new Error("Failed to load sales reps");
             reps = await res.json();
             localStorage.setItem(cacheKey, JSON.stringify(reps));
@@ -101,7 +101,7 @@ async function loadProducts(selectElement = null) {
 
     try {
         if (!products) {
-            const res = await fetch("/api/lookups/products");
+            const res = await fetch("/api/orders/lookups/products");
             if (!res.ok) throw new Error("Failed to load products");
             products = await res.json();
             localStorage.setItem(cacheKey, JSON.stringify(products));

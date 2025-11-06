@@ -1,12 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using SiparisApi.Data;
+using SiparisApi.Dtos;
 using SiparisApi.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using BCrypt.Net;
-using SiparisApi.Dtos;
 
 namespace SiparisApi.Controllers
 {
@@ -55,7 +54,7 @@ namespace SiparisApi.Controllers
             var _key = _config["Jwt:Key"];
             if (string.IsNullOrEmpty(_key))
                 throw new InvalidOperationException("❌ JWT anahtarı (Jwt:Key) appsettings.json içinde tanımlı olmalı.");
-               var key = Encoding.UTF8.GetBytes(_key);
+            var key = Encoding.UTF8.GetBytes(_key);
             var claims = new[]
             {
                 new Claim(ClaimTypes.Email, user.Email),
@@ -124,5 +123,5 @@ namespace SiparisApi.Controllers
         }
     }
 
-    
+
 }

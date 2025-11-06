@@ -16,16 +16,16 @@ namespace SiparisApi.Models
         public string? DeliveryTerm { get; set; }
         public int DueDays { get; set; }
         public string? Currency { get; set; }          // Varsayılan para birimi (satır override edebilir)
-      //  public int? CreatedById { get; set; }
-      //  public User? CreatedById { get; set; }
-        // Durum & zaman damgaları
+                                                       //  public int? CreatedById { get; set; }
+                                                       //  public User? CreatedById { get; set; }
+                                                       // Durum & zaman damgaları
         public string Status { get; set; } = "Onay Bekleniyor";
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
         public string? PortOfDelivery { get; set; }
         public string? PlaceOfDelivery { get; set; }
         public SintanCari? Customer { get; set; }
-        public User? SalesRep { get; set; }      
+        public User? SalesRep { get; set; }
         // Navigations
         public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
         public bool IsNew { get; set; } = false;

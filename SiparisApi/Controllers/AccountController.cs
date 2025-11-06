@@ -77,7 +77,7 @@ namespace SiparisApi.Controllers
             string? role = jsonDoc.RootElement.TryGetProperty("role", out var r) ? r.GetString() : "Kullanıcı";
 
             try
-            { 
+            {
                 if (jsonDoc.RootElement.TryGetProperty("token", out var tokenProp))
                     token = tokenProp.GetString();
                 else if (jsonDoc.RootElement.TryGetProperty("access_token", out var accessTokenProp))

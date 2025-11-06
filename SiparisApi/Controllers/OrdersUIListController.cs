@@ -61,7 +61,7 @@ namespace SiparisApi.Controllers
         {
             var token = HttpContext.Session.GetString("AccessToken");
             if (token == null)
-                return RedirectToAction("Login", "Account");            
+                return RedirectToAction("Login", "Account");
             return View("~/Views/OrdersUI/Create.cshtml");
         }
 
@@ -176,6 +176,6 @@ namespace SiparisApi.Controllers
         }
     }
 
-    
-   
+
+
 }

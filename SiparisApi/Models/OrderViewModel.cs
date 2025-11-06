@@ -1,6 +1,4 @@
-﻿using SiparisApi.Models;
-
-namespace SiparisApi.Models
+﻿namespace SiparisApi.Models
 {
     public class OrderViewModel
     {
