@@ -243,6 +243,75 @@ namespace SiparisApi.Controllers
 
             return Ok(order);
         }
+        // ================================================
+        // 🔹 Lookup API'leri (Müşteri, Ürün, Satış Temsilcisi)
+        // ================================================
+
+        [HttpGet("lookups/customers")]
+        public IActionResult GetCustomers()
+        {
+            try
+            {
+                var list = _context.SintanCari
+                    .Select(c => new
+                    {
+                        id = c.Id,
+                        name = c.CARI_ISIM,
+                        city = c.ILCE,
+                        country = c.IL,
+                        phone = c.TELEFON
+                    })
+                    .ToList();
+
+                return Ok(list);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpGet("lookups/products")]
+        public IActionResult GetProducts()
+        {
+            try
+            {
+                var list = _context.SintanStok
+                    .Select(s => new
+                    {
+                        id = s.Id,
+                        name = s.STOK_ADI
+                    })
+                    .ToList();
+
+                return Ok(list);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpGet("lookups/salesreps")]
+        public IActionResult GetSalesReps()
+        {
+            try
+            {
+                var list = _context.AllowedEmails
+                    .Select(u => new
+                    {
+                        id = u.Id,
+                        name = u.NameSurname
+                    })
+                    .ToList();
+
+                return Ok(list);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
 
     }
 }
