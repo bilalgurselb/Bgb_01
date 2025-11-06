@@ -167,51 +167,79 @@ select {
 /* ============================================================
    🔐 LOGIN SAYFASI
    ============================================================ */
-/* === 🔹 Login Sayfası Kurumsal Denge Ayarı === */
+
 body.login-page {
-    background-color: #ffffff;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    background: #fff;
+    overflow: hidden;
 }
 
 .login-container {
-    text-align: center;
     width: 100%;
-    max-width: 380px;
-    margin-top: -60px;
+    max-width: 400px;
+    text-align: center;
+    background: #ffffff;
+    padding: 40px 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
-    .login-container input {
-        background: #f8f9fa;
-        border: 1px solid #d1d9e0;
-        border-radius: 6px;
-        padding: 10px;
-        font-size: 0.95rem;
+    .login-container img {
+        width: 180px;
+        height: auto;
+        margin-bottom: 25px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
     }
 
-    .login-container button {
-        background-color: #0054A6; /* 🔹 Kurumsal mavi */
-        color: #fff;
-        border: none;
-        border-radius: 6px;
-        padding: 10px 0;
-        font-weight: 500;
-        font-size: 1rem;
-        transition: background-color 0.2s;
+    .login-container h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #333;
     }
+
+    .login-container input[type="email"],
+    .login-container input[type="password"] {
+        width: 100%;
+        height: 46px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 15px;
+        padding: 10px;
+        margin-bottom: 12px;
+        box-sizing: border-box;
+    }
+
 
         .login-container button:hover {
-            background-color: #0b6cc3;
+            background-color: #0072d1;
+            transform: scale(1.02);
         }
 
-.footer {
-    font-size: 13px;
-    color: #555;
-    text-align: center;
-    margin-top: 20px;
+/* === 🔹 Mobil uyum === */
+@media (max-width: 768px) {
+    .login-container {
+        width: 92%;
+        padding: 25px 20px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+        .login-container img {
+            width: 140px;
+            margin-bottom: 20px;
+        }
+
+        .login-container button {
+            height: 54px;
+            font-size: 1.05rem;
+            border-radius: 8px;
+        }
 }
 
 /* ============================================================
