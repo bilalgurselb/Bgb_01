@@ -130,19 +130,18 @@
     <script src="/js/lookups.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-                    // --- Sayfa Yenilemeyi Engelle ---
-        window.addEventListener("beforeunload", function (e) {
-            
-            e.preventDefault();
-            e.returnValue = "";
-        });
+            // --- Sayfa Yenilemeyi Engelle ---
+            window.addEventListener("beforeunload", function (e) {
+                e.preventDefault();
+                e.returnValue = "";
+            });
 
             loadLookups();
             addOrderItemRow();
         });
 
         // 🔹 ÜRÜN SATIRI EKLE
-               function addOrderItemRow() {
+        function addOrderItemRow() {
             const container = document.getElementById("itemsContainer");
             const rowIndex = container.children.length + 1;
 
@@ -170,9 +169,17 @@
                         <label>Unit</label>
                         <select class="form-control unit-select" required></select>
                     </div>
-                    <div class="col-6 mb-2">
+                    <div class="col-12 mb-2">
                         <label>Price</label>
-                        <input type="number" class="form-control price" inputmode="decimal" step="0.0001" placeholder="Enter price" required>
+                        <div class="input-group">
+                            <input type="number"
+                                class="form-control price"
+                                inputmode="decimal"
+                                step="0.0001"
+                                required
+                                placeholder="Enter price" />
+                            <span class="input-group-text price-symbol" style="min-width:40px;">€</span>
+                        </div>
                     </div>
                 </div>
             `;
@@ -183,25 +190,28 @@
             loadUnits(row.querySelector(".unit-select"));
 
             updateRowNumbers();
+            document.getElementById("currency")?.dispatchEvent(new Event("change"));
         }
 
+        // 🔹 Satır numaralarını yeniden sırala
         function updateRowNumbers() {
-            const rows = document.querySelectorAll("#itemsContainer .item-row");
-            rows.forEach((row, index) => {
-                const badge = row.querySelector(".row-number");
+            document.querySelectorAll("#itemsContainer .item-row").forEach((row, index) => {
+                const badge = row.querySelector(".badge");
                 if (badge) badge.textContent = `#${index + 1}`;
             });
-                    document.addEventListener("click", function (e) {
-            if (e.target.closest(".remove-item")) {
-                const row = e.target.closest(".item-row");
-                if (row) {
-                    row.remove();
-                    updateRowNumbers();
-                }
+        }
+
+        // 🔹 Ürün Satırı Silme (Delegated Listener)
+        document.addEventListener("click", function (e) {
+            const btn = e.target.closest(".remove-item");
+            if (!btn) return;
+
+            const row = btn.closest(".item-row");
+            if (row) {
+                row.remove();
+                updateRowNumbers();
             }
         });
-
-        }
 
         // 🔹 TOAST
         function showToast(msg) {
@@ -209,13 +219,30 @@
             toastEl.querySelector(".toast-body").innerText = msg;
             new bootstrap.Toast(toastEl).show();
         }
-                document.getElementById("createOrderForm").addEventListener("submit", function (e) {
+
+        document.getElementById("createOrderForm").addEventListener("submit", function (e) {
             e.preventDefault(); // Formun klasik gönderimini iptal eder
         });
+
+        // === Currency seçilince Price yanına sembol yaz ===
+        (function attachCurrencySymbolBinding(){
+            const cur = document.getElementById("currency");
+            if (!cur) return;
+            const symbols = { USD: "$", EURO: "€", TL: "₺", RUBLE: "₽" };
+
+            function refreshSymbols(){
+                const symbol = symbols[cur.value] || "";
+                document.querySelectorAll(".price-symbol").forEach(el => el.textContent = symbol);
+            }
+
+            cur.addEventListener("change", refreshSymbols);
+            setTimeout(refreshSymbols, 0);
+        })();
 
         // 🔹 KAYDET
         document.getElementById("createOrderForm").addEventListener("submit", async (e) => {
             e.preventDefault();
+
             const order = {
                 CustomerId: document.getElementById("customerSelect").value,
                 SalesRepId: document.getElementById("salesRepSelect").value,
@@ -268,10 +295,11 @@
                 } else showToast("Kayıt başarısız.");
             };
         });
-         
-          window.addEventListener("pageshow", e => {
+
+        window.addEventListener("pageshow", e => {
             if (e.persisted) console.log("Sayfa cache'den yüklendi.");
         });
         document.getElementById("addItem").addEventListener("click", addOrderItemRow);
     </script>
 }
+

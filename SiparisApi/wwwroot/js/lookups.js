@@ -1,10 +1,11 @@
-﻿// === 🔹 Lookup.js — SINTAN CHEMICALS (v2) ===
+﻿// === 🔹 Lookup.js — SINTAN CHEMICALS (v3, DB + Cache + Fast) ===
 
 // --- Ana yükleyici ---
 async function loadLookups() {
     await Promise.all([
         loadCustomers(),
         loadSalesReps(),
+        loadProducts(),
         loadCurrencies(),
         loadUnits(),
         loadTransports(),
@@ -16,20 +17,20 @@ async function loadLookups() {
     ]);
 }
 
-// === 🔹 MÜŞTERİLER (API'den veya cache'ten) ===
+// === 🔹 MÜŞTERİLER (dbo.SintanCari) ===
 async function loadCustomers() {
     const select = document.getElementById("customerSelect");
     if (!select) return;
-
     select.disabled = true;
-    select.innerHTML = `<option>Loading...</option>`;
+    select.innerHTML = `<option>Loading customers...</option>`;
 
     try {
-        const cacheKey = "sintan_customers";
+        const cacheKey = "sintan_customers_v3";
         let customers = JSON.parse(localStorage.getItem(cacheKey));
 
         if (!customers) {
             const res = await fetch("/api/lookups/customers");
+            if (!res.ok) throw new Error("Failed to load customers");
             customers = await res.json();
             localStorage.setItem(cacheKey, JSON.stringify(customers));
         }
@@ -38,49 +39,42 @@ async function loadCustomers() {
         customers.forEach(c => {
             const opt = document.createElement("option");
             opt.value = c.id;
-            opt.textContent = `${c.name} (${c.city}, ${c.country})`;
+            opt.textContent = `${c.name} (${c.city || "N/A"}, ${c.country || "-"})`;
             opt.dataset.city = c.city;
             opt.dataset.country = c.country;
             opt.dataset.phone = c.phone;
             select.appendChild(opt);
         });
 
-        // müşteri bilgisi gösterimi
+        // Bilgi gösterimi
         select.addEventListener("change", function () {
-            const option = this.selectedOptions[0];
-            if (option && option.value) {
-                document.getElementById("customerInfo").innerHTML = `
-                    <small>
-                        <b>City:</b> ${option.dataset.city || '-'} |
-                        <b>Country:</b> ${option.dataset.country || '-'} |
-                        <b>Phone:</b> ${option.dataset.phone || '-'}
-                    </small>`;
-            } else {
-                document.getElementById("customerInfo").innerHTML = "";
-            }
+            const o = this.selectedOptions[0];
+            document.getElementById("customerInfo").innerHTML = o?.value
+                ? `<small><b>City:</b> ${o.dataset.city || '-'} | <b>Country:</b> ${o.dataset.country || '-'} | <b>Phone:</b> ${o.dataset.phone || '-'}</small>`
+                : "";
         });
     } catch (err) {
-        console.error("❌ Müşteri listesi yüklenemedi:", err);
-        select.innerHTML = `<option>Error loading</option>`;
+        console.error("❌ Customer list failed:", err);
+        select.innerHTML = `<option>Error loading customers</option>`;
     } finally {
         select.disabled = false;
     }
 }
 
-// === 🔹 SATIŞ TEMSİLCİLERİ ===
+// === 🔹 SATIŞ TEMSİLCİLERİ (AllowedUsers) ===
 async function loadSalesReps() {
     const select = document.getElementById("salesRepSelect");
     if (!select) return;
-
     select.disabled = true;
-    select.innerHTML = `<option>Loading...</option>`;
+    select.innerHTML = `<option>Loading sales reps...</option>`;
 
     try {
-        const cacheKey = "sintan_salesreps";
+        const cacheKey = "sintan_salesreps_v3";
         let reps = JSON.parse(localStorage.getItem(cacheKey));
 
         if (!reps) {
             const res = await fetch("/api/lookups/salesreps");
+            if (!res.ok) throw new Error("Failed to load sales reps");
             reps = await res.json();
             localStorage.setItem(cacheKey, JSON.stringify(reps));
         }
@@ -93,14 +87,40 @@ async function loadSalesReps() {
             select.appendChild(opt);
         });
     } catch (err) {
-        console.error("❌ Satış temsilcileri yüklenemedi:", err);
-        select.innerHTML = `<option>Error loading</option>`;
+        console.error("❌ Sales reps failed:", err);
+        select.innerHTML = `<option>Error loading reps</option>`;
     } finally {
         select.disabled = false;
     }
 }
 
-// === 🔹 SHIP FROM (Sabit, İzmir / İstanbul) ===
+// === 🔹 STOKLAR (dbo.SintanStok) ===
+async function loadProducts(selectElement = null) {
+    const cacheKey = "sintan_products_v3";
+    let products = JSON.parse(localStorage.getItem(cacheKey));
+
+    try {
+        if (!products) {
+            const res = await fetch("/api/lookups/products");
+            if (!res.ok) throw new Error("Failed to load products");
+            products = await res.json();
+            localStorage.setItem(cacheKey, JSON.stringify(products));
+        }
+
+        // Eğer belirli select verildiyse onu doldur
+        if (selectElement) {
+            fillSelectElement(selectElement, products.map(p => ({ value: p.id, text: p.name })));
+        } else {
+            const allProductSelects = document.querySelectorAll(".product-select");
+            allProductSelects.forEach(sel => fillSelectElement(sel, products.map(p => ({ value: p.id, text: p.name }))));
+        }
+    } catch (err) {
+        console.error("❌ Products failed:", err);
+        if (selectElement) selectElement.innerHTML = `<option>Error loading</option>`;
+    }
+}
+
+// === 🔹 SHIP FROM (Sabit) ===
 function loadShipFrom() {
     const container = document.getElementById("shipFromContainer");
     if (!container) return;
@@ -116,29 +136,6 @@ function loadShipFrom() {
         </div>
     `;
 }
-// Product //
-function loadProducts(select) {
-    if (!select) return;
-    select.innerHTML = `<option value="">Loading...</option>`;
-
-    // örnek simülasyon (ileride SQL’den API’ye geçecek)
-    const products = [
-        { id: 1, name: "TURAX PH (25*40) P", net: 1000, gross: 1035 },
-        { id: 2, name: "TURAX DLM (25*42) P", net: 1050, gross: 1085 },
-        { id: 3, name: "TURAX LQ (IBC)", net: 1000, gross: 1040 }
-    ];
-
-    select.innerHTML = `<option value="">Seçiniz...</option>`;
-    products.forEach(p => {
-        const opt = document.createElement("option");
-        opt.value = p.id;
-        opt.textContent = p.name;
-        opt.dataset.net = p.net;
-        opt.dataset.gross = p.gross;
-        select.appendChild(opt);
-    });
-}
-
 
 // === 🔹 PARA BİRİMLERİ ===
 function loadCurrencies() {
@@ -147,9 +144,9 @@ function loadCurrencies() {
 }
 
 // === 🔹 ÖLÇÜ BİRİMLERİ ===
-function loadUnits(selectId = null) {
-    const list = ["pieces", "pallets", "IBC"];
-    if (!target) fillSelect(selectId, list);
+function loadUnits(selectElement = null) {
+    const list = ["Pallets", "Pieces", "IBC"];
+    if (selectElement) fillSelectElement(selectElement, list.map(u => ({ value: u, text: u })));
     else fillSelect("unit", list);
 }
 
@@ -162,18 +159,12 @@ function loadTransports() {
 // === 🔹 ÖDEME ŞARTLARI ===
 function loadPaymentTerms() {
     const list = [
-        "%30 Cash in Advance +%70 Cash Against Documents",
-        "%40 Cash in Advance +%60 Cash Against Documents",
-        "%50 Cash in Advance +%50 Cash Against Documents",
-        "%50 Cash in Advance +%50 Cash Against Goods",
-        "Acceptance Credit",
+        "%30 Cash in Advance + %70 CAD",
+        "%40 Cash in Advance + %60 CAD",
+        "%50 Cash in Advance + %50 CAD",
         "Cash Against Documents",
-        "Cash Against Goods",
-        "Cash in Advance",
-        "Free of Charge",
-        "Letter of Credit",
         "Letter of Credit at Sight",
-        "Letter of Credit Deferred"
+        "Free of Charge"
     ];
     fillSelect("paymentTerm", list);
 }
@@ -183,14 +174,9 @@ function loadDeliveryTerms() {
     const list = [
         "CFR - Cost and Freight",
         "CIF - Cost, Insurance and Freight",
-        "CIP - Carriage and Insurance Paid To",
-        "CPT - Carriage Paid To",
         "DAP - Delivered At Place",
-        "DDP - Delivered Duty Paid",
-        "EXW - Ex Works",
-        "FAS - Free Alongside Ship",
-        "FCA - Free Carrier",
-        "FOB - Free On Board"
+        "FOB - Free On Board",
+        "EXW - Ex Works"
     ];
     fillSelect("deliveryTerm", list);
 }
@@ -201,106 +187,53 @@ async function loadPorts(selectId) {
     if (!select) return;
 
     select.disabled = true;
-    select.innerHTML = `<option>Loading...</option>`;
+    select.innerHTML = `<option>Loading ports...</option>`;
 
     try {
-        const cacheKey = "sintan_ports";
+        const cacheKey = "sintan_ports_v3";
         let ports = JSON.parse(localStorage.getItem(cacheKey));
 
         if (!ports) {
-            const response = await fetch("/js/ports.json");
-            ports = await response.json();
+            const res = await fetch("/js/ports.json");
+            if (!res.ok) throw new Error("Ports not found");
+            ports = await res.json();
             localStorage.setItem(cacheKey, JSON.stringify(ports));
         }
 
         select.innerHTML = `<option value="">Select Port...</option>`;
-        ports.slice(0, 2000).forEach(port => {
+        ports.forEach(p => {
             const opt = document.createElement("option");
-            opt.value = port.code || port.name;
-            opt.textContent = `${port.name} (${port.country})`;
+            opt.value = p.code || p.name;
+            opt.textContent = `${p.name} (${p.country || '-'})`;
             select.appendChild(opt);
         });
     } catch (err) {
-        console.error("❌ Liman listesi yüklenemedi:", err);
+        console.error("❌ Ports failed:", err);
         select.innerHTML = `<option>Error loading ports</option>`;
     } finally {
         select.disabled = false;
     }
 }
-// --- Müşteriler ---
-async function loadCustomers() {
-    const select = document.getElementById("customerSelect");
-    if (!select) return;
-    select.disabled = true;
-    select.innerHTML = `<option>Loading...</option>`;
 
-    try {
-        // 🔹 Geçici sabit liste (API hazır olana kadar)
-        const customers = [
-            { id: 1, name: "MANAŞ DERİ GIDA VE İNŞ. SAN. TİC. LTD. ŞTİ.", city: "İzmir", country: "Türkiye", phone: "0232 483 79 26" },
-            { id: 2, name: "DERPA KİMYA SAN. VE TİC. A.Ş.", city: "İstanbul", country: "Türkiye", phone: "0216 365 44 88" },
-            { id: 3, name: "LEATHEREX INDIA PVT LTD", city: "Kolkata", country: "Hindistan", phone: "+91 33 2215 9000" }
-        ];
-
-        select.innerHTML = `<option value="">Seçiniz...</option>`;
-        customers.forEach(c => {
-            const opt = document.createElement("option");
-            opt.value = c.id;
-            opt.textContent = c.name;
-            opt.dataset.city = c.city;
-            opt.dataset.country = c.country;
-            opt.dataset.phone = c.phone;
-            select.appendChild(opt);
-        });
-
-        select.disabled = false;
-    } catch (err) {
-        console.error("Customer list failed:", err);
-        select.innerHTML = `<option>Error loading</option>`;
-        select.disabled = false;
-    }
-}
-
-// --- Satış Temsilcileri ---
-async function loadSalesReps() {
-    const select = document.getElementById("salesRepSelect");
-    if (!select) return;
-    select.disabled = true;
-    select.innerHTML = `<option>Loading...</option>`;
-
-    try {
-        // 🔹 Geçici sabit liste (ileride Users tablosundan gelecek)
-        const reps = [
-            { id: 12, name: "Cenk Erdem" },
-            { id: 13, name: "Bilal Börekci" },
-            { id: 14, name: "Seda Uğur" }
-        ];
-
-        select.innerHTML = `<option value="">Seçiniz...</option>`;
-        reps.forEach(r => {
-            const opt = document.createElement("option");
-            opt.value = r.id;
-            opt.textContent = r.name;
-            select.appendChild(opt);
-        });
-
-        select.disabled = false;
-    } catch (err) {
-        console.error("Sales reps list failed:", err);
-        select.innerHTML = `<option>Error loading</option>`;
-        select.disabled = false;
-    }
-}
-
-// === 🔹 Genel Yardımcı ===
+// === 🔹 Genel Yardımcılar ===
 function fillSelect(id, list) {
     const select = document.getElementById(id);
     if (!select) return;
     select.innerHTML = `<option value="">Select...</option>`;
     list.forEach(x => {
         const opt = document.createElement("option");
-        opt.value = x;
-        opt.textContent = x;
+        opt.value = typeof x === "string" ? x : x.value;
+        opt.textContent = typeof x === "string" ? x : x.text;
+        select.appendChild(opt);
+    });
+}
+
+function fillSelectElement(select, list) {
+    select.innerHTML = `<option value="">Select...</option>`;
+    list.forEach(x => {
+        const opt = document.createElement("option");
+        opt.value = typeof x === "string" ? x : x.value;
+        opt.textContent = typeof x === "string" ? x : x.text;
         select.appendChild(opt);
     });
 }
