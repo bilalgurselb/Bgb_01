@@ -86,7 +86,7 @@
 
         <!-- 🔹 ÜRÜN SATIRLARI -->
         <div class="mt-4">
-            <h5><i class="fas fa-box text-success"></i> Products</h5>
+            <h5><i class="fas fa-box text-success"></i>Products</h5>
             <div id="itemsContainer"></div>
             <button type="button" id="addItem" class="btn btn-sm btn-success mt-2">
                 <i class="fas fa-plus"></i> Add Product
@@ -173,29 +173,31 @@
               <select class="form-control unit-select" required></select>
             </div>
 
-            <!-- 🔹 Price + Total + Currency aynı satırda -->
-            <div class="col-md-5 mb-2">
-              <label>Price</label>
-              <input type="number"
-                     class="form-control price"
-                     inputmode="decimal"
-                     step="0.0001"
-                     required
-                     placeholder="Enter price" />
-            </div>
-
-            <div class="col-md-5 mb-2">
-              <label>Total</label>
-              <input type="text"
-                     class="form-control total-amount"
-                     value="0.00"
-                     readonly />
-            </div>
-
-            <div class="col-md-2 d-flex align-items-center justify-content-center">
-              <label class="currency-label fw-bold mb-0" style="font-size:1.1rem; pointer-events:none; user-select:none;">€</label>
-            </div>
+                 <!-- 🔹 Price + Total + Currency aynı satırda -->
+        <div class="row align-items-end mb-2">
+          <div class="col-md-5 mb-2">
+            <label>Price</label>
+            <input type="number"
+                   class="form-control price"
+                   inputmode="decimal"
+                   step="0.0001"
+                   required
+                   placeholder="Enter price" />
           </div>
+
+          <div class="col-md-5 mb-2">
+            <label>Total</label>
+            <input type="text"
+                   class="form-control total-amount"
+                   value="0.00"
+                   readonly />
+          </div>
+
+          <div class="col-md-2 d-flex align-items-end justify-content-center">
+            <span class="currency-label fw-bold mb-2" style="font-size:1.2rem;">€</span>
+          </div>
+        </div>
+
         `;
 
 
