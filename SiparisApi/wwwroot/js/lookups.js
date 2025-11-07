@@ -106,7 +106,60 @@ async function loadSalesReps() {
     }
 }
 // === Products (normalize) ===
-async function loadProducts(selectElement = null) {
+async function loadProducts() {
+    const select = document.getElementById("productselect");
+    if (!select) return;
+    select.disabled = true;
+    select.innerHTML = `<option>Ürünler yükleniyor...</option>`;
+
+    try {
+        const cacheKey = "sintan_products_v6"; // versiyon artırdık
+        let products = JSON.parse(localStorage.getItem(cacheKey));
+        const lastFetch = localStorage.getItem(cacheKey + "_time");
+        const expired = !lastFetch || Date.now() - parseInt(lastFetch) > 86400000;
+
+        // Veriyi yenile
+        if (!products || expired) {
+            const res = await fetch("/api/orders/lookups/products");
+            if (!res.ok) throw new Error("Ürünler alınamadı");
+            products = await res.json();
+            localStorage.setItem(cacheKey, JSON.stringify(products));
+            localStorage.setItem(cacheKey + "_time", Date.now().toString());
+        }
+
+        // --- Düzgün veri eşleme ---
+        const norm = products.map(p => ({
+            id: p.id ?? p.STOK_KODU,
+            name: p.name ?? p.STOK_ADI ?? "",
+            kg: p.kg ?? p.AMBALAJ_AGIRLIGI ?? "",
+            ad: p.ad ?? p.PALET_AMBALAJ_ADEDI ?? "",
+            net: p.net ?? p.PALET_NET_AGIRLIGI ?? "",
+            tut: p.tut ?? p.NAKLIYET_TUT ?? ""
+        }));
+
+        select.innerHTML = `<option value="">Ürün seçiniz...</option>`;
+        norm.forEach(p => {
+            const opt = document.createElement("option");
+            opt.value = p.id;
+            opt.textContent = `${p.name} (${p.id || "-"})`;
+            opt.dataset.AMBALAJ_AGIRLIGI = p.kg;
+            opt.dataset.PALET_AMBALAJ_ADEDI = p.ad;
+            opt.dataset.PALET_NET_AGIRLIGI = p.net;
+            opt.dataset.NAKLIYET_TUT = p.tut;
+            select.appendChild(opt);
+        });
+
+    } catch (err) {
+        console.error("❌ Ürün listesi yüklenemedi:", err);
+        select.innerHTML = `<option>Ürün listesi yüklenemedi</option>`;
+    } finally {
+        select.disabled = false;
+    }
+}
+
+
+// === Products (normalize) ===
+/*async function loadProducts(selectElement = null) {
     const cacheKey = "sintan_products_v5";
     let products = JSON.parse(localStorage.getItem(cacheKey));
     const lastFetch = localStorage.getItem(cacheKey + "_time");
@@ -142,7 +195,7 @@ async function loadProducts(selectElement = null) {
         if (selectElement) selectElement.innerHTML = `<option>Error loading products</option>`;
     }
 }
-
+*/
 
 // === 🔹 ÜRÜN DETAYLARI (AMBALAJ/PALET) ===
 document.addEventListener("change", async (e) => {

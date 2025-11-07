@@ -258,9 +258,9 @@ namespace SiparisApi.Controllers
                     {
                         id = c.CARI_KOD,
                         name = c.CARI_ISIM,
-                       // city  =  c.ILCE,
-                       // country = c.IL,
-                       // phone = c.TELEFON
+                        city  =  c.ILCE,
+                        country = c.IL,
+                        phone = c.TELEFON
                     })
                     .ToList();
 
@@ -277,7 +277,7 @@ namespace SiparisApi.Controllers
         {
             try
             {
-                var x= _context.SintanStok
+                var products= _context.SintanStok
                     .AsNoTracking()
                  //  .Where(x => x.STOK_KODU == id)
                     .Select(x => new
@@ -289,13 +289,9 @@ namespace SiparisApi.Controllers
                        net= x.PALET_NET_AGIRLIGI,
                       tut =  x.NAKLIYET_TUT  
                     })
-                    .FirstOrDefault();
-
-                if (x == null)
-                    return NotFound("Ürün bulunamadı.");
-
-                return Ok(x);
-            }
+                    .ToList();
+                return Ok(products);
+                            }
             catch (Exception ex)
             {
                 return StatusCode(500, new { error = ex.Message });
