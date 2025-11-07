@@ -18,25 +18,19 @@ async function loadLookups() {
 }
 
 // === 🔹 MÜŞTERİLER (dbo.SintanCari - Autocomplete + Cache) ===
+// === Customers (normalize) ===
 async function loadCustomers() {
-    const selectContainer = document.getElementById("customerSelect");
-    if (!selectContainer) return;
-
-    // 🔹 Input alanı oluştur
-    const input = document.createElement("input");
-    input.type = "text";
-    input.className = "form-control";
-    input.placeholder = "Type customer name...";
-    input.autocomplete = "off";
-    selectContainer.replaceWith(input);
-
-    // 🔹 Müşteri verisini cache'den veya API'den al
-    const cacheKey = "sintan_customers_v5";
-    let customers = JSON.parse(localStorage.getItem(cacheKey));
-    const lastFetch = localStorage.getItem(cacheKey + "_time");
-    const expired = !lastFetch || Date.now() - parseInt(lastFetch) > 86400000;
+    const select = document.getElementById("customerSelect");
+    if (!select) return;
+    select.disabled = true;
+    select.innerHTML = `<option>Loading customers...</option>`;
 
     try {
+        const cacheKey = "sintan_customers_v5";
+        let customers = JSON.parse(localStorage.getItem(cacheKey));
+        const lastFetch = localStorage.getItem(cacheKey + "_time");
+        const expired = !lastFetch || Date.now() - parseInt(lastFetch) > 86400000;
+
         if (!customers || expired) {
             const res = await fetch("/api/orders/lookups/customers");
             if (!res.ok) throw new Error("Failed to load customers");
@@ -44,80 +38,40 @@ async function loadCustomers() {
             localStorage.setItem(cacheKey, JSON.stringify(customers));
             localStorage.setItem(cacheKey + "_time", Date.now().toString());
         }
-    } catch (err) {
-        console.error("❌ Customer list failed:", err);
-        input.placeholder = "Error loading customers";
-        return;
-    }
 
-    // 🔹 Dropdown menü
-    const dropdown = document.createElement("div");
-    dropdown.className = "dropdown-menu show";
-    dropdown.style.position = "absolute";
-    dropdown.style.maxHeight = "220px";
-    dropdown.style.overflowY = "auto";
-    dropdown.style.width = "100%";
-    dropdown.style.display = "none";
-    input.parentNode.insertBefore(dropdown, input.nextSibling);
+        // 🔹 normalize (API name/CARI_ISIM; city/ILCE; country/ULKE/IL; id/Id)
+        const norm = customers.map(c => ({
+            id: c.id ?? c.Id,
+            name: c.name ?? c.CARI_ISIM ?? "",
+            city: c.city ?? c.ILCE ?? "",
+            country: c.country ?? c.ULKE ?? c.IL ?? "",
+            phone: c.phone ?? c.TELEFON ?? ""
+        }));
 
-    // 🔹 Arama (yazdıkça filtreleme)
-    input.addEventListener("input", () => {
-        const query = input.value.trim().toLowerCase();
-        dropdown.innerHTML = "";
-
-        if (!query) {
-            dropdown.style.display = "none";
-            return;
-        }
-
-        const matches = customers
-            .filter(c => (c.CARI_ISIM || "").toLowerCase().includes(query))
-            .slice(0, 25); // 🔹 En fazla 25 sonuç
-
-        matches.forEach(c => {
-            const item = document.createElement("button");
-            item.type = "button";
-            item.className = "dropdown-item";
-            item.textContent = `${c.CARI_ISIM} (${c.IL || "-"})`;
-            item.onclick = () => {
-                input.value = c.CARI_ISIM;
-                input.dataset.value = c.CARI_KODU || c.id || c.Id || c.CARI_ISIM;
-                dropdown.style.display = "none";
-
-                // Müşteri bilgilerini göster
-                let infoDiv = document.getElementById("customerInfo");
-                if (infoDiv) {
-                    infoDiv.innerHTML = `
-                        <small><b>City:</b> ${c.ILCE || '-'} |
-                        <b>Country:</b> ${c.IL || '-'} |
-                        <b>Phone:</b> ${c.TELEFON || '-'}</small>
-                    `;
-                }
-
-                // Değişiklik olayı tetikle (form için)
-                input.dispatchEvent(new Event("change"));
-            };
-            dropdown.appendChild(item);
+        select.innerHTML = `<option value="">Select Customer...</option>`;
+        norm.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.id;
+            opt.textContent = `${c.name} (${c.city || "N/A"}, ${c.country || "-"})`;
+            opt.dataset.city = c.city;
+            opt.dataset.country = c.country;
+            opt.dataset.phone = c.phone;
+            select.appendChild(opt);
         });
 
-        dropdown.style.display = matches.length ? "block" : "none";
-    });
-
-    // 🔹 Dışarı tıklanınca listeyi kapat
-    document.addEventListener("click", e => {
-        if (!dropdown.contains(e.target) && e.target !== input)
-            dropdown.style.display = "none";
-    });
-
-    // 🔹 Mobilde klavye focus
-    input.addEventListener("focus", () => {
-        input.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
-
-    // 🔹 Input'a class ekleyelim ki diğer fonksiyonlar etkilesin
-    input.classList.add("customer-select");
+        select.addEventListener("change", function () {
+            const o = this.selectedOptions[0];
+            document.getElementById("customerInfo").innerHTML = o?.value
+                ? `<small><b>City:</b> ${o.dataset.city || '-'} | <b>Country:</b> ${o.dataset.country || '-'} | <b>Phone:</b> ${o.dataset.phone || '-'}</small>`
+                : "";
+        });
+    } catch (err) {
+        console.error("❌ Customer list failed:", err);
+        select.innerHTML = `<option>Error loading customers</option>`;
+    } finally {
+        select.disabled = false;
+    }
 }
-
 
 // === 🔹 SATIŞ TEMSİLCİLERİ (AllowedUsers) ===
 async function loadSalesReps() {
@@ -151,7 +105,7 @@ async function loadSalesReps() {
         select.disabled = false;
     }
 }
-// === 🔹 ÜRÜNLER (dbo.SintanStok - Autocomplete + Cache) ===
+// === Products (normalize) ===
 async function loadProducts(selectElement = null) {
     const cacheKey = "sintan_products_v5";
     let products = JSON.parse(localStorage.getItem(cacheKey));
@@ -166,76 +120,27 @@ async function loadProducts(selectElement = null) {
             localStorage.setItem(cacheKey, JSON.stringify(products));
             localStorage.setItem(cacheKey + "_time", Date.now().toString());
         }
+
+        // 🔹 normalize (API name/STOK_ADI; id/Id)
+        const norm = products.map(p => ({
+            id: p.id ?? p.Id,
+            name: p.name ?? p.STOK_ADI ?? ""
+        }));
+
+        const targets = selectElement ? [selectElement] : document.querySelectorAll(".product-select");
+        targets.forEach(sel => {
+            sel.innerHTML = `<option value="">Select Product...</option>`;
+            norm.forEach(p => {
+                const opt = document.createElement("option");
+                opt.value = p.id;
+                opt.textContent = p.name;
+                sel.appendChild(opt);
+            });
+        });
     } catch (err) {
         console.error("❌ Products failed:", err);
-        return;
+        if (selectElement) selectElement.innerHTML = `<option>Error loading products</option>`;
     }
-
-    const selects = selectElement
-        ? [selectElement]
-        : document.querySelectorAll(".product-select");
-
-    selects.forEach(sel => {
-        const wrapper = document.createElement("div");
-        wrapper.style.position = "relative";
-        wrapper.classList.add("autocomplete-wrapper");
-
-        const input = document.createElement("input");
-        input.type = "text";
-        input.className = "form-control";
-        input.placeholder = "Type product name...";
-        input.autocomplete = "off";
-
-        const dropdown = document.createElement("div");
-        dropdown.className = "dropdown-menu show";
-        dropdown.style.position = "absolute";
-        dropdown.style.maxHeight = "220px";
-        dropdown.style.overflowY = "auto";
-        dropdown.style.width = "100%";
-        dropdown.style.display = "none";
-
-        sel.replaceWith(wrapper);
-        wrapper.appendChild(input);
-        wrapper.appendChild(dropdown);
-
-        // 🔹 Arama (her yerde arar)
-        input.addEventListener("input", () => {
-            const query = input.value.trim().toLowerCase();
-            dropdown.innerHTML = "";
-
-            if (!query) {
-                dropdown.style.display = "none";
-                return;
-            }
-
-            const matches = products
-                .filter(p => (p.STOK_ADI || "").toLowerCase().includes(query))
-                .slice(0, 25); // 🔹 en fazla 25 sonuç
-
-            matches.forEach(p => {
-                const item = document.createElement("button");
-                item.type = "button";
-                item.className = "dropdown-item";
-                item.textContent = p.STOK_ADI;
-                item.onclick = () => {
-                    input.value = p.STOK_ADI;
-                    input.dataset.value = p.id || p.Id;
-                    dropdown.style.display = "none";
-                    input.dispatchEvent(new Event("change"));
-                };
-                dropdown.appendChild(item);
-            });
-
-            dropdown.style.display = matches.length ? "block" : "none";
-        });
-
-        document.addEventListener("click", e => {
-            if (!dropdown.contains(e.target) && e.target !== input)
-                dropdown.style.display = "none";
-        });
-
-        input.classList.add("product-select");
-    });
 }
 
 
