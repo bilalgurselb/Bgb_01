@@ -256,11 +256,11 @@ namespace SiparisApi.Controllers
                      .AsNoTracking()
                     .Select(c => new
                     {
-                        id = c.Id,
+                        id = c.CARI_KOD,
                         name = c.CARI_ISIM,
-                        city = c.ILCE,
-                        country = c.IL,
-                        phone = c.TELEFON
+                       // city  =  c.ILCE,
+                       // country = c.IL,
+                       // phone = c.TELEFON
                     })
                     .ToList();
 
@@ -272,27 +272,29 @@ namespace SiparisApi.Controllers
             }
         }
 
-        [HttpGet("lookups/productdetails/{id}")]
-        public IActionResult GetProductDetails(int id)
+        [HttpGet("lookups/products")]
+        public IActionResult GetProducts()
         {
             try
             {
-                var p = _context.SintanStok
-                    .Where(x => x.Id == id)
+                var x= _context.SintanStok
+                    .AsNoTracking()
+                 //  .Where(x => x.STOK_KODU == id)
                     .Select(x => new
                     {
-                        x.STOK_ADI,
-                        x.STOK_KODU,
-                        x.AMBALAJ_AGIRLIGI,
-                        x.PALET_AMBALAJ_ADEDI,
-                        x.PALET_NET_AGIRLIGI
+                     name =   x.STOK_ADI,
+                       id = x.STOK_KODU,
+                      kg=  x.AMBALAJ_AGIRLIGI,
+                       ad= x.PALET_AMBALAJ_ADEDI,
+                       net= x.PALET_NET_AGIRLIGI,
+                      tut =  x.NAKLIYET_TUT  
                     })
                     .FirstOrDefault();
 
-                if (p == null)
+                if (x == null)
                     return NotFound("Ürün bulunamadı.");
 
-                return Ok(p);
+                return Ok(x);
             }
             catch (Exception ex)
             {
@@ -328,7 +330,7 @@ namespace SiparisApi.Controllers
             {
                 var list = _context.SintanCari
                     .Where(c => c.IL != null && c.IL.Trim() != "")
-                    .Select(c => c.IL.Trim())
+                    .Select(static c => c.IL.Trim())
                     .Distinct()
                     .OrderBy(c => c)
                     .ToList();

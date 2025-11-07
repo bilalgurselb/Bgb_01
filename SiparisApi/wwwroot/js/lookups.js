@@ -122,18 +122,18 @@ async function loadProducts(selectElement = null) {
         }
 
         // 🔹 normalize (API name/STOK_ADI; id/Id)
-        const norm = products.map(p => ({
-            id: p.id ?? p.Id,
-            name: p.name ?? p.STOK_ADI ?? ""
+        const norm = products.map(x => ({
+            id: x.id ?? x.STOK_KODU,
+            name: x.name ?? x.STOK_ADI ?? ""
         }));
 
         const targets = selectElement ? [selectElement] : document.querySelectorAll(".product-select");
         targets.forEach(sel => {
             sel.innerHTML = `<option value="">Select Product...</option>`;
-            norm.forEach(p => {
+            norm.forEach(x => {
                 const opt = document.createElement("option");
-                opt.value = p.id;
-                opt.textContent = p.name;
+                opt.value = x.id;
+                opt.textContent = x.name;
                 sel.appendChild(opt);
             });
         });
@@ -153,7 +153,7 @@ document.addEventListener("change", async (e) => {
     if (!id) return;
 
     try {
-        const res = await fetch(`/api/orders/lookups/productdetails/${id}`);
+        const res = await fetch(`/api/orders/lookups/products/${id}`);
         if (!res.ok) throw new Error("Ürün bilgisi alınamadı.");
         const d = await res.json();
 
