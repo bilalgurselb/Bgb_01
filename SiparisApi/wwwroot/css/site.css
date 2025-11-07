@@ -398,3 +398,15 @@ html, body {
     touch-action: pan-x pan-y;
     overscroll-behavior: none; /* iOS Safari */
 }
+/*-----------------------------------------*/
+.currency-label {
+    display: inline-block;
+    text-align: center;
+    width: 40px;
+    color: #222;
+}
+
+.total-amount[readonly] {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}

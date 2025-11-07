@@ -148,48 +148,56 @@
             const row = document.createElement("div");
             row.classList.add("item-row", "border", "p-2", "rounded", "mb-2", "bg-white", "shadow-sm");
 
-            row.innerHTML = `
-                <div class="item-row-header d-flex justify-content-between align-items-center mb-2">
-                    <span class="badge bg-primary">#${rowIndex}</span>
-                    <button type="button" class="btn btn-outline-danger btn-sm remove-item" aria-label="Remove">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-
-                <div class="row">
-                    <div class="col-12 mb-2">
-                        <label>Product</label>
-                        <select class="form-control product-select" required></select>
-                    </div>
-                    <div class="col-6 mb-2">
-                        <label>Quantity</label>
-                        <input type="number" class="form-control quantity" inputmode="decimal" step="0.01" placeholder="Enter quantity" required>
-                    </div>
-                    <div class="col-6 mb-2">
-                        <label>Unit</label>
-                        <select class="form-control unit-select" required></select>
-                    </div>
-                    <div class="col-12 mb-2">
-                        <label>Price</label>
-                        <div class="input-group">
-                            <input type="number"
-                                class="form-control price"
-                                inputmode="decimal"
-                                step="0.0001"
-                                required
-                                placeholder="Enter price" />
-                                <span class="input-group-text price-symbol" style="min-width:40px;">€</span>
-                     </div>
-                    </div>
-                           <div class="col-6 mb-2">
-          <label>Total</label>
-          <div class="input-group">
-            <span class="input-group-text total-symbol" style="min-width:40px;">€</span>
-            <input type="text" class="form-control total-amount" value="0.00" readonly>
+                    row.innerHTML = `
+          <div class="item-row-header d-flex justify-content-between align-items-center mb-2">
+            <span class="badge bg-primary">#${rowIndex}</span>
+            <button type="button" class="btn btn-outline-danger btn-sm remove-item" aria-label="Remove">
+              <i class="fas fa-times"></i>
+            </button>
           </div>
-        </div>
-              </div>
-            `;
+
+          <!-- 🔹 Ürün bilgileri -->
+          <div class="col-12 mb-2">
+            <label>Product</label>
+            <select class="form-control product-select" required></select>
+          </div>
+
+          <div class="row">
+            <div class="col-6 mb-2">
+              <label>Quantity</label>
+              <input type="number" class="form-control quantity" inputmode="decimal" step="0.01" placeholder="Enter quantity" required>
+            </div>
+
+            <div class="col-6 mb-2">
+              <label>Unit</label>
+              <select class="form-control unit-select" required></select>
+            </div>
+
+            <!-- 🔹 Price + Total + Currency aynı satırda -->
+            <div class="col-md-5 mb-2">
+              <label>Price</label>
+              <input type="number"
+                     class="form-control price"
+                     inputmode="decimal"
+                     step="0.0001"
+                     required
+                     placeholder="Enter price" />
+            </div>
+
+            <div class="col-md-5 mb-2">
+              <label>Total</label>
+              <input type="text"
+                     class="form-control total-amount"
+                     value="0.00"
+                     readonly />
+            </div>
+
+            <div class="col-md-2 d-flex align-items-center justify-content-center">
+              <label class="currency-label fw-bold mb-0" style="font-size:1.1rem; pointer-events:none; user-select:none;">€</label>
+            </div>
+          </div>
+        `;
+
 
             container.appendChild(row);
 
@@ -230,9 +238,50 @@
         document.getElementById("createOrderForm").addEventListener("submit", function (e) {
             e.preventDefault(); // Formun klasik gönderimini iptal eder
         });
+        /*--------------------------HESAP-----------------*/
+                function recalcRowTotal(row) {
+          const qtyEl   = row.querySelector(".quantity");
+          const priceEl = row.querySelector(".price");
+          const totalEl = row.querySelector(".total-amount");
+          const unitEl  = row.querySelector(".unit-select");
+          const curEl   = row.querySelector(".currency-label");
+          const lblInfo = row.querySelector(".net-weight-info");
+
+          const cur = document.getElementById("currency")?.value || "EURO";
+          const symbols = { USD: "$", EURO: "€", TL: "₺", RUBLE: "₽" };
+          const sym = symbols[cur] || "";
+
+          const qty = parseFloat(qtyEl.value) || 0;
+          const price = parseFloat(priceEl.value) || 0;
+          const unit = unitEl.value;
+
+          const packWeight = parseFloat(row.dataset.packWeight || 0);
+          const palletNet  = parseFloat(row.dataset.palletNet || 0);
+
+          let netKg = 0;
+
+          switch (unit) {
+            case "Pallets":
+              netKg = qty * palletNet;
+              break;
+            case "Pieces":
+              netKg = qty * packWeight;
+              break;
+            case "IBC":
+              netKg = qty * packWeight;
+              break;
+          }
+
+          const total = price * netKg;
+
+          if (totalEl) totalEl.value = total.toFixed(2);
+          if (curEl) curEl.textContent = sym;
+          if (lblInfo)
+            lblInfo.textContent = netKg > 0 ? `Net Weight: ${netKg.toFixed(2)} kg` : "Net Weight: -";
+        }
 
         // === Currency seçilince Price yanına sembol yaz ===
-        (function attachCurrencySymbolBinding(){
+     /*   (function attachCurrencySymbolBinding(){
             const cur = document.getElementById("currency");
             if (!cur) return;
             const symbols = { USD: "$", EURO: "€", TL: "₺", RUBLE: "₽" };
@@ -244,7 +293,7 @@
 
             cur.addEventListener("change", refreshSymbols);
             setTimeout(refreshSymbols, 0);
-        })();
+        })();*/
 
         // 🔹 KAYDET
         document.getElementById("createOrderForm").addEventListener("submit", async (e) => {

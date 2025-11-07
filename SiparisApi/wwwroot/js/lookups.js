@@ -135,6 +135,38 @@ async function loadProducts(selectElement = null) {
             selectElement.innerHTML = `<option>Error loading products</option>`;
     }
 }
+// === 🔹 ÜRÜN DETAYLARI (AMBALAJ/PALET) ===
+document.addEventListener("change", async (e) => {
+    if (!e.target.classList.contains("product-select")) return;
+    const select = e.target;
+    const row = select.closest(".item-row");
+    const id = select.value;
+    if (!id) return;
+
+    try {
+        const res = await fetch(`/api/orders/lookups/productdetails/${id}`);
+        if (!res.ok) throw new Error("Ürün bilgisi alınamadı.");
+        const d = await res.json();
+
+        row.dataset.packWeight = parseFloat(d.AMBALAJ_AGIRLIGI || 0);
+        row.dataset.palletCount = parseFloat(d.PALET_AMBALAJ_ADEDI || 0);
+        row.dataset.palletNet = parseFloat(d.PALET_NET_AGIRLIGI || 0);
+        row.dataset.productName = d.STOK_ADI || "-";
+
+        // Net Weight etiketi oluştur (Product altına)
+        let lbl = row.querySelector(".net-weight-info");
+        if (!lbl) {
+            lbl = document.createElement("small");
+            lbl.className = "text-muted net-weight-info d-block mt-1";
+            select.insertAdjacentElement("afterend", lbl);
+        }
+        lbl.textContent = "";
+
+        recalcRowTotal(row);
+    } catch (err) {
+        console.error("Ürün detay yüklenemedi:", err);
+    }
+});
 
 // === 🔹 SHIP FROM (Sabit) ===
 function loadShipFrom() {
@@ -310,3 +342,5 @@ function fillSelectElement(select, list) {
         select.appendChild(opt);
     });
 }
+
+
