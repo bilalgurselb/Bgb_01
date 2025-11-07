@@ -107,18 +107,18 @@ async function loadSalesReps() {
 }
 // === Products (normalize) ===
 async function loadProducts() {
-    const select = document.getElementById("productselect");
+    const select = document.getElementById("product-select");
     if (!select) return;
     select.disabled = true;
     select.innerHTML = `<option>Ürünler yükleniyor...</option>`;
 
     try {
-        const cacheKey = "sintan_products_v6"; // versiyon artırdık
+        const cacheKey = "sintan_products_v6"; // yeni versiyon
         let products = JSON.parse(localStorage.getItem(cacheKey));
         const lastFetch = localStorage.getItem(cacheKey + "_time");
         const expired = !lastFetch || Date.now() - parseInt(lastFetch) > 86400000;
 
-        // Veriyi yenile
+        // API'den veriyi çek
         if (!products || expired) {
             const res = await fetch("/api/orders/lookups/products");
             if (!res.ok) throw new Error("Ürünler alınamadı");
@@ -127,7 +127,7 @@ async function loadProducts() {
             localStorage.setItem(cacheKey + "_time", Date.now().toString());
         }
 
-        // --- Düzgün veri eşleme ---
+        // Gelen JSON'u düzenli hale getir
         const norm = products.map(p => ({
             id: p.id ?? p.STOK_KODU,
             name: p.name ?? p.STOK_ADI ?? "",
@@ -137,6 +137,7 @@ async function loadProducts() {
             tut: p.tut ?? p.NAKLIYET_TUT ?? ""
         }));
 
+        // Dropdown doldur
         select.innerHTML = `<option value="">Ürün seçiniz...</option>`;
         norm.forEach(p => {
             const opt = document.createElement("option");
@@ -156,7 +157,6 @@ async function loadProducts() {
         select.disabled = false;
     }
 }
-
 
 // === Products (normalize) ===
 /*async function loadProducts(selectElement = null) {
