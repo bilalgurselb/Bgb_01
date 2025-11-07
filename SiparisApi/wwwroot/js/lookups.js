@@ -107,18 +107,17 @@ async function loadSalesReps() {
 }
 // === Products (normalize) ===
 async function loadProducts() {
-    const select = document.getElementById("product-select");
+    const select = document.getElementById("productselect");
     if (!select) return;
     select.disabled = true;
     select.innerHTML = `<option>Ürünler yükleniyor...</option>`;
 
     try {
-        const cacheKey = "sintan_products_v6"; // yeni versiyon
+        const cacheKey = "sintan_products_v7";
         let products = JSON.parse(localStorage.getItem(cacheKey));
         const lastFetch = localStorage.getItem(cacheKey + "_time");
         const expired = !lastFetch || Date.now() - parseInt(lastFetch) > 86400000;
 
-        // API'den veriyi çek
         if (!products || expired) {
             const res = await fetch("/api/orders/lookups/products");
             if (!res.ok) throw new Error("Ürünler alınamadı");
@@ -127,26 +126,15 @@ async function loadProducts() {
             localStorage.setItem(cacheKey + "_time", Date.now().toString());
         }
 
-        // Gelen JSON'u düzenli hale getir
-        const norm = products.map(p => ({
-            id: p.id ?? p.STOK_KODU,
-            name: p.name ?? p.STOK_ADI ?? "",
-            kg: p.kg ?? p.AMBALAJ_AGIRLIGI ?? "",
-            ad: p.ad ?? p.PALET_AMBALAJ_ADEDI ?? "",
-            net: p.net ?? p.PALET_NET_AGIRLIGI ?? "",
-            tut: p.tut ?? p.NAKLIYET_TUT ?? ""
-        }));
-
-        // Dropdown doldur
         select.innerHTML = `<option value="">Ürün seçiniz...</option>`;
-        norm.forEach(p => {
+        products.forEach(p => {
             const opt = document.createElement("option");
             opt.value = p.id;
-            opt.textContent = `${p.name} (${p.id || "-"})`;
-            opt.dataset.AMBALAJ_AGIRLIGI = p.kg;
-            opt.dataset.PALET_AMBALAJ_ADEDI = p.ad;
-            opt.dataset.PALET_NET_AGIRLIGI = p.net;
-            opt.dataset.NAKLIYET_TUT = p.tut;
+            opt.textContent = `${p.name} (${p.id})`;
+            opt.dataset.kg = p.kg;
+            opt.dataset.ad = p.ad;
+            opt.dataset.net = p.net;
+            opt.dataset.tut = p.tut;
             select.appendChild(opt);
         });
 
@@ -157,6 +145,7 @@ async function loadProducts() {
         select.disabled = false;
     }
 }
+
 
 // === Products (normalize) ===
 /*async function loadProducts(selectElement = null) {
