@@ -111,148 +111,40 @@ async function loadSalesReps() {
         select.disabled = false;
     }
 }
-// === Products (normalize) ===
-/**
- * Ürün listesini verilen select elemanına yükler.
- * selectElement parametresi boş bırakılırsa, sayfadaki `productselect` id'li
- * veya `.product-select` sınıfına sahip elemanlar doldurulur.
- * Ürün dataset'leri packWeight, palletNet, palletCount ve transportCost adlarıyla ayarlanır.
- *
- * @param {HTMLSelectElement|null} selectElement
- */
-async function loadProducts(selectElement = null) {
-    // Önce veri kaynağını cache ile yükle
-    const cacheKey = "sintan_products_v7";
-    let products = JSON.parse(localStorage.getItem(cacheKey));
-    const lastFetch = localStorage.getItem(cacheKey + "_time");
-    const expired = !lastFetch || Date.now() - parseInt(lastFetch) > 86400000;
 
+
+    // === 🔹 ÜRÜNLER ---//
+    let productListCache = [];
+
+async function preloadProducts() {
     try {
-        if (!products || expired) {
-            const res = await fetch("/api/orders/lookups/products");
-            if (!res.ok) throw new Error("Ürünler alınamadı");
-            products = await res.json();
-            localStorage.setItem(cacheKey, JSON.stringify(products));
-            localStorage.setItem(cacheKey + "_time", Date.now().toString());
-        }
-
-        // Hedef select eleman(lar)ını belirle
-        let targets = [];
-        if (selectElement) {
-            targets = [selectElement];
-        } else {
-            // Belirli bir select yoksa id="productselect" veya class="product-select" olan tüm elemanları hedefle
-            const byId = document.getElementById("productselect");
-            if (byId) {
-                targets.push(byId);
-            } else {
-                targets = Array.from(document.querySelectorAll(".product-select"));
-            }
-        }
-
-        // Seçili target yoksa çık
-        if (!targets || targets.length === 0) return;
-
-        // Her target için listeleri doldur
-        targets.forEach((sel) => {
-            sel.disabled = true;
-            sel.innerHTML = `<option value="">Ürün seçiniz...</option>`;
-            products.forEach((p) => {
-                const opt = document.createElement("option");
-                opt.value = p.id ?? p.STOK_KODU;
-                // Kullanıcıya gösterilecek metin
-                opt.textContent = `${p.name ?? p.STOK_ADI ?? ""} (${p.id ?? p.STOK_KODU ?? "-"})`;
-                // Net/ambalaj bilgilerini dataset'e koy
-                opt.dataset.packWeight = p.packWeight  ?? p.AMBALAJ_AGIRLIGI ?? "";
-                opt.dataset.palletCount = p.palletCount  ?? p.PALET_AMBALAJ_ADEDI ?? "";
-                opt.dataset.palletNet = p.palletNet ?? p.PALET_NET_AGIRLIGI ?? "";
-                opt.dataset.transportCost = p.transportCost ?? p.NAKLIYET_TUT ?? "";
-                sel.appendChild(opt);
-            });
-            sel.disabled = false;
-        });
-
+        const res = await fetch("/api/orders/lookups/products");
+        if (!res.ok) throw new Error("Ürün verisi alınamadı");
+        const list = await res.json();
+        productListCache = Array.isArray(list) ? list : [];
     } catch (err) {
-        console.error("❌ Ürün listesi yüklenemedi:", err);
-        // Hata durumunda varsa selectElement'e hata mesajı göster
-        if (selectElement)
-            selectElement.innerHTML = `<option>Error loading products</option>`;
-            }
-}
-
-
-// === Products (normalize) ===
-/*async function loadProducts(selectElement = null) {
-    const cacheKey = "sintan_products_v5";
-    let products = JSON.parse(localStorage.getItem(cacheKey));
-    const lastFetch = localStorage.getItem(cacheKey + "_time");
-    const expired = !lastFetch || Date.now() - parseInt(lastFetch) > 86400000;
-
-    try {
-        if (!products || expired) {
-            const res = await fetch("/api/orders/lookups/products");
-            if (!res.ok) throw new Error("Failed to load products");
-            products = await res.json();
-            localStorage.setItem(cacheKey, JSON.stringify(products));
-            localStorage.setItem(cacheKey + "_time", Date.now().toString());
-        }
-
-        // 🔹 normalize (API name/STOK_ADI; id/Id)
-        const norm = products.map(x => ({
-            id: x.id ?? x.STOK_KODU,
-            name: x.name ?? x.STOK_ADI ?? ""
-        }));
-
-        const targets = selectElement ? [selectElement] : document.querySelectorAll(".product-select");
-        targets.forEach(sel => {
-            sel.innerHTML = `<option value="">Select Product...</option>`;
-            norm.forEach(x => {
-                const opt = document.createElement("option");
-                opt.value = x.id;
-                opt.textContent = x.name;
-                sel.appendChild(opt);
-            });
-        });
-    } catch (err) {
-        console.error("❌ Products failed:", err);
-        if (selectElement) selectElement.innerHTML = `<option>Error loading products</option>`;
+        console.error("❌ Ürünler alınamadı:", err);
+        productListCache = [];
     }
 }
-*/
 
-// === 🔹 ÜRÜN DETAYLARI (AMBALAJ / PALET) ===
-document.addEventListener("change", async (e) => {
-    if (!e.target.classList.contains("product-select")) return;
-    const select = e.target;
-    const row = select.closest(".item-row");
-    const id = select.value;
-    if (!id) return;
+function fillProductSelect(selectElement) {
+    if (!selectElement) return;
+    selectElement.innerHTML = `<option value="">Ürün seçiniz...</option>`;
 
-    try {
-        const res = await fetch(`/api/orders/lookups/products/${id}`);
-        if (!res.ok) throw new Error("Ürün bilgisi alınamadı.");
-        const d = await res.json();
+    productListCache.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.id ?? "";
+        opt.textContent = `${p.name ?? "(isimsiz)"} (${p.id})`;
+        opt.dataset.packWeight = p.packWeight ?? 0;
+        opt.dataset.palletCount = p.palletCount ?? 0;
+        opt.dataset.palletNet = p.palletNet ?? 0;
+        opt.dataset.transportCost = p.transportCost ?? 0;
+        selectElement.appendChild(opt);
+    });
 
-        row.dataset.packWeight = parseFloat(d.AMBALAJ_AGIRLIGI || 0);
-        row.dataset.palletCount = parseFloat(d.PALET_AMBALAJ_ADEDI || 0);
-        row.dataset.palletNet = parseFloat(d.PALET_NET_AGIRLIGI || 0);
-        row.dataset.productName = d.STOK_ADI || "-";
-
-        let lbl = row.querySelector(".net-weight-info");
-        if (!lbl) {
-            lbl = document.createElement("small");
-            lbl.className = "text-muted net-weight-info d-block mt-1";
-            select.insertAdjacentElement("afterend", lbl);
-        }
-        lbl.textContent = "";
-
-        // 🔹 küçük delay ile yeniden hesapla
-        setTimeout(() => recalcRowTotal(row), 120);
-    } catch (err) {
-        console.error("Ürün detay yüklenemedi:", err);
-    }
-});
-
+    selectElement.disabled = false;
+}
 
 // === 🔹 SHIP FROM (Sabit) ===
 function loadShipFrom() {

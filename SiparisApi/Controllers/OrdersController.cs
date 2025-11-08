@@ -272,32 +272,25 @@ namespace SiparisApi.Controllers
             }
         }
 
-        [HttpGet("lookups/products/{id}")]
-        public IActionResult GetProductById(string id)
+        [HttpGet("lookups/products")]
+        public IActionResult GetAllProducts()
         {
-            try
-            {
-                var products= _context.SintanStok
-                    .AsNoTracking()
-                   .Where(x => x.STOK_KODU == id)
-                    .Select(x => new
-                    {
-                     name =   x.STOK_ADI,
-                       id = x.STOK_KODU,
-                        packWeight =  x.AMBALAJ_AGIRLIGI,
-                        palletCount = x.PALET_AMBALAJ_ADEDI,
-                        palletNet = x.PALET_NET_AGIRLIGI,
-                        transportCost =  x.NAKLIYET_TUT  
-                    })
-                   .ToList();
-                if (products == null) return NotFound();
-                return Ok(products);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = ex.Message });
-            }
+            var list = _context.SintanStok
+                .AsNoTracking()
+                .Select(x => new
+                {
+                    id = x.STOK_KODU,
+                    name = x.STOK_ADI,
+                    packWeight = x.AMBALAJ_AGIRLIGI,
+                    palletCount = x.PALET_AMBALAJ_ADEDI,
+                    palletNet = x.PALET_NET_AGIRLIGI,
+                    transportCost = x.NAKLIYET_TUT
+                })
+                .ToList();
+
+            return Ok(list);
         }
+
 
 
         [HttpGet("lookups/salesreps")]

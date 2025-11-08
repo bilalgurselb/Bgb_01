@@ -142,8 +142,9 @@
                 }
             });
 
-              loadLookups();
+              loadLookups().then(()=>{
               addOrderItemRow();
+              });
             // 🔹 Mobilde "çek-bırak yenileme"yi engelle (Android & iOS)
             let touchStartY = 0;
             document.addEventListener("touchstart", e => {
@@ -166,7 +167,7 @@
 
             // Geri tuşu veya yönlendirme engellemesi (SPA senaryosu)
             window.addEventListener("popstate", e => {
-                if (formChanged && !confirm("Kaydedilmemiş değişiklikler var. Devam etmek istiyor musunuz?")) {
+                if (formChanged && !confirm("Kaydedilmemiş veriler var. Devam etmek istiyor musunuz?")) {
                     history.pushState(null, null, location.href);
                     e.preventDefault();
                 }
@@ -233,9 +234,10 @@
             container.appendChild(row);
                     const select = row.querySelector(".product-select");
         select.id = `productselect_${Date.now()}`; // Backtick kullanımı
-        loadProducts(select);   
-        
-            loadUnits(row.querySelector(".unit-select"));
+          fillProductSelect(select);
+
+
+              loadUnits(row.querySelector(".unit-select"));
             updateRowNumbers();
             document.getElementById("currency")?.dispatchEvent(new Event("change"));
         }
