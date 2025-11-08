@@ -157,10 +157,10 @@ async function loadProducts(selectElement = null) {
                 // Kullanıcıya gösterilecek metin
                 opt.textContent = `${p.name ?? p.STOK_ADI ?? ""} (${p.id ?? p.STOK_KODU ?? "-"})`;
                 // Net/ambalaj bilgilerini dataset'e koy
-                opt.dataset.packWeight    = p.kg  ?? p.AMBALAJ_AGIRLIGI      ?? "";
-                opt.dataset.palletCount   = p.ad  ?? p.PALET_AMBALAJ_ADEDI   ?? "";
-                opt.dataset.palletNet     = p.net ?? p.PALET_NET_AGIRLIGI    ?? "";
-                opt.dataset.transportCost = p.tut ?? p.NAKLIYET_TUT           ?? "";
+                opt.dataset.packWeight = p.packWeight  ?? p.AMBALAJ_AGIRLIGI      ?? "";
+                opt.dataset.palletCount = p.palletCount  ?? p.PALET_AMBALAJ_ADEDI   ?? "";
+                opt.dataset.palletNet = p.palletNet ?? p.PALET_NET_AGIRLIGI    ?? "";
+                opt.dataset.transportCost = p.transportCost ?? p.NAKLIYET_TUT           ?? "";
                 sel.appendChild(opt);
             });
             sel.disabled = false;
