@@ -142,6 +142,8 @@
                 }
             });
 
+              loadLookups();
+              addOrderItemRow();
             // 🔹 Mobilde "çek-bırak yenileme"yi engelle (Android & iOS)
             let touchStartY = 0;
             document.addEventListener("touchstart", e => {
