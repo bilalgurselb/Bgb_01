@@ -359,21 +359,9 @@
             row.style.borderLeft = total > 0 ? "4px solid #47AAC6" : "4px solid transparent";
         }
 
-              /* --- 🔹 Toplamlar (Alt Toplam, KDV, Genel Toplam) --- */
-        function calculateOrderTotals() {
-            let subtotal = 0;
-            document.querySelectorAll('.total-amount').forEach(el => {
-                subtotal += normalizeFloat(el.value);
-            });
 
-            const vatRate = 0.18;
-            const vat = roundBankers(subtotal * vatRate, 2);
-            const grandTotal = roundBankers(subtotal + vat, 2);
-
-            document.getElementById('subtotalDisplay')?.textContent = subtotal.toFixed(2);
-            document.getElementById('vatDisplay')?.textContent = vat.toFixed(2);
-            document.getElementById('grandTotalDisplay')?.textContent = grandTotal.toFixed(2);
-        }
+            
+        
                 /* --- 🔹 Tetikleyiciler (Event Binding) --- */
 
         // Miktar, fiyat veya birim değişince
