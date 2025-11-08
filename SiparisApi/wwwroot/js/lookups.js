@@ -19,7 +19,7 @@ async function loadLookups() {
         loadShipFrom(),
         loadPorts("portOfDelivery"),
         loadCities("placeOfDelivery"),
-        loadProducts(headers)  // token taşı!
+        loadProducts()
     ]);
 }
 
