@@ -18,7 +18,6 @@ async function loadLookups() {
 }
 
 // === 🔹 MÜŞTERİLER (dbo.SintanCari - Autocomplete + Cache) ===
-// === Customers (normalize) ===
 async function loadCustomers() {
     const select = document.getElementById("customerSelect");
     if (!select) return;
@@ -39,30 +38,30 @@ async function loadCustomers() {
             localStorage.setItem(cacheKey + "_time", Date.now().toString());
         }
 
-        // 🔹 normalize (API name/CARI_ISIM; city/ILCE; country/ULKE/IL; id/Id)
+        // Normalize tüm olası alan isimlerine göre
         const norm = customers.map(c => ({
-            id: c.id ?? c.CARI_KOD ??,
+            id: c.id ?? c.CARI_KOD ?? "",
             name: c.name ?? c.CARI_ISIM ?? "",
-            city: c.city ?? c.ILCE ?? "",
-            country: c.country ?? c.IL ?? "",
+            city: c.city ?? c.ILCE ?? c.Ilce ?? "",
+            country: c.country ?? c.IL ?? c.Ulke ?? "",
             phone: c.phone ?? c.TELEFON ?? ""
         }));
 
         select.innerHTML = `<option value="">Select Customer...</option>`;
         norm.forEach(c => {
             const opt = document.createElement("option");
-            opt.value = c.CARI_KOD;
-            opt.textContent = `${c.name} (${c.ILCE || "N/A"}, ${c.IL || "-"})`;
-            opt.dataset.city = c.ILCE;
-            opt.dataset.country = c.IL;
-            opt.dataset.phone = c.TELEFON;
+            opt.value = c.id;
+            opt.textContent = `${c.name} (${c.city || "N/A"}, ${c.country || "-"})`;
+            opt.dataset.city = c.city || "";
+            opt.dataset.country = c.country || "";
+            opt.dataset.phone = c.phone || "";
             select.appendChild(opt);
         });
 
         select.addEventListener("change", function () {
             const o = this.selectedOptions[0];
             document.getElementById("customerInfo").innerHTML = o?.value
-                ? `<small><b>ILCE:</b> ${o.dataset.city || '-'} | <b>IL:</b> ${o.dataset.country || '-'} | <b>TELEFON:</b> ${o.dataset.phone || '-'}</small>`
+                ? `<small><b>City:</b> ${o.dataset.city || '-'} | <b>Country:</b> ${o.dataset.country || '-'} | <b>Phone:</b> ${o.dataset.phone || '-'}</small>`
                 : "";
         });
     } catch (err) {
@@ -72,6 +71,7 @@ async function loadCustomers() {
         select.disabled = false;
     }
 }
+
 
 // === 🔹 SATIŞ TEMSİLCİLERİ (AllowedUsers) ===
 async function loadSalesReps() {
