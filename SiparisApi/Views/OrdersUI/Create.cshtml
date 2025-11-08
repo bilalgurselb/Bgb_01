@@ -270,6 +270,37 @@
         });
         /*---HESAPLAMA-------*/addOrderItemRow
                 /* === 🔹 HESAP MODÜLÜ (Bankacılık Tipi Para Hesabı) === */
+
+
+        /* --- 🔹 Ondalık normalizasyonu --- */
+        function normalizeFloat(v) {
+            if (typeof v === "string") v = v.replace(",", ".").trim();
+            return parseFloat(v) || 0;
+        }
+
+        /* --- 🔹 Banker’s rounding (Round half even) --- */
+        function roundBankers(value, decimals = 2) {
+            const factor = Math.pow(10, decimals);
+            const n = value * factor;
+            const f = Math.floor(n);
+            const diff = n - f;
+
+            if (diff > 0.5) return (f + 1) / factor;
+            if (diff < 0.5) return f / factor;
+            // Tam ortadaysa çift sayıya yuvarla
+            return (f % 2 === 0 ? f : f + 1) / factor;
+        }
+
+        /* --- 🔹 Bankacılık tipi çarpım --- */
+        function preciseMoneyMultiply(price, qty) {
+            const p = Math.round(normalizeFloat(price) * 10000); // 4 ondalık precision
+            const q = Math.round(normalizeFloat(qty) * 10000);
+            const result = (p * q) / 100000000; // 8 ondalık
+            return roundBankers(result, 2);
+        }
+
+
+
         function recalcRowTotal(row) {
             if (!row) return;
 
@@ -288,12 +319,14 @@
             const price = parseFloat(priceEl.value) || 0;
             const unit = unitEl?.value || "";
 
-            const packWeight = parseFloat(row.dataset.packWeight || 0);
-            const palletNet  = parseFloat(row.dataset.palletNet  || 0);
 
-            let netKg = 0;
-                  if (!unit) {
-            if (lblInfo) lblInfo.textContent = "Net Weight: -";
+        const packWeight = normalizeFloat(row.dataset.packWeight);
+        const palletNet  = normalizeFloat(row.dataset.palletNet);
+
+        let netKg = 0;
+
+             if (!unit) {
+            if (lblInfo) lblInfo.textContent = `Net Weight: ${row.dataset.netKg || '-'}`;
             if (totalEl) totalEl.value = "0.00";
             return;
         }
@@ -307,62 +340,61 @@
                 netKg = qty * packWeight;
                 break;
         }
-
-            // === 🔹 Bankacılık tipi parasal çarpma ===
-            // 1) Parayı 4 ondalık basamaklı cent olarak al
-            // 2) Çarpmayı tam sayıda yap
-            // 3) Sonucu 2 ondalıkla geri böl (round half even)
+           if (lblInfo) {
+          lblInfo.textContent = `Net Weight: ${netKg.toFixed(2)} KG`;
+          row.dataset.netKg = netKg.toFixed(2);
+           }
+           
 
             const total = preciseMoneyMultiply(price, netKg);
 
             if (totalEl) totalEl.value = total.toFixed(2);
             if (curEl) curEl.textContent = sym;
+
+
+
             if (lblInfo)
                 lblInfo.textContent = netKg > 0 ? `Net Weight: ${netKg.toFixed(2)} kg` : "Net Weight: -";
 
             row.style.borderLeft = total > 0 ? "4px solid #47AAC6" : "4px solid transparent";
         }
 
-        /* === 🔹 Bankacılık tipi para çarpımı === */
-        function preciseMoneyMultiply(price, qty) {
-            const p = Math.round(price * 10000); // fiyatı 4 ondalıklı olarak integer’a çevir
-            const q = Math.round(qty * 10000);   // miktarı da 4 ondalıklı çevir
-            const result = (p * q) / 100000000;  // toplamda 8 ondalıklı olur, 10⁸’e böl
-            return Math.round(result * 100) / 100; // 2 ondalıkla round half-even
+              /* --- 🔹 Toplamlar (Alt Toplam, KDV, Genel Toplam) --- */
+        function calculateOrderTotals() {
+            let subtotal = 0;
+            document.querySelectorAll('.total-amount').forEach(el => {
+                subtotal += normalizeFloat(el.value);
+            });
+
+            const vatRate = 0.18;
+            const vat = roundBankers(subtotal * vatRate, 2);
+            const grandTotal = roundBankers(subtotal + vat, 2);
+
+            document.getElementById('subtotalDisplay')?.textContent = subtotal.toFixed(2);
+            document.getElementById('vatDisplay')?.textContent = vat.toFixed(2);
+            document.getElementById('grandTotalDisplay')?.textContent = grandTotal.toFixed(2);
         }
-        /* === 🔹 HESAP TETİKLEYİCİLERİ (BANKACILIK FORMÜLÜ İLE) === */
+                /* --- 🔹 Tetikleyiciler (Event Binding) --- */
 
-        // 🔸 1. Miktar veya Fiyat değiştiğinde
-        document.addEventListener('input', e => {
-            if (e.target.matches('.price')) {
+        // Miktar, fiyat veya birim değişince
+        document.addEventListener('change', e => {
+            if (e.target.matches('.quantity, .price, .unit-select')) {
                 const row = e.target.closest('.item-row');
-                if (row) recalcRowTotal(row);
+                if (row) {
+                    recalcRowTotal(row);
+                    calculateOrderTotals();
+                }
             }
         });
 
-        // 🔸 2. Ölçü birimi değiştiğinde
-        document.addEventListener('change', e => {
-            if (e.target.matches('.quantity, .unit-select')) {
-                const row = e.target.closest('.item-row');
-                if (row) recalcRowTotal(row);
-            }
-        });
-
-        /* 🔸 3. Ürün seçildiğinde dataset güncellendikten sonra
-        document.addEventListener('change', e => {
-            if (e.target.matches('.product-select')) {
-                const row = e.target.closest('.item-row');
-                // Dataset yüklenmesi mikro gecikmeli olduğu için küçük delay ekliyoruz
-                setTimeout(() => recalcRowTotal(row), 100);
-            }
-        }); */
-
-        /* 🔸 4. Para birimi değişince, tüm satırları yeniden hesapla
+        // Para birimi değişince
         document.getElementById('currency')?.addEventListener('change', () => {
             document.querySelectorAll('.item-row').forEach(row => recalcRowTotal(row));
+            calculateOrderTotals();
         });
-        */
-   
+
+
+
         // === Currency seçilince Price yanına sembol yaz ===
       (function attachCurrencySymbolBinding(){
             const cur = document.getElementById("currency");
@@ -374,10 +406,13 @@
                   document.querySelectorAll(".price-symbol").forEach(el => el.textContent = symbol);
              document.querySelectorAll(".currency-label").forEach(el => el.textContent = symbol);
               }
-
             cur.addEventListener("change", refreshSymbols);
             setTimeout(refreshSymbols, 0);
         })();
+
+
+
+
 
         // 🔹 KAYDET
         document.getElementById("createOrderForm").addEventListener("submit", async (e) => {
