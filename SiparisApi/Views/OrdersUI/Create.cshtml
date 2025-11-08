@@ -129,17 +129,48 @@
 @section Scripts {
     <script src="/js/lookups.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // --- Sayfa Yenilemeyi Engelle ---
-            window.addEventListener("beforeunload", function (e) {
-                e.preventDefault();
-                e.returnValue = "";
+              
+        /* === 🧩 SİNTAN: Sayfa Yenilemeyi Engelleme (Desktop + Mobile) === */
+        document.addEventListener("DOMContentLoaded", () => {
+
+            // 🔹 Masaüstü için klasik yenilemeyi engelle
+            window.addEventListener("beforeunload", e => {
+                const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+                if (!isMobile) {
+                    e.preventDefault();
+                    e.returnValue = ""; // Chrome, Edge, Firefox için
+                }
             });
 
-            loadLookups();
-            addOrderItemRow();
-        });
+            // 🔹 Mobilde "çek-bırak yenileme"yi engelle (Android & iOS)
+            let touchStartY = 0;
+            document.addEventListener("touchstart", e => {
+                touchStartY = e.touches[0].clientY;
+            });
 
+            document.addEventListener("touchmove", e => {
+                const touchCurrentY = e.touches[0].clientY;
+                const scrollTop = document.scrollingElement.scrollTop;
+                // Sayfanın en üstünde aşağı çekiliyorsa: (pull-to-refresh)
+                if (scrollTop === 0 && touchCurrentY > touchStartY) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            // 🔹 Formdaki değişiklikleri algıla (ekstra güvenlik)
+            let formChanged = false;
+            document.querySelectorAll("#createOrderForm input, #createOrderForm select")
+              .forEach(el => el.addEventListener("input", () => formChanged = true));
+
+            // Geri tuşu veya yönlendirme engellemesi (SPA senaryosu)
+            window.addEventListener("popstate", e => {
+                if (formChanged && !confirm("Kaydedilmemiş değişiklikler var. Devam etmek istiyor musunuz?")) {
+                    history.pushState(null, null, location.href);
+                    e.preventDefault();
+                }
+            });
+        });
+    
         // 🔹 ÜRÜN SATIRI EKLE
         function addOrderItemRow() {
             const container = document.getElementById("itemsContainer");

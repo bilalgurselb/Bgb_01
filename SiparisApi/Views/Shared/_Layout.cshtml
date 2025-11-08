@@ -13,7 +13,9 @@
         userName = user?.Claims?.FirstOrDefault(c => c.Type == "NameSurname")?.Value
            ?? user?.Identity?.Name
            ?? "";
-        userRole = user?.Claims?.FirstOrDefault(c => c.Type == "Role")?.Value ?? "";
+        userRole = user?.Claims?.FirstOrDefault(c => c.Type == "Role")?.Value
+        ?? user?.Identity?.AuthenticationType   
+        ?? "";
 
         var hour = DateTime.Now.Hour;
         var greeting = hour < 12 ? "Günaydın" :
@@ -47,7 +49,6 @@
                         <span class="fw-semibold">SINTAN CHEMICALS</span>
                     </a>
                     </div>
-
                 <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                         aria-controls="navbarNav" aria-expanded="false" aria-label="Menüyü Aç/Kapat">
                     <span class="navbar-toggler-icon"></span>
@@ -55,14 +56,15 @@
 
                 <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                     <ul class="navbar-nav align-items-lg-center">
-                        <li class="nav-item">
-                            <a class="nav-link nav-sipa text-white" window.location.href="@Url.Action("Index", "OrdersUIList")">
-                                <i class="fas fa-list"></i> Siparişler
-                            </a>
-                        </li>
+                        
                         <li class="nav-item">
                             <a class="nav-link nav-neworder text-white" href="@Url.Action("Create", "OrdersUIList")">
                                 <i class="fas fa-plus-circle"></i> <strong>Yeni Sipariş</strong>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link nav-sipa text-white" href="@Url.Action("Index", "OrdersUIList")">
+                                <i class="fas fa-list"></i> Siparişler
                             </a>
                         </li>
                         <li class="nav-item">
@@ -83,9 +85,18 @@
         </nav>
         @if (isAuthenticated)
         {
-            <div class="greeting-banner">
-                Merhaba <strong>@userName</strong>
-                <small>(@userRole)</small>
+            <div class="d-flex justify-content-between align-items-center">
+                <span>  class="greeting-banner">     
+                                <a> Merhaba <strong>@userName</strong> </a>
+                   <small>(@userRole)</small> </span>
+                   
+                <li class="nav-item">
+                    <span>
+                        <a class="nav-link nav-neworder2 text-white" href="@Url.Action("Create", "OrdersUIList")">
+                        <i class="fas fa-plus-circle"></i> <strong>Yeni Sipariş</strong>
+                        </a>
+                </span>
+                </li>           
             </div>
         }
     </header>
