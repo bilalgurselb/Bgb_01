@@ -321,114 +321,52 @@ function loadDeliveryTerms() {
     fillSelect("deliveryTerm", list);
 }
 
-// === 🔹 LİMANLAR (ports.json’dan - Lazy Autocomplete Versiyonu) ===
-// === 🔹 LİMANLAR (ports.json’dan - Stabil ve Kurumsal Renklerle) ===
-async function loadPorts(selectId) {
-    const container = document.getElementById(selectId);
-    if (!container) return;
+// === 🔹 LİMANLAR (ports.json’dan - Basit ve Hızlı Sürüm) ===
+async function loadPorts(selectId = "portOfDelivery") {
+    const select = document.getElementById(selectId);
+    if (!select) return;
 
-    // Yeni input oluştur
-    const input = document.createElement("input");
-    input.type = "text";
-    input.className = "form-control";
-    input.placeholder = "Type port name...";
-    input.autocomplete = "off";
+    select.disabled = true;
+    select.innerHTML = `<option>Loading ports...</option>`;
 
-    // Mevcut container'ı input ile değiştir
-    container.replaceWith(input);
+    try {
+        const cacheKey = "sintan_ports_v4";
+        let ports = JSON.parse(localStorage.getItem(cacheKey));
+        const lastFetch = localStorage.getItem(cacheKey + "_time");
+        const expired = !lastFetch || Date.now() - parseInt(lastFetch) > 86400000;
 
-    // 🔹 Veri kaynağını LocalStorage + JSON'dan al
-    let ports = JSON.parse(localStorage.getItem("sintan_ports_v3"));
-    if (!ports) {
-        try {
+        // 🔹 JSON’dan veri çek
+        if (!ports || expired) {
             const res = await fetch("/js/ports.json", { cache: "no-store" });
-            if (!res.ok) throw new Error("Ports not found");
+            if (!res.ok) throw new Error("Ports file not found");
             ports = await res.json();
-            localStorage.setItem("sintan_ports_v3", JSON.stringify(ports));
-        } catch (err) {
-            console.error("❌ Ports failed:", err);
-            input.placeholder = "Error loading ports";
-            return;
-        }
-    }
-
-    // 🔹 Dropdown listesi oluştur (kurumsal renklerle)
-    const dropdown = document.createElement("div");
-    dropdown.className = "dropdown-menu show";
-    dropdown.style.position = "absolute";
-    dropdown.style.maxHeight = "220px";
-    dropdown.style.overflowY = "auto";
-    dropdown.style.width = "100%";
-    dropdown.style.display = "none";
-    dropdown.style.border = "1px solid #47AAC6"; // Sintan mavi
-    dropdown.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)";
-    dropdown.style.zIndex = "1050";
-    dropdown.style.backgroundColor = "#fff";
-
-    // Daha güvenli ekleme
-    input.insertAdjacentElement("afterend", dropdown);
-
-    // 🔹 Yazdıkça filtreleme
-    input.addEventListener("input", () => {
-        const query = input.value.trim().toLowerCase();
-        dropdown.innerHTML = "";
-
-        if (!query) {
-            dropdown.style.display = "none";
-            return;
+            localStorage.setItem(cacheKey, JSON.stringify(ports));
+            localStorage.setItem(cacheKey + "_time", Date.now().toString());
         }
 
-        const matches = ports
-            .filter(p => (p.name || "").toLowerCase().includes(query))
-            .slice(0, 20);
-
-        matches.forEach(p => {
-            const item = document.createElement("button");
-            item.type = "button";
-            item.className = "dropdown-item";
-            item.style.fontSize = "0.9rem";
-            item.style.color = "#333";
-            item.style.padding = "6px 12px";
-            item.textContent = `${p.name} (${p.country || "-"})`;
-
-            // Hover rengi – Sintan mavi
-            item.addEventListener("mouseover", () => {
-                item.style.backgroundColor = "#47AAC6";
-                item.style.color = "white";
-            });
-            item.addEventListener("mouseout", () => {
-                item.style.backgroundColor = "white";
-                item.style.color = "#333";
-            });
-
-            item.onclick = () => {
-                input.value = `${p.name} (${p.country || "-"})`;
-                input.dataset.value = p.code || p.name;
-                dropdown.style.display = "none";
-            };
-            dropdown.appendChild(item);
+        // 🔹 Dropdown doldur
+        select.innerHTML = `<option value="">Select Port...</option>`;
+        ports.forEach(p => {
+            const opt = document.createElement("option");
+            opt.value = p.code || p.name;
+            opt.textContent = `${p.name} (${p.country || "-"})`;
+            select.appendChild(opt);
         });
 
-        dropdown.style.display = matches.length ? "block" : "none";
-    });
-
-    // 🔹 Dış tıklamada kapatma (capture mod)
-    document.addEventListener("click", e => {
-        if (!dropdown.contains(e.target) && e.target !== input) {
-            dropdown.style.display = "none";
-        }
-    }, true);
-
-    // 🔹 Focus olduğunda konumu ayarla
-    input.addEventListener("focus", () => {
-        input.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
-
-    // 🔹 Mobil klavyede “bazen kaymama” düzeltmesi
-    input.addEventListener("touchstart", () => {
-        dropdown.style.display = "none";
-    });
+        // 🔹 Görsel düzen
+        select.style.color = "#000";
+        select.style.backgroundColor = "#fff";
+        select.style.border = "1px solid #47AAC6"; // Sintan mavisi
+        select.style.borderRadius = "6px";
+        select.style.padding = "6px";
+    } catch (err) {
+        console.error("❌ Port listesi yüklenemedi:", err);
+        select.innerHTML = `<option>Error loading ports</option>`;
+    } finally {
+        select.disabled = false;
+    }
 }
+
 
 
 document.addEventListener('change', function (e) {

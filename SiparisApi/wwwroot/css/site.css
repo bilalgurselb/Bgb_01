@@ -98,11 +98,16 @@ h1, h2, h3 {
     color: #fff !important;
 }
 #nav-neworder2 {
-    color: #ff9900 !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px; /* ikonla yazı arası boşluk */
+    color: #ff9900 !important; /* kurumsal turuncu */
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    padding: 6px 14px;
     border-radius: 6px;
-    padding: 6px 12px;
-    font-size: 0.9rem;
-    margin-right: 10px;
+    transition: all 0.2s ease-in-out;
 }
 /* ============================================================
    ⚙️ BUTONLAR
