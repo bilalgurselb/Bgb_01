@@ -65,9 +65,10 @@ h1, h2, h3 {
     display: flex;
     align-items: center;
     gap: 5px;
+    margin-right: auto;
 }
 .navbar-nav .nav-sipa {
-    background-color: var(--sintan-blue-light);
+    background-color: var(--sintan-blue-dark);
     border-radius: 6px;
     padding: 6px 12px;
     font-weight: 600;
@@ -85,7 +86,7 @@ h1, h2, h3 {
     font-weight: 600;
 }
 .navbar-nav .nav-sipa:hover {
-    background-color:var(--sintan-blue-dark);
+    background-color: var(--sintan-blue-light);
     color: #fff !important;
 }
   .navbar-nav .nav-neworder:hover {

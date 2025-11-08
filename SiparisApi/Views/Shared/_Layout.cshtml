@@ -9,17 +9,17 @@
     string userName = "";
     string userRole = "";
 
-   
-        userName = user?.Claims?.FirstOrDefault(c => c.Type == "NameSurname")?.Value
-           ?? user?.Identity?.Name
-           ?? "";
-        userRole = user?.Claims?.FirstOrDefault(c => c.Type == "Role")?.Value
-        ?? user?.Identity?.AuthenticationType   
+
+    userName = user?.Claims?.FirstOrDefault(c => c.Type == "NameSurname")?.Value
+       ?? user?.Identity?.Name
+       ?? "";
+    userRole = user?.Claims?.FirstOrDefault(c => c.Type == "Role")?.Value
+     
         ?? "";
 
         var hour = DateTime.Now.Hour;
         var greeting = hour < 12 ? "Günaydın" :
-                           hour < 18 ? "Merhaba" : "İyi akşamlar";
+                   hour > 17 ? "İyi akşamlar" : "Merhaba";
     
 }
 

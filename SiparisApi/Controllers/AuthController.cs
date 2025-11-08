@@ -58,7 +58,8 @@ namespace SiparisApi.Controllers
             var claims = new[]
             {
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, allowed.Role ?? "User"),
+                new Claim(ClaimTypes.Role, allowed.Role ?? ""),
+                new Claim("Role", allowed.Role ?? ""),
                 new Claim("NameSurname", allowed.NameSurname ?? "")
             };
 
