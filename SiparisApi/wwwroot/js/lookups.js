@@ -346,8 +346,7 @@ async function loadPorts(selectId) {
             return;
         }
     }
-
-    // Dropdown listesi oluştur
+    /* ----DropDown Listesi ----------*/
     const dropdown = document.createElement("div");
     dropdown.className = "dropdown-menu show";
     dropdown.style.position = "absolute";
@@ -355,6 +354,7 @@ async function loadPorts(selectId) {
     dropdown.style.overflowY = "auto";
     dropdown.style.width = "100%";
     dropdown.style.display = "none";
+    
     input.parentNode.insertBefore(dropdown, input.nextSibling);
 
     // Kullanıcı yazdıkça filtreleme
