@@ -19,8 +19,9 @@ async function loadLookups() {
         loadShipFrom(),
         loadPorts("portOfDelivery"),
         loadCities("placeOfDelivery"),
-        loadProducts()
+        preloadProducts()
     ]);
+    
 }
 
 // === 🔹 MÜŞTERİLER (dbo.SintanCari - Autocomplete + Cache) ===
