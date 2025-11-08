@@ -2,10 +2,15 @@
 
 // --- Ana yükleyici ---
 async function loadLookups() {
+    const token = localStorage.getItem("token");
+
+    const headers = {
+        "Authorization": `Bearer ${token}`
+    };
+
     await Promise.all([
         loadCustomers(),
         loadSalesReps(),
-        loadProducts(),
         loadCurrencies(),
         loadUnits(),
         loadTransports(),
@@ -13,7 +18,8 @@ async function loadLookups() {
         loadDeliveryTerms(),
         loadShipFrom(),
         loadPorts("portOfDelivery"),
-        loadCities("placeOfDelivery")
+        loadCities("placeOfDelivery"),
+        loadProducts(headers)  // token taşı!
     ]);
 }
 
