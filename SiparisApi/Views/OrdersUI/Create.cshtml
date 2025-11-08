@@ -447,6 +447,7 @@
             if (order.Items.length === 0) return showToast("En az bir ürün satırı eklemelisiniz.");
 
             // Sipariş özeti modal
+
             let summary = `<table class="table table-sm"><thead><tr><th>#</th><th>Ürün</th><th>Miktar</th><th>Fiyat</th></tr></thead><tbody>`;
             order.Items.forEach(i => {
                 const name = document.querySelector(`.product-select option[value='${i.ProductId}']`)?.text || "-";

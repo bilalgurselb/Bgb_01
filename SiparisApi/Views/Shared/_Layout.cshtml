@@ -86,19 +86,17 @@
         @if (isAuthenticated)
         {
             <div class="d-flex justify-content-between align-items-center">
-                <span> <a class="greeting-banner">   </a>  
+                <span> <a class="greeting-banner"></a>  
                                 <a> Merhaba <strong>@userName</strong> </a>
-                   <small>(@userRole)</small> </span>
-                   
-                <li class="nav-item">
+                   <small>(@userRole)</small> </span>                
+                
                     <span>
                         <a id="nav-neworder2" class="fas fa-plus-circle" href="@Url.Action("Create", "OrdersUIList")">
-                            <strong>Yeni Sipariş</strong>
+                            <small>Yeni Sipariş</small>
                         </a>
-                 </span>
-                </li>           
+                 </span>                        
             </div>
-        }
+            }
     </header>
 
     <div class="container mt-4">
