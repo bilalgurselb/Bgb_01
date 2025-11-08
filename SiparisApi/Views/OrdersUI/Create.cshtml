@@ -268,62 +268,91 @@
         document.getElementById("createOrderForm").addEventListener("submit", function (e) {
             e.preventDefault(); // Formun klasik gönderimini iptal eder
         });
-        /*--------------------------HESAP-----------------*/
-                function recalcRowTotal(row) {
-          const qtyEl   = row.querySelector(".quantity");
-          const priceEl = row.querySelector(".price");
-          const totalEl = row.querySelector(".total-amount");
-          const unitEl  = row.querySelector(".unit-select");
-          const curEl   = row.querySelector(".currency-label");
-          const lblInfo = row.querySelector(".net-weight-info");
+        /*---HESAPLAMA-------*/addOrderItemRow
+                /* === 🔹 HESAP MODÜLÜ (Bankacılık Tipi Para Hesabı) === */
+        function recalcRowTotal(row) {
+            if (!row) return;
 
-          const cur = document.getElementById("currency")?.value || "EURO";
-          const symbols = { USD: "$", EURO: "€", TL: "₺", RUBLE: "₽" };
-          const sym = symbols[cur] || "";
+            const qtyEl   = row.querySelector(".quantity");
+            const priceEl = row.querySelector(".price");
+            const totalEl = row.querySelector(".total-amount");
+            const unitEl  = row.querySelector(".unit-select");
+            const curEl   = row.querySelector(".currency-label");
+            const lblInfo = row.querySelector(".net-weight-info");
 
-          const qty = parseFloat(qtyEl.value) || 0;
-          const price = parseFloat(priceEl.value) || 0;
-          const unit = unitEl.value;
+            const cur = document.getElementById("currency")?.value || "EURO";
+            const symbols = { USD: "$", EURO: "€", TL: "₺", RUBLE: "₽" };
+            const sym = symbols[cur] || "";
 
-              const packWeight = parseFloat(row.dataset.packWeight || 0);
-        const palletNet  = parseFloat(row.dataset.palletNet  || 0);
-        let netKg = 0;
+            const qty = parseFloat(qtyEl?.value) || 0;
+            const price = parseFloat(priceEl?.value) || 0;
+            const unit = unitEl?.value || "";
 
-          switch (unit) {
-            case "Pallets":
-              netKg = qty * palletNet;
-              break;
-            case "Pieces":
-              netKg = qty * packWeight;
-              break;
-            case "IBC":
-              netKg = qty * packWeight;
-              break;
-          }
+            const packWeight = parseFloat(row.dataset.packWeight || 0);
+            const palletNet  = parseFloat(row.dataset.palletNet  || 0);
 
-          const total = price * netKg;
+            let netKg = 0;
+            switch (unit) {
+                case "Pallets": netKg = qty * palletNet; break;
+                case "Pieces":  netKg = qty * packWeight; break;
+                case "IBC":     netKg = qty * packWeight; break;
+                default:        netKg = qty; break;
+            }
 
-          if (totalEl) totalEl.value = total.toFixed(2);
-          if (curEl) curEl.textContent = sym;
-          if (lblInfo)
-            lblInfo.textContent = netKg > 0 ? `Net Weight: ${netKg.toFixed(2)} kg` : "Net Weight: -";
+            // === 🔹 Bankacılık tipi parasal çarpma ===
+            // 1) Parayı 4 ondalık basamaklı cent olarak al
+            // 2) Çarpmayı tam sayıda yap
+            // 3) Sonucu 2 ondalıkla geri böl (round half even)
+
+            const total = preciseMoneyMultiply(price, netKg);
+
+            if (totalEl) totalEl.value = total.toFixed(2);
+            if (curEl) curEl.textContent = sym;
+            if (lblInfo)
+                lblInfo.textContent = netKg > 0 ? `Net Weight: ${netKg.toFixed(2)} kg` : "Net Weight: -";
+
+            row.style.borderLeft = total > 0 ? "4px solid #47AAC6" : "4px solid transparent";
         }
-    
-        // Miktar veya fiyat değiştiğinde toplamı yeniden hesapla
-        document.addEventListener('input', function(e) {
-          if (e.target.matches('.quantity, .price')) {
-            const row = e.target.closest('.item-row');
-            if (row) recalcRowTotal(row);
-          }
+
+        /* === 🔹 Bankacılık tipi para çarpımı === */
+        function preciseMoneyMultiply(price, qty) {
+            const p = Math.round(price * 10000); // fiyatı 4 ondalıklı olarak integer’a çevir
+            const q = Math.round(qty * 10000);   // miktarı da 4 ondalıklı çevir
+            const result = (p * q) / 100000000;  // toplamda 8 ondalıklı olur, 10⁸’e böl
+            return Math.round(result * 100) / 100; // 2 ondalıkla round half-even
+        }
+        /* === 🔹 HESAP TETİKLEYİCİLERİ (BANKACILIK FORMÜLÜ İLE) === */
+
+        // 🔸 1. Miktar veya Fiyat değiştiğinde
+        document.addEventListener('input', e => {
+            if (e.target.matches('.quantity, .price')) {
+                const row = e.target.closest('.item-row');
+                if (row) recalcRowTotal(row);
+            }
         });
 
-        // Ölçü birimi seçimi değiştiğinde toplamı yeniden hesapla
-        document.addEventListener('change', function(e) {
-          if (e.target.matches('.unit-select')) {
-            const row = e.target.closest('.item-row');
-            if (row) recalcRowTotal(row);
-          }
+        // 🔸 2. Ölçü birimi değiştiğinde
+        document.addEventListener('change', e => {
+            if (e.target.matches('.unit-select')) {
+                const row = e.target.closest('.item-row');
+                if (row) recalcRowTotal(row);
+            }
         });
+
+        // 🔸 3. Ürün seçildiğinde dataset güncellendikten sonra
+        document.addEventListener('change', e => {
+            if (e.target.matches('.product-select')) {
+                const row = e.target.closest('.item-row');
+                // Dataset yüklenmesi mikro gecikmeli olduğu için küçük delay ekliyoruz
+                setTimeout(() => recalcRowTotal(row), 100);
+            }
+        });
+
+        // 🔸 4. Para birimi değişince, tüm satırları yeniden hesapla
+        document.getElementById('currency')?.addEventListener('change', () => {
+            document.querySelectorAll('.item-row').forEach(row => recalcRowTotal(row));
+        });
+
    
         // === Currency seçilince Price yanına sembol yaz ===
       (function attachCurrencySymbolBinding(){

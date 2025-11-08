@@ -52,10 +52,10 @@ async function loadCustomers() {
         norm.forEach(c => {
             const opt = document.createElement("option");
             opt.value = c.id;
-            opt.textContent = `${c.name} (${c.city || "N/A"}, ${c.country || "-"})`;
-            opt.dataset.city = c.city;
-            opt.dataset.country = c.country;
-            opt.dataset.phone = c.phone;
+            opt.textContent = `${c.name} (${c.ILCE || "N/A"}, ${c.IL || "-"})`;
+            opt.dataset.city = c.ILCE;
+            opt.dataset.country = c.IL;
+            opt.dataset.phone = c.TELEFON;
             select.appendChild(opt);
         });
 
@@ -214,7 +214,7 @@ async function loadProducts(selectElement = null) {
 }
 */
 
-// === 🔹 ÜRÜN DETAYLARI (AMBALAJ/PALET) ===
+// === 🔹 ÜRÜN DETAYLARI (AMBALAJ / PALET) ===
 document.addEventListener("change", async (e) => {
     if (!e.target.classList.contains("product-select")) return;
     const select = e.target;
@@ -227,12 +227,13 @@ document.addEventListener("change", async (e) => {
         if (!res.ok) throw new Error("Ürün bilgisi alınamadı.");
         const d = await res.json();
 
+        // Veritabanından gelen veriler
         row.dataset.packWeight = parseFloat(d.AMBALAJ_AGIRLIGI || 0);
         row.dataset.palletCount = parseFloat(d.PALET_AMBALAJ_ADEDI || 0);
         row.dataset.palletNet = parseFloat(d.PALET_NET_AGIRLIGI || 0);
         row.dataset.productName = d.STOK_ADI || "-";
 
-        // Net Weight etiketi oluştur (Product altına)
+        // Etiket oluştur (görsel bilgi)
         let lbl = row.querySelector(".net-weight-info");
         if (!lbl) {
             lbl = document.createElement("small");
@@ -241,11 +242,12 @@ document.addEventListener("change", async (e) => {
         }
         lbl.textContent = "";
 
-        recalcRowTotal(row);
+        recalcRowTotal(row); // → hesaplama fonksiyonu tetiklenir
     } catch (err) {
         console.error("Ürün detay yüklenemedi:", err);
     }
 });
+
 
 // === 🔹 SHIP FROM (Sabit) ===
 function loadShipFrom() {
@@ -321,18 +323,22 @@ function loadDeliveryTerms() {
 }
 
 // === 🔹 LİMANLAR (ports.json’dan - Lazy Autocomplete Versiyonu) ===
+// === 🔹 LİMANLAR (ports.json’dan - Stabil ve Kurumsal Renklerle) ===
 async function loadPorts(selectId) {
     const container = document.getElementById(selectId);
     if (!container) return;
 
-    // Input oluştur
+    // Yeni input oluştur
     const input = document.createElement("input");
     input.type = "text";
     input.className = "form-control";
     input.placeholder = "Type port name...";
     input.autocomplete = "off";
+
+    // Mevcut container'ı input ile değiştir
     container.replaceWith(input);
 
+    // 🔹 Veri kaynağını LocalStorage + JSON'dan al
     let ports = JSON.parse(localStorage.getItem("sintan_ports_v3"));
     if (!ports) {
         try {
@@ -346,7 +352,8 @@ async function loadPorts(selectId) {
             return;
         }
     }
-    /* ----DropDown Listesi ----------*/
+
+    // 🔹 Dropdown listesi oluştur (kurumsal renklerle)
     const dropdown = document.createElement("div");
     dropdown.className = "dropdown-menu show";
     dropdown.style.position = "absolute";
@@ -354,10 +361,15 @@ async function loadPorts(selectId) {
     dropdown.style.overflowY = "auto";
     dropdown.style.width = "100%";
     dropdown.style.display = "none";
-    
-    input.parentNode.insertBefore(dropdown, input.nextSibling);
+    dropdown.style.border = "1px solid #47AAC6"; // Sintan mavi
+    dropdown.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)";
+    dropdown.style.zIndex = "1050";
+    dropdown.style.backgroundColor = "#fff";
 
-    // Kullanıcı yazdıkça filtreleme
+    // Daha güvenli ekleme
+    input.insertAdjacentElement("afterend", dropdown);
+
+    // 🔹 Yazdıkça filtreleme
     input.addEventListener("input", () => {
         const query = input.value.trim().toLowerCase();
         dropdown.innerHTML = "";
@@ -369,13 +381,27 @@ async function loadPorts(selectId) {
 
         const matches = ports
             .filter(p => (p.name || "").toLowerCase().includes(query))
-            .slice(0, 20); // 🔹 En fazla 20 sonuç göster
+            .slice(0, 20);
 
         matches.forEach(p => {
             const item = document.createElement("button");
             item.type = "button";
             item.className = "dropdown-item";
+            item.style.fontSize = "0.9rem";
+            item.style.color = "#333";
+            item.style.padding = "6px 12px";
             item.textContent = `${p.name} (${p.country || "-"})`;
+
+            // Hover rengi – Sintan mavi
+            item.addEventListener("mouseover", () => {
+                item.style.backgroundColor = "#47AAC6";
+                item.style.color = "white";
+            });
+            item.addEventListener("mouseout", () => {
+                item.style.backgroundColor = "white";
+                item.style.color = "#333";
+            });
+
             item.onclick = () => {
                 input.value = `${p.name} (${p.country || "-"})`;
                 input.dataset.value = p.code || p.name;
@@ -387,18 +413,24 @@ async function loadPorts(selectId) {
         dropdown.style.display = matches.length ? "block" : "none";
     });
 
-    // Dışarı tıklanınca listeyi kapat
+    // 🔹 Dış tıklamada kapatma (capture mod)
     document.addEventListener("click", e => {
         if (!dropdown.contains(e.target) && e.target !== input) {
             dropdown.style.display = "none";
         }
-    });
+    }, true);
 
-    // 🔹 Klavye odaklanınca hemen açılacak
+    // 🔹 Focus olduğunda konumu ayarla
     input.addEventListener("focus", () => {
         input.scrollIntoView({ behavior: "smooth", block: "center" });
     });
+
+    // 🔹 Mobil klavyede “bazen kaymama” düzeltmesi
+    input.addEventListener("touchstart", () => {
+        dropdown.style.display = "none";
+    });
 }
+
 
 document.addEventListener('change', function (e) {
     if (e.target.classList.contains('product-select')) {
