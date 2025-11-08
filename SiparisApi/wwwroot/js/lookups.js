@@ -482,7 +482,7 @@ async function loadCities(selectId = "placeOfDelivery") {
     }
 }
 
-
+///*-------yaRDIMCI OLMAK-------*/// 
 // === 🔹 Genel Yardımcılar ===
 function fillSelect(id, list) {
     const select = document.getElementById(id);
