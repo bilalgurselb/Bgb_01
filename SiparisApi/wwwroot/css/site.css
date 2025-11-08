@@ -98,11 +98,12 @@ h1, h2, h3 {
     color: #fff !important;
 }
 .navbar-nav .nav-neworder2 {
-    color: var(--sintan-orange);
-    background-color: var(--sintan-orange);
+    color: #ff9900 !important;
     border-radius: 6px;
     padding: 6px 12px;
     font-weight: 600;
+    font-weight: bold;
+    margin-left: 10px;
 }
 /* ============================================================
    ⚙️ BUTONLAR

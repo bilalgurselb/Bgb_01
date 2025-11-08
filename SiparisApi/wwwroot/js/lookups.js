@@ -41,17 +41,17 @@ async function loadCustomers() {
 
         // 🔹 normalize (API name/CARI_ISIM; city/ILCE; country/ULKE/IL; id/Id)
         const norm = customers.map(c => ({
-            id: c.id ?? c.Id,
+            id: c.id ?? c.CARI_KOD ??,
             name: c.name ?? c.CARI_ISIM ?? "",
             city: c.city ?? c.ILCE ?? "",
-            country: c.country ?? c.ULKE ?? c.IL ?? "",
+            country: c.country ?? c.IL ?? "",
             phone: c.phone ?? c.TELEFON ?? ""
         }));
 
         select.innerHTML = `<option value="">Select Customer...</option>`;
         norm.forEach(c => {
             const opt = document.createElement("option");
-            opt.value = c.id;
+            opt.value = c.CARI_KOD;
             opt.textContent = `${c.name} (${c.ILCE || "N/A"}, ${c.IL || "-"})`;
             opt.dataset.city = c.ILCE;
             opt.dataset.country = c.IL;
@@ -62,7 +62,7 @@ async function loadCustomers() {
         select.addEventListener("change", function () {
             const o = this.selectedOptions[0];
             document.getElementById("customerInfo").innerHTML = o?.value
-                ? `<small><b>City:</b> ${o.dataset.city || '-'} | <b>Country:</b> ${o.dataset.country || '-'} | <b>Phone:</b> ${o.dataset.phone || '-'}</small>`
+                ? `<small><b>ILCE:</b> ${o.dataset.city || '-'} | <b>IL:</b> ${o.dataset.country || '-'} | <b>TELEFON:</b> ${o.dataset.phone || '-'}</small>`
                 : "";
         });
     } catch (err) {
@@ -227,13 +227,11 @@ document.addEventListener("change", async (e) => {
         if (!res.ok) throw new Error("Ürün bilgisi alınamadı.");
         const d = await res.json();
 
-        // Veritabanından gelen veriler
         row.dataset.packWeight = parseFloat(d.AMBALAJ_AGIRLIGI || 0);
         row.dataset.palletCount = parseFloat(d.PALET_AMBALAJ_ADEDI || 0);
         row.dataset.palletNet = parseFloat(d.PALET_NET_AGIRLIGI || 0);
         row.dataset.productName = d.STOK_ADI || "-";
 
-        // Etiket oluştur (görsel bilgi)
         let lbl = row.querySelector(".net-weight-info");
         if (!lbl) {
             lbl = document.createElement("small");
@@ -242,7 +240,8 @@ document.addEventListener("change", async (e) => {
         }
         lbl.textContent = "";
 
-        recalcRowTotal(row); // → hesaplama fonksiyonu tetiklenir
+        // 🔹 küçük delay ile yeniden hesapla
+        setTimeout(() => recalcRowTotal(row), 120);
     } catch (err) {
         console.error("Ürün detay yüklenemedi:", err);
     }
