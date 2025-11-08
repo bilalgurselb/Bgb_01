@@ -73,6 +73,47 @@ async function loadCustomers() {
     }
 }
 
+// === Products (normalize) ===
+async function loadProducts() {
+    const select = document.getElementById("productselect");
+    if (!select) return;
+    select.disabled = true;
+    select.innerHTML = `<option>Ürünler yükleniyor...</option>`;
+
+    try {
+        const cacheKey = "sintan_products_v7";
+        let products = JSON.parse(localStorage.getItem(cacheKey));
+        const lastFetch = localStorage.getItem(cacheKey + "_time");
+        const expired = !lastFetch || Date.now() - parseInt(lastFetch) > 86400000;
+
+        if (!products || expired) {
+            const res = await fetch("/api/orders/lookups/products");
+            if (!res.ok) throw new Error("Ürünler alınamadı");
+            products = await res.json();
+            localStorage.setItem(cacheKey, JSON.stringify(products));
+            localStorage.setItem(cacheKey + "_time", Date.now().toString());
+        }
+
+        select.innerHTML = `<option value="">Ürün seçiniz...</option>`;
+        products.forEach(p => {
+            const opt = document.createElement("option");
+            opt.value = p.id;
+            opt.textContent = `${p.name} (${p.id})`;
+            opt.dataset.kg = p.kg;
+            opt.dataset.ad = p.ad;
+            opt.dataset.net = p.net;
+            opt.dataset.tut = p.tut;
+            select.appendChild(opt);
+        });
+
+    } catch (err) {
+        console.error("❌ Ürün listesi yüklenemedi:", err);
+        select.innerHTML = `<option>Ürün listesi yüklenemedi</option>`;
+    } finally {
+        select.disabled = false;
+    }
+}
+
 // === 🔹 SATIŞ TEMSİLCİLERİ (AllowedUsers) ===
 async function loadSalesReps() {
     const select = document.getElementById("salesRepSelect");
@@ -105,78 +146,6 @@ async function loadSalesReps() {
         select.disabled = false;
     }
 }
-// === Products (normalize) ===
-/**
- * Ürün listesini verilen select elemanına yükler.
- * selectElement parametresi boş bırakılırsa, sayfadaki `productselect` id'li
- * veya `.product-select` sınıfına sahip elemanlar doldurulur.
- * Ürün dataset'leri packWeight, palletNet, palletCount ve transportCost adlarıyla ayarlanır.
- *
- * @param {HTMLSelectElement|null} selectElement
- */
-async function loadProducts(selectElement = null) {
-    // Önce veri kaynağını cache ile yükle
-    const cacheKey = "sintan_products_v7";
-    let products = JSON.parse(localStorage.getItem(cacheKey));
-    const lastFetch = localStorage.getItem(cacheKey + "_time");
-    const expired = !lastFetch || Date.now() - parseInt(lastFetch) > 86400000;
-
-    try {
-        if (!products || expired) {
-            const res = await fetch("/api/orders/lookups/products");
-            if (!res.ok) throw new Error("Ürünler alınamadı");
-            products = await res.json();
-            localStorage.setItem(cacheKey, JSON.stringify(products));
-            localStorage.setItem(cacheKey + "_time", Date.now().toString());
-        }
-
-        // Hedef select eleman(lar)ını belirle
-        let targets = [];
-        if (selectElement) {
-            targets = [selectElement];
-        } else {
-            // Belirli bir select yoksa id="productselect" veya class="product-select" olan tüm elemanları hedefle
-            const byId = document.getElementById("productselect");
-            if (byId) {
-                targets.push(byId);
-            } else {
-                targets = Array.from(document.querySelectorAll(".product-select"));
-            }
-        }
-
-        // Seçili target yoksa çık
-        if (!targets || targets.length === 0) return;
-
-        // Her target için listeleri doldur
-        targets.forEach((sel) => {
-            sel.disabled = true;
-            sel.innerHTML = `<option value="">Ürün seçiniz...</option>`;
-            products.forEach((p) => {
-                const opt = document.createElement("option");
-                opt.value = p.id ?? p.STOK_KODU;
-                // Kullanıcıya gösterilecek metin
-                opt.textContent = `${p.name ?? p.STOK_ADI ?? ""} (${p.id ?? p.STOK_KODU ?? "-"})`;
-                // Net/ambalaj bilgilerini dataset'e koy
-                opt.dataset.packWeight    = p.kg  ?? p.AMBALAJ_AGIRLIGI      ?? "";
-                opt.dataset.palletCount   = p.ad  ?? p.PALET_AMBALAJ_ADEDI   ?? "";
-                opt.dataset.palletNet     = p.net ?? p.PALET_NET_AGIRLIGI    ?? "";
-                opt.dataset.transportCost = p.tut ?? p.NAKLIYET_TUT           ?? "";
-                sel.appendChild(opt);
-            });
-            sel.disabled = false;
-        });
-
-    } catch (err) {
-        console.error("❌ Ürün listesi yüklenemedi:", err);
-        // Hata durumunda varsa selectElement'e hata mesajı göster
-        const targets = selectElement ? [selectElement] : [];
-        targets.forEach((sel) => {
-            sel.innerHTML = `<option>Ürün listesi yüklenemedi</option>`;
-            sel.disabled = false;
-        });
-    }
-}
-
 
 // === Products (normalize) ===
 /*async function loadProducts(selectElement = null) {
@@ -403,16 +372,6 @@ async function loadPorts(selectId) {
     });
 }
 
-document.addEventListener('change', function (e) {
-    if (e.target.classList.contains('product-select')) {
-        const opt = e.target.selectedOptions[0];
-        const row = e.target.closest('.item-row');
-        // loadProducts sırasında set ettiğiniz packWeight ve palletNet verilerini kullanın
-        row.dataset.packWeight = opt.dataset.packWeight || 0;
-        row.dataset.palletNet = opt.dataset.palletNet || 0;
-        recalcRowTotal(row);
-    }
-});
 
 // === 🔹 PLACE OF DELIVERY (SQL: dbo.SintanCari.IL) ===
 async function loadCities(selectId = "placeOfDelivery") {

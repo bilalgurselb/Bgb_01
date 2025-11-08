@@ -159,7 +159,7 @@
           <!-- 🔹 Ürün bilgileri -->
           <div class="col-12 mb-2">
             <label>Product</label>
-            <select id="productselect" class="product-select" required></select>
+            <select class="product-select" required></select>
           </div>
 
           <div class="row">
@@ -172,11 +172,10 @@
               <label>Unit</label>
               <select class="form-control unit-select" required></select>
             </div>
-
-                 <!-- 🔹 Price + Total + Currency aynı satırda -->
-        <div class="row align-items-end mb-2">
-          <div class="col-md-5 mb-2">
-            <label>Price</label>
+        <div class="col-md-5 mb-2">
+          <label>Price</label>
+          <div class="input-group">
+            <span class="input-group-text price-symbol">€</span>
             <input type="number"
                    class="form-control price"
                    inputmode="decimal"
@@ -184,32 +183,29 @@
                    required
                    placeholder="Enter price" />
           </div>
+        </div>
 
-          <div class="col-md-5 mb-2">
-            <label>Total</label>
+             <div class="col-md-5 mb-2">
+          <label>Total</label>
+          <div class="input-group">
             <input type="text"
                    class="form-control total-amount"
                    value="0.00"
                    readonly />
-          </div>
-
-          <div class="col-md-2 d-flex align-items-end justify-content-center">
-            <span class="currency-label fw-bold mb-2" style="font-size:1.2rem;">€</span>
+            <span class="input-group-text currency-label">€</span>
           </div>
         </div>
 
         `;
-
-
             container.appendChild(row);
-
-            loadProducts(row.querySelector(".product-select"));
+                    const select = row.querySelector(".product-select");
+        select.id = `productselect_${Date.now()}`; // Backtick kullanımı
+        loadProducts(select);   
+        
             loadUnits(row.querySelector(".unit-select"));
-
             updateRowNumbers();
             document.getElementById("currency")?.dispatchEvent(new Event("change"));
         }
-
         // 🔹 Satır numaralarını yeniden sırala
         function updateRowNumbers() {
             document.querySelectorAll("#itemsContainer .item-row").forEach((row, index) => {
@@ -217,7 +213,6 @@
                 if (badge) badge.textContent = `#${index + 1}`;
             });
         }
-
         // 🔹 Ürün Satırı Silme (Delegated Listener)
         document.addEventListener("click", function (e) {
             const btn = e.target.closest(".remove-item");
@@ -257,10 +252,9 @@
           const price = parseFloat(priceEl.value) || 0;
           const unit = unitEl.value;
 
-          const packWeight = parseFloat(row.dataset.packWeight || 0);
-          const palletNet  = parseFloat(row.dataset.palletNet || 0);
-
-          let netKg = 0;
+              const packWeight = parseFloat(row.dataset.packWeight || 0);
+        const palletNet  = parseFloat(row.dataset.palletNet  || 0);
+        let netKg = 0;
 
           switch (unit) {
             case "Pallets":
@@ -281,21 +275,38 @@
           if (lblInfo)
             lblInfo.textContent = netKg > 0 ? `Net Weight: ${netKg.toFixed(2)} kg` : "Net Weight: -";
         }
+    
+        // Miktar veya fiyat değiştiğinde toplamı yeniden hesapla
+        document.addEventListener('input', function(e) {
+          if (e.target.matches('.quantity, .price')) {
+            const row = e.target.closest('.item-row');
+            if (row) recalcRowTotal(row);
+          }
+        });
+
+        // Ölçü birimi seçimi değiştiğinde toplamı yeniden hesapla
+        document.addEventListener('change', function(e) {
+          if (e.target.matches('.unit-select')) {
+            const row = e.target.closest('.item-row');
+            if (row) recalcRowTotal(row);
+          }
+        });    
 
         // === Currency seçilince Price yanına sembol yaz ===
-     /*   (function attachCurrencySymbolBinding(){
+      (function attachCurrencySymbolBinding(){
             const cur = document.getElementById("currency");
             if (!cur) return;
             const symbols = { USD: "$", EURO: "€", TL: "₺", RUBLE: "₽" };
 
             function refreshSymbols(){
                 const symbol = symbols[cur.value] || "";
-                document.querySelectorAll(".price-symbol").forEach(el => el.textContent = symbol);
-            }
+                  document.querySelectorAll(".price-symbol").forEach(el => el.textContent = symbol);
+             document.querySelectorAll(".currency-label").forEach(el => el.textContent = symbol);
+              }
 
             cur.addEventListener("change", refreshSymbols);
             setTimeout(refreshSymbols, 0);
-        })();*/
+        })();
 
         // 🔹 KAYDET
         document.getElementById("createOrderForm").addEventListener("submit", async (e) => {
@@ -324,7 +335,7 @@
                 const price = parseFloat(row.querySelector(".price").value);
                 if (productId && quantity > 0 && price > 0) {
                     order.Items.push({ RowNumber: index + 1, ProductId: productId, Quantity: quantity, Price: price });
-                }
+                  }recalcRowTotal(row);
             });
 
             if (order.Items.length === 0) return showToast("En az bir ürün satırı eklemelisiniz.");
