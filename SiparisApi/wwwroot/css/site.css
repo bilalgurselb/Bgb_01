@@ -3,10 +3,12 @@
    🔹 SINTAN CHEMICALS - Kurumsal Tema
    ============================================================ */
 :root {
-    --sintan-blue: #0054A6;
+    --sintan-blue: #47AAC6;
     --sintan-blue-dark: #004b95;
-    --sintan-orange: #F47C20;
-    --sintan-green: #27AE60;
+    --sintan-blue-light: #A9D7E4;
+    --sintan-orange: #DF5A41;
+    --sintan-green: #57B37F;
+    --sintan-green-light: #8BCBA3;
     --sintan-red: #E84C3D;
     --text-dark: #1B1B1B;
     --text-light: #FFFFFF;
@@ -64,21 +66,36 @@ h1, h2, h3 {
     align-items: center;
     gap: 5px;
 }
-
-    .navbar-nav .nav-link:hover {
-        color: var(--sintan-orange) !important;
-    }
+.navbar-nav .nav-sipa {
+    background-color: var(--sintan-blue-dark);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-weight: 600;
+} 
 .navbar-nav .nav-neworder {
     background-color: var(--sintan-orange);
     border-radius: 6px;
     padding: 6px 12px;
     font-weight: 600;
 }
-
-    .navbar-nav .nav-neworder:hover {
+.navbar-nav .nav-admin {
+    background-color: var(--sintan-green);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-weight: 600;
+}
+.navbar-nav .nav-sipa:hover {
+    background-color: #d66b18;
+    color: #fff !important;
+}
+  .navbar-nav .nav-neworder:hover {
         background-color: #d66b18;
         color: #fff !important;
     }
+.navbar-nav .nav-admin:hover {
+    background-color: #d66b18;
+    color: #fff !important;
+}
 
 /* ============================================================
    ⚙️ BUTONLAR
