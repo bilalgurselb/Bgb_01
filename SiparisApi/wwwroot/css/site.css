@@ -100,10 +100,11 @@ h1, h2, h3 {
 #nav-neworder2 {
     display: inline-flex;
     align-items: center;
-    gap: 6px; /* ikonla yazı arası boşluk */
-    color: #ff9900 !important; /* kurumsal turuncu */
+    gap: 6px; 
+    color: #ff9900 !important; 
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.9rem;
+    text-transform: lowercase;
     text-decoration: none;
     padding: 6px 14px;
     border-radius: 6px;
