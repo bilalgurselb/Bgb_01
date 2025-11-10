@@ -6,32 +6,28 @@ namespace SiparisApi.Models
     {
         public int Id { get; set; }
 
-        // Başlık alanları (hepsi HEAD level)
-        public int? CustomerId { get; set; }
-        public int? SalesRepId { get; set; }          // CreatedBy yerine ek açıklık
-        public DateTime OrderDate { get; set; } = DateTime.UtcNow;
+        public string? CustomerId { get; set; }
+        public SintanCari? Customer { get; set; }
+        public int SalesRepId { get; set; }
+        public User? SalesRep { get; set; }
+        public DateTime OrderDate { get; set; } 
         public DateTime? DeliveryDate { get; set; }
         public string? PaymentTerm { get; set; }
         public string? Transport { get; set; }
         public string? DeliveryTerm { get; set; }
-        public int DueDays { get; set; }
-        public string? Currency { get; set; }          // Varsayılan para birimi (satır override edebilir)
-                                                       //  public int? CreatedById { get; set; }
-                                                       //  public User? CreatedById { get; set; }
-                                                       // Durum & zaman damgaları
+        public int? DueDays { get; set; }
+        public string? Currency { get; set; }          
         public string Status { get; set; } = "Onay Bekleniyor";
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
         public string? PortOfDelivery { get; set; }
-        public string? PlaceOfDelivery { get; set; }
-        public SintanCari? Customer { get; set; }
-        public User? SalesRep { get; set; }
-        // Navigations
+        public string? PlaceOfDelivery { get; set; }        
         public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
-        public bool IsNew { get; set; } = false;
+        public bool IsNew { get; set; } = true;
         public bool IsUpdated { get; set; } = false;
         public int? CreatedById { get; set; }
         public User? CreatedBy { get; set; }
+
         [NotMapped]
         public string StatusColor =>
            (Status ?? "").Trim() switch

@@ -318,7 +318,6 @@ async function loadCities(selectId = "placeOfDelivery") {
         select.disabled = false;
     }
 }
-
 ///*-------yaRDIMCI OLMAK-------*/// 
 // === 🔹 Genel Yardımcılar ===
 function fillSelect(id, list) {

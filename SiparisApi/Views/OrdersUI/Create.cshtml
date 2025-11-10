@@ -109,22 +109,29 @@
         </div>
     </div>
 </div>
-
+<!-- 🔹 Sipariş Özeti Modal -->
 <div class="modal fade" id="orderSummaryModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">Sipariş Özeti</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title">📦 Sipariş Özeti</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
             </div>
-            <div class="modal-body" id="orderSummaryBody"></div>
+
+            <div class="modal-body" id="orderSummaryBody">
+                <!-- JS ile dinamik tablo buraya basılacak -->
+            </div>
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-                <button type="button" class="btn btn-success" id="confirmSaveBtn">Kaydet</button>
+                <button type="button" class="btn btn-success" id="confirmSaveBtn">
+                    <i class="fas fa-check"></i> Onayla ve Kaydet
+                </button>
             </div>
         </div>
     </div>
 </div>
+
 
 @section Scripts {
     <script src="/js/lookups.js"></script>
@@ -219,7 +226,7 @@
           </div>
         </div>
 
-             <div class="col-md-5 mb-2">
+        <div class="col-md-5 mb-2">
           <label>Total</label>
           <div class="input-group">
             <input type="text"
@@ -228,8 +235,14 @@
                    readonly />
             <span class="input-group-text currency-label">€</span>
           </div>
+                  <div class="col-md-12 mb-2">
+          <label>Description</label>
+          <textarea class="form-control description" rows="2" placeholder="Açıklama girin..."></textarea>
         </div>
 
+          <!-- 🔹 Net ağırlık gösterimi -->
+          <small class="text-muted net-weight-info d-block ms-1 mt-1">Net Weight: -</small>
+        </div>
         `;
             container.appendChild(row);
                     const select = row.querySelector(".product-select");
@@ -419,66 +432,175 @@
 
 
         // 🔹 KAYDET
-        document.getElementById("createOrderForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
 
-            const order = {
-                CustomerId: document.getElementById("customerSelect").value,
-                SalesRepId: document.getElementById("salesRepSelect").value,
-                OrderDate: document.getElementById("orderDate").value,
-                DeliveryDate: document.getElementById("deliveryDate").value,
-                PaymentTerm: document.getElementById("paymentTerm").value,
-                Transport: document.getElementById("transport").value,
-                PortOfDelivery: document.getElementById("portOfDelivery").value,
-                PlaceOfDelivery: document.getElementById("placeOfDelivery").value,
-                DeliveryTerm: document.getElementById("deliveryTerm").value,
-                DueDays: parseInt(document.getElementById("dueDays").value) || 0,
-                Currency: document.getElementById("currency").value,
-                Items: []
-            };
+      
+            const form = document.getElementById("createOrderForm");
 
-            if (!order.CustomerId) return showToast("Lütfen müşteri seçin.");
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
 
-            document.querySelectorAll("#itemsContainer .item-row").forEach((row, index) => {
-                const productId = row.querySelector(".product-select").value;
-                const quantity = parseFloat(row.querySelector(".quantity").value);
-                const price = parseFloat(row.querySelector(".price").value);
-                if (productId && quantity > 0 && price > 0) {
-                    order.Items.push({ RowNumber: index + 1, ProductId: productId, Quantity: quantity, Price: price });
-                  }recalcRowTotal(row);
-            });
+                const order = {
+                    CustomerId: document.getElementById("customerSelect").value,
+                    SalesRepId: parseInt(document.getElementById("salesRepSelect").value),
+                    OrderDate: document.getElementById("orderDate").value,
+                    DeliveryDate: document.getElementById("deliveryDate").value,
+                    PaymentTerm: document.getElementById("paymentTerm").value,
+                    Transport: document.getElementById("transport").value,
+                    DeliveryTerm: document.getElementById("deliveryTerm").value,
+                    DueDays: parseInt(document.getElementById("dueDays").value) || 0,
+                    Currency: document.getElementById("currency").value,
+                    PortOfDelivery: document.getElementById("portOfDelivery").value,
+                    PlaceOfDelivery: document.getElementById("placeOfDelivery").value,
+                    CreatedById: 1, // Gerekirse auth'dan alınır
+                    Items: []
+                };
 
-            if (order.Items.length === 0) return showToast("En az bir ürün satırı eklemelisiniz.");
+                // 🔒 Zorunlu alanlar (başlık)
+                if (!order.CustomerId || !order.SalesRepId || !order.OrderDate || !order.Currency)
+                    return showToast("Lütfen zorunlu alanları doldurun.");
 
-            // Sipariş özeti modal
+                // 🔹 Kalemleri topla
+                document.querySelectorAll("#itemsContainer .item-row").forEach((row, index) => {
+                    const productId = row.querySelector(".product-select").value;
+                    const quantity = parseFloat(row.querySelector(".quantity").value);
+                    const price = parseFloat(row.querySelector(".price").value);
+                    const unit = row.querySelector(".unit-select").value;
+                    const netWeight = parseFloat(row.dataset.netKg || "0");
+                    const description = row.querySelector(".description")?.value || "";
 
-            let summary = `<table class="table table-sm"><thead><tr><th>#</th><th>Ürün</th><th>Miktar</th><th>Fiyat</th></tr></thead><tbody>`;
+                    if (productId && quantity > 0 && price > 0 && unit) {
+                        order.Items.push({
+                            RowNumber: index + 1,
+                            ProductId: productId,
+                            Quantity: quantity,
+                            Price: price,
+                            Unit: unit,
+                            NetWeight: netWeight,
+                            Description: description
+                        });
+                      }else {
+          invalidRows.push(index + 1)
+                      }
+                      });
+
+                if (order.Items.length === 0)
+                    return showToast("En az bir ürün satırı girilmeli.");
+                        if (invalidRows.length > 0)
+        return showToast(`❌ ${invalidRows.join(", ")} numaralı satırlarda eksik alan(lar) var.`);
+
+
+                            // 🟨 Sipariş Özeti Modal Tablosu//
+            let summary = `
+            <table class="table table-bordered table-sm table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>#</th>
+                  <th>Ürün</th>
+                  <th>Miktar</th>
+                  <th>Birim</th>
+                  <th>Net KG</th>
+                  <th>Toplam</th>
+                  <th>Para Birimi</th>
+                </tr>
+              </thead>
+              <tbody>`;
+
             order.Items.forEach(i => {
                 const name = document.querySelector(`.product-select option[value='${i.ProductId}']`)?.text || "-";
-                summary += `<tr><td>${i.RowNumber}</td><td>${name}</td><td>${i.Quantity}</td><td>${i.Price}</td></tr>`;
+                const total = (i.NetWeight || 0) * (i.Price || 0);
+                summary += `
+                <tr>
+                  <td>${i.RowNumber}</td>
+                  <td>${name}</td>
+                  <td>${i.Quantity}</td>
+                  <td>${i.Unit}</td>
+                  <td>${(i.NetWeight || 0).toFixed(2)}</td>
+                  <td>${total.toFixed(2)}</td>
+                  <td>${order.Currency}</td>
+                </tr>`;
             });
+
             summary += `</tbody></table>`;
             document.getElementById("orderSummaryBody").innerHTML = summary;
+
             const modal = new bootstrap.Modal(document.getElementById("orderSummaryModal"));
             modal.show();
 
-            document.getElementById("confirmSaveBtn").onclick = async () => {
-                modal.hide();
-                const res = await fetch("/api/orders/create", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(order)
-                });
-                if (res.ok) {
-                    alert("✅ Sipariş başarıyla kaydedildi!");
-                    window.location.href = "/OrdersUIList/Index";
-                } else showToast("Kayıt başarısız.");
-            };
+            // ⬇️ Bu veriyi modal onayında kullanılmak üzere geçici olarak global değişkende tut
+            window._pendingOrderData = order;
         });
+               
+                    document.getElementById("confirmSaveBtn").addEventListener("click", async () => {
+        const order = window._pendingOrderData;
+        if (!order) return;
+               
+        const modal = bootstrap.Modal.getInstance(document.getElementById("orderSummaryModal"));
+        modal.hide();
+                       /*-------KAyıt Onayı ile-------------*/
+                try {
+                    const res = await fetch("/api/orders/create", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(order)
+                    });
 
-        window.addEventListener("pageshow", e => {
-            if (e.persisted) console.log("Sayfa cache'den yüklendi.");
-        });
+                    if (res.ok) {
+                        alert("✅ Sipariş başarıyla kaydedildi!");
+                        window.location.href = "/OrdersUIList/Index";
+                    } else {
+                        const errorText = await res.text();
+                        showToast("❌ Kayıt başarısız: " + errorText + ". Veri silinmedi, daha sonra gönderilecektir.");
+                        saveOrderOffline(order);
+                    }
+
+                } catch (err) {
+                    console.warn("🌐 Sunucuya erişilemedi. Offline kayıt başlatılıyor...");
+                    showToast("⚠️ İnternet yok. Sipariş yerel olarak kaydedildi.");
+                    saveOrderOffline(order);
+                }
+
+                
+            });
+
+            function saveOrderOffline(order) {
+                const existing = JSON.parse(localStorage.getItem("pendingOrders") || "[]");
+                existing.push(order);
+                localStorage.setItem("pendingOrders", JSON.stringify(existing));
+            }
+
+            async function retryPendingOrders() {
+                const pending = JSON.parse(localStorage.getItem("pendingOrders") || "[]");
+                if (pending.length === 0) return;
+
+                const successful = [];
+
+                for (const order of pending) {
+                    try {
+                        const res = await fetch("/api/orders/create", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(order)
+                        });
+                        if (res.ok) {
+                            successful.push(order);
+                        }
+                    } catch (err) {
+                        console.warn("⌛ Sipariş gönderilemedi. Daha sonra tekrar denenecek.");
+                    }
+                }
+
+                if (successful.length > 0) {
+                    const remaining = pending.filter(o => !successful.includes(o));
+                    localStorage.setItem("pendingOrders", JSON.stringify(remaining));
+                    showToast(`🔁 ${successful.length} bekleyen sipariş başarıyla gönderildi.`);
+                }
+            }
+
+            // Sayfa açıldığında bekleyen kayıt varsa gönder
+            window.addEventListener("load", retryPendingOrders);
+    
+
+
         document.getElementById("addItem").addEventListener("click", addOrderItemRow);
     </script>
 }
