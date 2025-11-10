@@ -273,7 +273,7 @@ namespace SiparisApi.Controllers
         }
 
         [HttpGet("lookups/products")]
-        [AllowAnonymous]
+    //    [AllowAnonymous]
         public IActionResult GetAllProducts()
         {
             var list = _context.SintanStok
