@@ -37,9 +37,9 @@ namespace SiparisApi.Data
 
             // CustomerId → SintanCari
             modelBuilder.Entity<OrderHeader>()
-                .HasOne(h => h.Customer)                 // navigation
+                .HasOne(h => h.CustomerId)                 // navigation
                 .WithMany()
-                .HasForeignKey(h => h.CustomerId)        // FK sütunu
+               // .HasForeignKey(h => h.CustomerId)        // FK sütunu
                 .OnDelete(DeleteBehavior.NoAction);
 
             // SalesRepId → Users
@@ -73,11 +73,8 @@ namespace SiparisApi.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             // ProductId → SintanStok
-            modelBuilder.Entity<OrderItem>()
-                .HasOne(i => i.Product)                   // !!! navigation (SintanStok)
-                .WithMany()
-                .HasForeignKey(i => i.ProductId)
-                .OnDelete(DeleteBehavior.NoAction);
+          
+               
 
             // ---- OrderStatusHistory ----
             modelBuilder.Entity<OrderStatusHistory>()
@@ -110,13 +107,13 @@ namespace SiparisApi.Data
 
             // ---- SintanCari / SintanStok ----
             modelBuilder.Entity<SintanCari>()
-                .HasKey(c => c.Id);
+                .HasKey(c => c.CARI_KOD);
             modelBuilder.Entity<SintanCari>()
                 .Property(c => c.CARI_KOD)
                 .IsRequired();
 
             modelBuilder.Entity<SintanStok>()
-                .HasKey(s => s.Id);
+                .HasKey(s => s.STOK_KODU);
             modelBuilder.Entity<SintanStok>()
                 .Property(s => s.STOK_KODU)
                 .IsRequired();

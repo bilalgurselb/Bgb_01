@@ -7,7 +7,7 @@ namespace SiparisApi.Models
         public int Id { get; set; }
 
         public string? CustomerId { get; set; }
-        public SintanCari? Customer { get; set; }
+        public SintanCari? SintanCari { get; set; }
         public int SalesRepId { get; set; }
         public User? SalesRep { get; set; }
         public DateTime OrderDate { get; set; } 

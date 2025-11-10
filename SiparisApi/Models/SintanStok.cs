@@ -5,7 +5,7 @@ namespace SiparisApi.Models
 
     public class SintanStok
     {
-        public int Id { get; set; }
+      //  public int Id { get; set; }
 
         [MaxLength(200)]
         public string? STOK_ADI { get; set; }

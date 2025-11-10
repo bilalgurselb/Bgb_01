@@ -4,7 +4,7 @@ namespace SiparisApi.Models
 {
     public class SintanCari
     {
-        public int Id { get; set; }
+      //  public int Id { get; set; }
 
         [MaxLength(200)]
         public string? CARI_ISIM { get; set; }
