@@ -443,7 +443,7 @@
                     CustomerId: document.getElementById("customerSelect").value,
                     SalesRepId: parseInt(document.getElementById("salesRepSelect").value),
                     OrderDate: document.getElementById("orderDate").value,
-                    DeliveryDate: document.getElementById("deliveryDate").value,
+                    DeliveryDate: document.getElementById("deliveryDate").value || null,
                     PaymentTerm: document.getElementById("paymentTerm").value,
                     Transport: document.getElementById("transport").value,
                     DeliveryTerm: document.getElementById("deliveryTerm").value,
@@ -451,7 +451,7 @@
                     Currency: document.getElementById("currency").value,
                     PortOfDelivery: document.getElementById("portOfDelivery").value,
                     PlaceOfDelivery: document.getElementById("placeOfDelivery").value,
-                    CreatedById: 1, // Gerekirse auth'dan alınır
+                   // CreatedById: 1, // Gerekirse auth'dan alınır
                     Items: []
                 };
 

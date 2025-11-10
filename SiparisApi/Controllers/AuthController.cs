@@ -59,8 +59,8 @@ namespace SiparisApi.Controllers
             {
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, allowed.Role ?? ""),
-                new Claim(ClaimTypes.Role, allowed.Role ?? "User"),
-                new Claim("Role", allowed.Role ?? ""),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                //new Claim("Role", allowed.Role ?? ""),
                 new Claim("NameSurname", allowed.NameSurname ?? "")
             };
 

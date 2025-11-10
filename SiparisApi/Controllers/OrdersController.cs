@@ -27,9 +27,18 @@ namespace SiparisApi.Controllers
         public async Task<IActionResult> CreateOrder([FromBody] OrderHeader order)
         {
             var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
-            var user = await _context.Users
-                .Include(u => u.AllowedEmail)
-                .FirstOrDefaultAsync(u => u.Email == userEmail);
+          //  var user = await _context.Users
+            //    .Include(u => u.AllowedEmail)
+              //  .FirstOrDefaultAsync(u => u.Email == userEmail);
+
+
+            var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized("Kullanıcı bulunamadı.");
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
 
             if (user == null)
                 return Unauthorized("Kullanıcı bulunamadı.");

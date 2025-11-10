@@ -1,7 +1,7 @@
 ﻿namespace SiparisApi.Dtos
 {
     public class OrderDto
-    {
+    {/*
         public string Customer { get; set; }                // Müşteri adı
         public string Product { get; set; }                 // Ürün adı
         public int Quantity { get; set; }                   // Miktar
@@ -12,8 +12,9 @@
         public string PaymentTerm { get; set; }             // Ödeme şartı
         public string Transport { get; set; }               // Nakliye tipi
         public string DeliveryTerm { get; set; }            // Teslim şartı
-        public int DueDays { get; set; }                    // Vade (gün)
+        public int DueDays { get; set; }                    // Vade (gün)*/
     }
 }
 
 
+       

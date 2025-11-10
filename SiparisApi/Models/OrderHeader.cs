@@ -11,7 +11,7 @@ namespace SiparisApi.Models
         public int SalesRepId { get; set; }
         public User? SalesRep { get; set; }
         public DateTime OrderDate { get; set; } 
-        public DateTime? DeliveryDate { get; set; }
+        public DateTime? DeliveryDate { get; set;}
         public string? PaymentTerm { get; set; }
         public string? Transport { get; set; }
         public string? DeliveryTerm { get; set; }

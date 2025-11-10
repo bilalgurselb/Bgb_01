@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using SiparisApi.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -34,7 +35,6 @@ namespace SiparisApi.Controllers
                 ViewBag.Error = "E-posta ve şifre zorunludur.";
                 return View();
             }
-
             // 🔹 Şifre tekrar kontrolü
             if (!string.IsNullOrEmpty(confirmPassword))
             {
@@ -44,12 +44,11 @@ namespace SiparisApi.Controllers
                     return View();
                 }
             }
-
-            var client = _httpClientFactory.CreateClient();
-            var apiUrl = $"{_config["ApiBaseUrl"]}/api/Auth/login";
-
-            var payload = JsonSerializer.Serialize(new { Email = email, Password = password });
-            var content = new StringContent(payload, Encoding.UTF8, "application/json");
+                var client = _httpClientFactory.CreateClient();
+                //var apiUrl = $"{_config["ApiBaseUrl"]}/api/Auth/login";
+                var apiUrl = $"{_config["ApiSettings:BaseUrl"]}/api/Auth/login";
+                var payload = JsonSerializer.Serialize(new { Email = email, Password = password });
+                var content = new StringContent(payload, Encoding.UTF8, "application/json");
 
             HttpResponseMessage response;
             try
@@ -58,23 +57,21 @@ namespace SiparisApi.Controllers
             }
             catch (Exception ex)
             {
-                ViewBag.Error = "Sunucuya ulaşılamadı: " + ex.Message;
-                return View();
+              ViewBag.Error = "Sunucuya ulaşılamadı: " + ex.Message;
+              return View();
             }
 
             if (!response.IsSuccessStatusCode)
             {
-                var msg = await response.Content.ReadAsStringAsync();
-                ViewBag.Error = msg;
-                return View();
+              var msg = await response.Content.ReadAsStringAsync();
+              ViewBag.Error = msg;
+              return View();
             }
-
-            var responseBody = await response.Content.ReadAsStringAsync();
-            var jsonDoc = JsonDocument.Parse(responseBody);
-
-            string? token = jsonDoc.RootElement.GetProperty("token").GetString();
-            string? name = jsonDoc.RootElement.TryGetProperty("nameSurname", out var n) ? n.GetString() : email;
-            string? role = jsonDoc.RootElement.TryGetProperty("role", out var r) ? r.GetString() : "Kullanıcı";
+              var responseBody = await response.Content.ReadAsStringAsync();
+              var jsonDoc = JsonDocument.Parse(responseBody);
+              string? token = jsonDoc.RootElement.GetProperty("token").GetString();
+              string? name = jsonDoc.RootElement.TryGetProperty("nameSurname", out var n) ? n.GetString() : email;
+              string? role = jsonDoc.RootElement.TryGetProperty("role", out var r) ? r.GetString() : "Kullanıcı";
 
             try
             {
@@ -98,7 +95,10 @@ namespace SiparisApi.Controllers
             }
             var handler = new JwtSecurityTokenHandler();
             var jwt = handler.ReadJwtToken(token);
-
+            string userIdFromToken =
+                jwt.Claims.FirstOrDefault(c => c.Type == "Id")?.Value
+                ?? jwt.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value
+                ?? "";
             string nameSurname =
                 jwt.Claims.FirstOrDefault(c => c.Type == "NameSurname")?.Value
                 ?? jwt.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value
@@ -113,11 +113,10 @@ namespace SiparisApi.Controllers
                 new Claim(ClaimTypes.Name, email),
                 new Claim("NameSurname", nameSurname),
                 new Claim("Role", _role),
-                new Claim(ClaimTypes.Role,_role)
+                new Claim(ClaimTypes.Role,_role),
+                new Claim("UserId", userIdFromToken ?? "")
             };
-
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
             // 🔹 Kullanıcıyı giriş yapmış olarak işaretle
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
@@ -130,7 +129,7 @@ namespace SiparisApi.Controllers
 
             return RedirectToAction("Index", "OrdersUIList");
         }
-        [HttpGet]
+            [HttpGet]
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();
