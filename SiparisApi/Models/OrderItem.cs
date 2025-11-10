@@ -16,6 +16,6 @@
         public int RowNumber { get; set; }
         public string? PackingInfo { get; set; }
         public decimal NetWeight { get; set; }
-        public SintanStok? SintanStok { get; set; }
+        
     }
 }

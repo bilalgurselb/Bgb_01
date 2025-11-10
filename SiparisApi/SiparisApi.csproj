@@ -19,8 +19,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="Controllers\Controllers.zip" />
-    <None Remove="Migrations\Migrations.zip" />
-    <None Remove="Migrations\Migrations2.zip" />
     <None Remove="Models\Models.zip" />
     <None Remove="SiparisApi.zip" />
   </ItemGroup>

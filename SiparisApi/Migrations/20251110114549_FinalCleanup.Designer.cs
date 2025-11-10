@@ -12,8 +12,8 @@ using SiparisApi.Data;
 namespace SiparisApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251101044514_InitialFullSchema")]
-    partial class InitialFullSchema
+    [Migration("20251110114549_FinalCleanup")]
+    partial class FinalCleanup
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -105,8 +105,8 @@ namespace SiparisApi.Migrations
                     b.Property<string>("Currency")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("CustomerId")
-                        .HasColumnType("int");
+                    b.Property<string>("CustomerId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("DeliveryDate")
                         .HasColumnType("datetime2");
@@ -114,7 +114,7 @@ namespace SiparisApi.Migrations
                     b.Property<string>("DeliveryTerm")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("DueDays")
+                    b.Property<int?>("DueDays")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsNew")
@@ -135,7 +135,7 @@ namespace SiparisApi.Migrations
                     b.Property<string>("PortOfDelivery")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("SalesRepId")
+                    b.Property<int>("SalesRepId")
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
@@ -153,8 +153,6 @@ namespace SiparisApi.Migrations
                     b.HasIndex("CreatedAt");
 
                     b.HasIndex("CreatedById");
-
-                    b.HasIndex("CustomerId");
 
                     b.HasIndex("SalesRepId");
 
@@ -180,8 +178,8 @@ namespace SiparisApi.Migrations
                     b.Property<bool?>("IsApprovedBySales")
                         .HasColumnType("bit");
 
-                    b.Property<decimal?>("NetWeight")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<decimal>("NetWeight")
+                        .HasColumnType("decimal(13,2)");
 
                     b.Property<int>("OrderHeaderId")
                         .HasColumnType("int");
@@ -190,22 +188,20 @@ namespace SiparisApi.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(13,2)");
 
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
+                    b.Property<string>("ProductId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Quantity")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(13,2)");
 
-                    b.Property<int?>("RowNumber")
+                    b.Property<int>("RowNumber")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("OrderHeaderId");
-
-                    b.HasIndex("ProductId");
 
                     b.ToTable("OrderItems");
                 });
@@ -242,11 +238,9 @@ namespace SiparisApi.Migrations
 
             modelBuilder.Entity("SiparisApi.Models.SintanCari", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("CARI_KOD")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("ADRES")
                         .HasMaxLength(250)
@@ -255,11 +249,6 @@ namespace SiparisApi.Migrations
                     b.Property<string>("CARI_ISIM")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("CARI_KOD")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("nvarchar(15)");
 
                     b.Property<string>("EMAIL")
                         .HasMaxLength(200)
@@ -328,41 +317,39 @@ namespace SiparisApi.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.HasKey("Id");
+                    b.HasKey("CARI_KOD");
 
                     b.ToTable("SintanCari");
                 });
 
             modelBuilder.Entity("SiparisApi.Models.SintanStok", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("STOK_KODU")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("A")
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
                     b.Property<decimal?>("AMBALAJ_AGIRLIGI")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(13,2)");
 
                     b.Property<decimal?>("ASGARI_STOK")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(13,2)");
 
-                    b.Property<decimal?>("BIRIM_AGIRLIGI")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<decimal?>("BIRIM_AGIRLIK")
+                        .HasColumnType("decimal(13,2)");
 
                     b.Property<decimal?>("CEVRIM_DEGERI_1")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(13,2)");
 
                     b.Property<string>("KOD_1")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<decimal?>("NAKLIYET_TUT")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(13,2)");
 
                     b.Property<string>("OLCU_BR1")
                         .HasMaxLength(20)
@@ -381,27 +368,22 @@ namespace SiparisApi.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<decimal?>("PALET_AMBALAJ_ADEDI")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(13,2)");
 
                     b.Property<decimal?>("PALET_NET_AGIRLIGI")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(13,2)");
 
                     b.Property<decimal?>("PAY1")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(13,2)");
 
                     b.Property<decimal?>("PAY2")
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(13,2)");
 
                     b.Property<string>("STOK_ADI")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("STOK_KODU")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
+                    b.HasKey("STOK_KODU");
 
                     b.ToTable("SintanStok");
                 });
@@ -413,9 +395,6 @@ namespace SiparisApi.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AllowedEmailId")
-                        .HasColumnType("int");
 
                     b.Property<int?>("AllowedId")
                         .HasColumnType("int");
@@ -430,7 +409,7 @@ namespace SiparisApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AllowedEmailId");
+                    b.HasIndex("AllowedId");
 
                     b.HasIndex("Email")
                         .IsUnique();
@@ -455,19 +434,13 @@ namespace SiparisApi.Migrations
                         .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.HasOne("SiparisApi.Models.SintanCari", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
                     b.HasOne("SiparisApi.Models.User", "SalesRep")
                         .WithMany()
                         .HasForeignKey("SalesRepId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
 
                     b.Navigation("CreatedBy");
-
-                    b.Navigation("Customer");
 
                     b.Navigation("SalesRep");
                 });
@@ -480,15 +453,7 @@ namespace SiparisApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SiparisApi.Models.SintanStok", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
                     b.Navigation("OrderHeader");
-
-                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("SiparisApi.Models.OrderStatusHistory", b =>
@@ -513,7 +478,8 @@ namespace SiparisApi.Migrations
                 {
                     b.HasOne("SiparisApi.Models.AllowedEmail", "AllowedEmail")
                         .WithMany()
-                        .HasForeignKey("AllowedEmailId");
+                        .HasForeignKey("AllowedId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("AllowedEmail");
                 });

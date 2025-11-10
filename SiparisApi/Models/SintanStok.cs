@@ -42,7 +42,7 @@ namespace SiparisApi.Models
 
         public decimal? ASGARI_STOK { get; set; }
 
-        public decimal? BIRIM_AGIRLIGI { get; set; }
+        public decimal? BIRIM_AGIRLIK { get; set; }
 
         public decimal? NAKLIYET_TUT { get; set; }
 

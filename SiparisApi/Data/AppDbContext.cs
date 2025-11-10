@@ -7,7 +7,6 @@ namespace SiparisApi.Data
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-        // --- DbSets ---
         public DbSet<User> Users { get; set; }
         public DbSet<AllowedEmail> AllowedEmails { get; set; }
         public DbSet<Log> Logs { get; set; }
@@ -21,102 +20,125 @@ namespace SiparisApi.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // ---- AllowedEmail ----
+            // AllowedEmail
             modelBuilder.Entity<AllowedEmail>()
-                .HasIndex(x => x.Email)
+                .HasKey(a => a.Id);
+
+            modelBuilder.Entity<AllowedEmail>()
+                .HasIndex(a => a.Email)
                 .IsUnique();
 
-            // ---- User ----
+            // User
             modelBuilder.Entity<User>()
-                .HasIndex(x => x.Email)
+                .HasKey(u => u.Id);
+
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.Email)
                 .IsUnique();
 
-            // ---- OrderHeader ----
-            modelBuilder.Entity<OrderHeader>()
-                .HasKey(h => h.Id);
-
-            // CustomerId → SintanCari
-            modelBuilder.Entity<OrderHeader>()
-                .HasOne(h => h.CustomerId)                 // navigation
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.AllowedEmail)
                 .WithMany()
-               // .HasForeignKey(h => h.CustomerId)        // FK sütunu
+                .HasForeignKey(u => u.AllowedId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // SalesRepId → Users
-            modelBuilder.Entity<OrderHeader>()
-                .HasOne(h => h.SalesRep)
-                .WithMany()
-                .HasForeignKey(h => h.SalesRepId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            // CreatedById → Users
-            modelBuilder.Entity<OrderHeader>()
-                .HasOne(h => h.CreatedBy)
-                .WithMany()
-                .HasForeignKey(h => h.CreatedById)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            // Performans indexleri
-            modelBuilder.Entity<OrderHeader>().HasIndex(h => h.CreatedAt);
-            modelBuilder.Entity<OrderHeader>().HasIndex(h => h.Status);
-            modelBuilder.Entity<OrderHeader>().HasIndex(h => h.CreatedById);
-
-            // ---- OrderItem ----
-            modelBuilder.Entity<OrderItem>()
-                .HasKey(i => i.Id);
-
-            // OrderHeaderId → OrderHeaders (cascade)
-            modelBuilder.Entity<OrderItem>()
-                .HasOne(i => i.OrderHeader)
-                .WithMany(h => h.Items)                   // Header.Items koleksiyonu varsa; yoksa .WithMany()
-                .HasForeignKey(i => i.OrderHeaderId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // ProductId → SintanStok
-          
-               
-
-            // ---- OrderStatusHistory ----
-            modelBuilder.Entity<OrderStatusHistory>()
-                .HasKey(s => s.Id);
-
-            // OrderHeaderId → OrderHeaders (cascade)
-            modelBuilder.Entity<OrderStatusHistory>()
-                .HasOne(s => s.OrderHeader)
-                .WithMany()
-                .HasForeignKey(s => s.OrderHeaderId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // ChangedById → Users
-            modelBuilder.Entity<OrderStatusHistory>()
-                .HasOne(s => s.ChangedBy)
-                .WithMany()
-                .HasForeignKey(s => s.ChangedById)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            // ---- Logs ----
+            // Log
             modelBuilder.Entity<Log>()
                 .HasKey(l => l.Id);
 
-            // UserId → Users
             modelBuilder.Entity<Log>()
                 .HasOne(l => l.User)
                 .WithMany()
                 .HasForeignKey(l => l.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            // ---- SintanCari / SintanStok ----
+            // OrderHeader
+            modelBuilder.Entity<OrderHeader>()
+                .HasKey(h => h.Id);
+
+            modelBuilder.Entity<OrderHeader>()
+                .HasOne(h => h.SalesRep)
+                .WithMany()
+                .HasForeignKey(h => h.SalesRepId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<OrderHeader>()
+                .HasOne(h => h.CreatedBy)
+                .WithMany()
+                .HasForeignKey(h => h.CreatedById)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<OrderHeader>()
+                .HasIndex(h => h.CreatedAt);
+
+            modelBuilder.Entity<OrderHeader>()
+                .HasIndex(h => h.Status);
+
+            modelBuilder.Entity<OrderHeader>()
+                .HasIndex(h => h.CreatedById);
+
+            // OrderItem
+            modelBuilder.Entity<OrderItem>()
+                .HasKey(i => i.Id);
+
+            modelBuilder.Entity<OrderItem>()
+                .HasOne(i => i.OrderHeader)
+                .WithMany(h => h.Items)
+                .HasForeignKey(i => i.OrderHeaderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<OrderItem>()
+                .Property(i => i.Quantity).HasColumnType("decimal(13,2)");
+
+            modelBuilder.Entity<OrderItem>()
+                .Property(i => i.Price).HasColumnType("decimal(13,2)");
+
+            modelBuilder.Entity<OrderItem>()
+                .Property(i => i.NetWeight).HasColumnType("decimal(13,2)");
+
+            // OrderStatusHistory
+            modelBuilder.Entity<OrderStatusHistory>()
+                .HasKey(s => s.Id);
+
+            modelBuilder.Entity<OrderStatusHistory>()
+                .HasOne(s => s.OrderHeader)
+                .WithMany()
+                .HasForeignKey(s => s.OrderHeaderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<OrderStatusHistory>()
+                .HasOne(s => s.ChangedBy)
+                .WithMany()
+                .HasForeignKey(s => s.ChangedById)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // SintanCari (no relationships, just for reading)
             modelBuilder.Entity<SintanCari>()
                 .HasKey(c => c.CARI_KOD);
+
             modelBuilder.Entity<SintanCari>()
                 .Property(c => c.CARI_KOD)
-                .IsRequired();
+                .IsRequired()
+                .HasMaxLength(100);
 
+            // SintanStok (no relationships, just for reading)
             modelBuilder.Entity<SintanStok>()
                 .HasKey(s => s.STOK_KODU);
+
             modelBuilder.Entity<SintanStok>()
                 .Property(s => s.STOK_KODU)
-                .IsRequired();
+                .IsRequired()
+                .HasMaxLength(100);
+
+            modelBuilder.Entity<SintanStok>().Property(s => s.PAY1).HasColumnType("decimal(13,2)");
+            modelBuilder.Entity<SintanStok>().Property(s => s.AMBALAJ_AGIRLIGI).HasColumnType("decimal(13,2)");
+            modelBuilder.Entity<SintanStok>().Property(s => s.PALET_AMBALAJ_ADEDI).HasColumnType("decimal(13,2)");
+            modelBuilder.Entity<SintanStok>().Property(s => s.PALET_NET_AGIRLIGI).HasColumnType("decimal(13,2)");
+            modelBuilder.Entity<SintanStok>().Property(s => s.PAY2).HasColumnType("decimal(13,2)");
+            modelBuilder.Entity<SintanStok>().Property(s => s.CEVRIM_DEGERI_1).HasColumnType("decimal(13,2)");
+            modelBuilder.Entity<SintanStok>().Property(s => s.ASGARI_STOK).HasColumnType("decimal(13,2)");
+            modelBuilder.Entity<SintanStok>().Property(s => s.BIRIM_AGIRLIK).HasColumnType("decimal(13,2)");
+            modelBuilder.Entity<SintanStok>().Property(s => s.NAKLIYET_TUT).HasColumnType("decimal(13,2)");
         }
     }
 }
