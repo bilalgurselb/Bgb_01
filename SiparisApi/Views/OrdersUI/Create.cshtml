@@ -438,7 +438,7 @@
 
             form.addEventListener("submit", async (e) => {
                 e.preventDefault();
-
+                const invalidRows = [];
                 const order = {
                     CustomerId: document.getElementById("customerSelect").value,
                     SalesRepId: parseInt(document.getElementById("salesRepSelect").value),
