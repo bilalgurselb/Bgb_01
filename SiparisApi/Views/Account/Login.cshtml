@@ -1,5 +1,4 @@
-﻿@{
-    ViewData["Title"] = "Giriş Yap";
+﻿   ViewData["Title"] = "Giriş Yap";
     Layout = null;
 }
 
@@ -12,10 +11,6 @@
     <link rel="stylesheet" href="/css/site.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
 </head>
-@{
-         string bodyStyle = "background:#fff; display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:100vh;";
-
-}
 <body class="login-page">
 
     <div class="login-container">
@@ -23,11 +18,24 @@
         <h2>Sipariş Yönetim Sistemi</h2>
 
         <form id="loginForm" method="post" action="/Account/Login">
-            <input type="email" name="Email" placeholder="E-posta" autocomplete="email" required />
-            <input type="password" name="Password" placeholder="Şifre" autocomplete="current-password" required />
+            <input type="email"
+                   name="email"
+                   placeholder="E-posta"
+                   autocomplete="email"
+                   required />
 
-            <!-- 🔹 Şifre Tekrar -->
-            <input type="password" name="ConfirmPassword" id="confirmPassword" placeholder="Şifre (Tekrar)" style="display:none;" />
+            <input type="password"
+                   name="password"
+                   placeholder="Şifre"
+                   autocomplete="current-password"
+                   required />
+
+            <!-- 🔹 Şifre Tekrar (sadece signup modunda görünür) -->
+            <input type="password"
+                   name="confirmPassword"
+                   id="confirmPassword"
+                   placeholder="Şifre (Tekrar)"
+                   style="@(ViewBag.SignupMode == true ? "" : "display:none;")" />
 
             <button type="submit" class="btn btn-primary" style="width:100%;">Giriş Yap</button>
         </form>
@@ -35,6 +43,10 @@
         @if (ViewBag.Error != null)
         {
             <div style="color:red; margin-top:15px;">@ViewBag.Error</div>
+        }
+        @if (ViewBag.Info != null)
+        {
+            <div style="color:green; margin-top:15px;">@ViewBag.Info</div>
         }
 
         <p style="margin-top:20px; font-size:13px; color:#777;">
@@ -53,7 +65,9 @@
                 sessionStorage.setItem("AccessToken", token);
             }
         })();
-    
+
+
+           
 
         // --- LOGIN ---
         async function login() {
@@ -132,8 +146,8 @@
                 alert("Sunucuya bağlanılamadı: " + err.message);
             }
         }
+     
 
-        // --- FORM GEÇİŞİ (Login <-> Signup) ---
         function toggleForms(target) {
             const loginForm = document.getElementById("loginForm");
             const signupForm = document.getElementById("signupForm");
@@ -153,6 +167,42 @@
 
         const token = getCookie("AccessToken");
         if (token) sessionStorage.setItem("AccessToken", token);
+
+                      async function checkEmailStatus() {
+            const email = document.getElementById("email").value.trim();
+            const confirm = document.getElementById("confirmPassword");
+            const form = document.getElementById("loginForm");
+
+            if (!email) return;
+
+            const response = await fetch(`/api/auth/check-email?email=${email}`);
+            const data = await response.json();
+
+            if (data.status === "signup") {
+                // Şifre tekrar aç
+                confirm.style.display = "block";
+
+                // Signup’a yönlendir
+                form.action = "/api/Auth/signup";
+                form.method = "post";
+            }
+            else {
+                // Normal login
+                confirm.style.display = "none";
+                form.action = "/Account/Login";
+                form.method = "post";
+            }
+        }
+                async function submitForm() {
+            const form = document.getElementById("loginForm");
+
+            // Email blur olmadıysa buradan kontrol et
+            await checkEmailStatus();
+
+            // Artık action doğru (signup veya login)
+            form.submit();
+        }
+
     </script>
 
 

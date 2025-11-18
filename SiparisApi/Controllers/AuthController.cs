@@ -24,21 +24,25 @@ namespace SiparisApi.Controllers
             _config = config;
         }
 
+       
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
+
             if (dto == null || string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Password))
                 return BadRequest("E-posta ve şifre zorunludur.");
 
-            var user = _context.Users.FirstOrDefault(u => u.Email == dto.Email);
-            if (user == null)
+                     var user = _context.Users.FirstOrDefault(u => u.Email == dto.Email);
+                       if (user == null )
                 return Unauthorized("Kullanıcı bulunamadı.");
+            
 
             var allowed = _context.AllowedEmails.FirstOrDefault(a => a.Id == user.AllowedId);
             if (allowed == null)
                 return Unauthorized("Bu e-posta sistem erişimine kapalı.");
             if (!allowed.IsActive)
                 return Unauthorized("Bu hesap şu anda pasif durumda.");
+
 
             if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
                 return Unauthorized("Hatalı şifre.");
