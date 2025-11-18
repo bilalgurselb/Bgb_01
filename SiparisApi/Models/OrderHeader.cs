@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Net;
 
 namespace SiparisApi.Models
 {
@@ -25,9 +26,10 @@ namespace SiparisApi.Models
         public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
         public bool IsNew { get; set; } = true;
         public bool IsUpdated { get; set; } = false;
-        public int? CreatedById { get; set; }
+        public int? CreatedById { get; set; } 
         public User? CreatedBy { get; set; }
-
+        [NotMapped]
+        public string? CustomerName { get; set; }
         [NotMapped]
         public string StatusColor =>
            (Status ?? "").Trim() switch
@@ -41,6 +43,8 @@ namespace SiparisApi.Models
                "Kısmi İptal" => "#dc3545",
                _ => "#6c757d"  // gri - bilinmiyor/boş
            };
+        [NotMapped]
+        public string SalesRepName => SalesRep?.AllowedEmail?.NameSurname ?? "-";
 
     }
 }

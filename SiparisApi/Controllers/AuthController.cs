@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using SiparisApi.Data;
 using SiparisApi.Dtos;
@@ -22,45 +24,39 @@ namespace SiparisApi.Controllers
             _config = config;
         }
 
-        // 🔹 LOGIN (Giriş)
         [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginDto dto)
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
             if (dto == null || string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Password))
                 return BadRequest("E-posta ve şifre zorunludur.");
 
-            // 1️⃣ Kullanıcı var mı?
             var user = _context.Users.FirstOrDefault(u => u.Email == dto.Email);
             if (user == null)
                 return Unauthorized("Kullanıcı bulunamadı.");
 
-            // 2️⃣ AllowedEmail kaydını getir
             var allowed = _context.AllowedEmails.FirstOrDefault(a => a.Id == user.AllowedId);
             if (allowed == null)
                 return Unauthorized("Bu e-posta sistem erişimine kapalı.");
             if (!allowed.IsActive)
                 return Unauthorized("Bu hesap şu anda pasif durumda.");
 
-            // 3️⃣ Şifre kontrolü
             if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
                 return Unauthorized("Hatalı şifre.");
 
-            // 4️⃣ Kullanıcı bilgilerini UI’da göstermek için hydrate et
             user.NameSurname = allowed.NameSurname;
             user.Role = allowed.Role;
             user.IsActive = allowed.IsActive;
 
-            // 5️⃣ Token oluştur
             var _key = _config["Jwt:Key"];
             if (string.IsNullOrEmpty(_key))
                 throw new InvalidOperationException("❌ JWT anahtarı (Jwt:Key) appsettings.json içinde tanımlı olmalı.");
+
             var key = Encoding.UTF8.GetBytes(_key);
             var claims = new[]
             {
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, allowed.Role ?? ""),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                //new Claim("Role", allowed.Role ?? ""),
                 new Claim("NameSurname", allowed.NameSurname ?? "")
             };
 
@@ -75,10 +71,25 @@ namespace SiparisApi.Controllers
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.CreateToken(tokenDescriptor);
+            var jwt = tokenHandler.WriteToken(token);
+
+            // 🔐 Cookie Authentication için giriş (Razor tarafı için)
+            var cookieClaims = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(cookieClaims));
+
+            // 🧠 Token'ı Session'a ve Cookie'ye yaz
+            HttpContext.Session.SetString("AccessToken", jwt);
+            Response.Cookies.Append("AccessToken", jwt, new CookieOptions
+            {
+                HttpOnly = false,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddHours(8)
+            });
 
             return Ok(new
             {
-                token = tokenHandler.WriteToken(token),
+                token = jwt,
                 User = new
                 {
                     user.Email,
@@ -88,14 +99,12 @@ namespace SiparisApi.Controllers
             });
         }
 
-        // 🔹 SIGNUP (İlk kayıt — AllowedEmail kontrolü)
         [HttpPost("signup")]
         public IActionResult Signup([FromBody] SignupDto dto)
         {
             if (dto == null || string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Password))
                 return BadRequest("E-posta ve şifre zorunludur.");
 
-            // 1️⃣ AllowedEmail listesinde mi?
             var allowed = _context.AllowedEmails.FirstOrDefault(a => a.Email == dto.Email);
             if (allowed == null)
                 return Unauthorized("Bu e-posta kayıt listesinde bulunmuyor.");
@@ -103,14 +112,11 @@ namespace SiparisApi.Controllers
             if (!allowed.IsActive)
                 return Unauthorized("Bu hesap aktif değil. Lütfen yöneticinizle iletişime geçin.");
 
-            // 2️⃣ Zaten kayıtlı mı?
             if (_context.Users.Any(u => u.Email == dto.Email))
                 return BadRequest("Bu kullanıcı zaten kayıtlı.");
 
-            // 3️⃣ Şifre hash
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 
-            // 4️⃣ Yeni kullanıcı kaydı
             var newUser = new User
             {
                 Email = dto.Email,
@@ -124,6 +130,4 @@ namespace SiparisApi.Controllers
             return Ok("Kayıt işlemi tamamlandı. Artık giriş yapabilirsiniz.");
         }
     }
-
-
 }

@@ -70,62 +70,31 @@ namespace SiparisApi.Controllers
               var responseBody = await response.Content.ReadAsStringAsync();
               var jsonDoc = JsonDocument.Parse(responseBody);
               string? token = jsonDoc.RootElement.GetProperty("token").GetString();
-              string? name = jsonDoc.RootElement.TryGetProperty("nameSurname", out var n) ? n.GetString() : email;
-              string? role = jsonDoc.RootElement.TryGetProperty("role", out var r) ? r.GetString() : "Kullanıcı";
-
-            try
-            {
-                if (jsonDoc.RootElement.TryGetProperty("token", out var tokenProp))
-                    token = tokenProp.GetString();
-                else if (jsonDoc.RootElement.TryGetProperty("access_token", out var accessTokenProp))
-                    token = accessTokenProp.GetString();
+             
+          
 
                 if (string.IsNullOrEmpty(token))
                 {
                     ViewBag.Error = "Sunucudan geçerli bir yanıt alınamadı.";
                     return View();
                 }
-
-                HttpContext.Session.SetString("AccessToken", token);
-            }
-            catch
-            {
-                ViewBag.Error = "Yanıt çözümleme hatası oluştu.";
-                return View();
-            }
             var handler = new JwtSecurityTokenHandler();
-            var jwt = handler.ReadJwtToken(token);
-            string userIdFromToken =
-                jwt.Claims.FirstOrDefault(c => c.Type == "Id")?.Value
-                ?? jwt.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value
-                ?? "";
-            string nameSurname =
-                jwt.Claims.FirstOrDefault(c => c.Type == "NameSurname")?.Value
-                ?? jwt.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value
-                ?? email;
+            var jwtToken = handler.ReadJwtToken(token);
+            var claims = jwtToken.Claims.ToList();
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
 
-            string _role =
-                jwt.Claims.FirstOrDefault(c => c.Type == "Role")?.Value
-                ?? jwt.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value
-                ?? "User";
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, email),
-                new Claim("NameSurname", nameSurname),
-                new Claim("Role", _role),
-                new Claim(ClaimTypes.Role,_role),
-                new Claim("UserId", userIdFromToken ?? "")
-            };
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            // 🔹 Kullanıcıyı giriş yapmış olarak işaretle
-            await HttpContext.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(claimsIdentity),
-                new AuthenticationProperties
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+
+            HttpContext.Session.SetString("AccessToken", token);
+                Response.Cookies.Append("AccessToken", token, new CookieOptions
                 {
-                    IsPersistent = true,
-                    ExpiresUtc = DateTime.UtcNow.AddHours(8)
-                });
+                    HttpOnly = false, // ❗ Eğer JavaScript'te fetch için kullanıyorsan bu doğru
+                    Secure = true,    // ✔️ HTTPS zorunlu hale gelir
+                    SameSite = SameSiteMode.Lax,
+                    Expires = DateTimeOffset.UtcNow.AddHours(8)
+                });          
 
             return RedirectToAction("Index", "OrdersUIList");
         }

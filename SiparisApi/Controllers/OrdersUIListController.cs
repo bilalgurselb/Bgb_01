@@ -32,18 +32,18 @@ namespace SiparisApi.Controllers
             var response = await client.GetAsync($"{baseUrl}/api/orders/list");
             var json = await response.Content.ReadAsStringAsync();
 
-            List<OrderHeader> orders = new();
+            List<OrderListVm> orders = new();
 
             if (response.IsSuccessStatusCode && !string.IsNullOrWhiteSpace(json))
             {
                 try
                 {
-                    orders = JsonSerializer.Deserialize<List<OrderHeader>>(json,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<OrderHeader>();
+                    orders = JsonSerializer.Deserialize<List<OrderListVm>>(json,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<OrderListVm>();
                 }
                 catch
                 {
-                    orders = new List<OrderHeader>();
+                    orders = new List<OrderListVm>();
                 }
             }
 

@@ -1,0 +1,89 @@
+﻿@model IEnumerable<SiparisApi.Models.OrderListVm>
+
+
+<table class="table table-bordered table-hover align-middle">
+    <thead class="table-light">
+        <tr>
+            <th>#</th>
+            <th>Müşteri</th>
+            <th>Ürün</th>
+            <th>Miktar</th>
+            <th>Birim</th>
+            <th>Net KG</th>
+            <th>Tutar</th>
+            <th>Para Birimi</th>
+            <th>Temsilci</th>
+            <th>Durum</th>
+            <th>İşlem</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        @foreach (var order in Model)
+        {
+            var statusKey = order.Status?.Trim().ToLowerInvariant().Replace(" ", "");
+            var icon = statusKey switch
+            {
+                "yeni" => "fas fa-star",
+                "onaybekleniyor" => "fas fa-clock",
+                "onaylandı" => "fas fa-check-circle",
+                "üretimde" => "fas fa-industry",
+                "iptal" => "fas fa-times-circle",
+                _ => "fas fa-question-circle"
+            };
+
+            var statusClass = $"order-status status-{statusKey}";
+
+            foreach (var item in order.Items)
+            {
+                var total = item.Price * item.NetWeight;
+
+                <tr>
+                    <td>@order.Id</td>
+                    <td>@order.CustomerName</td>
+                    <td>@item.ProductName</td>
+
+                    <td>@item.Quantity.ToString("0")</td>
+                    <td>@item.PackingInfo</td>
+
+                    <td>@item.NetWeight.ToString("N2")</td>
+                    <td>@total.ToString("N2")</td>
+
+                    <td>@order.Currency</td>
+
+                    <td>@order.SalesRepName</td>
+
+                    <td>
+                        <span class="order-status status-@statusKey">
+                            <i class="@icon"></i> @order.Status
+                        </span>
+
+                    </td>
+
+                    <td>
+                        <a href="@Url.Action("Edit", "OrdersUIList", new { id = order.Id })"
+                           class="btn btn-sm btn-primary">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </td>
+                </tr>
+
+                <!-- DETAY SATIRI -->
+                <tr class="bg-light">
+                    <td colspan="11" class="small">
+
+                        <b>Port:</b> @order.PortOfDelivery &nbsp; | &nbsp;
+                        <b>Şehir/Ülke:</b> @order.PlaceOfDelivery &nbsp; | &nbsp;
+                        <b>Ödeme Şartı:</b> @order.PaymentTerm &nbsp; | &nbsp;
+                        <b>Transport:</b> @order.Transport &nbsp; | &nbsp;
+                        <b>Açıklama:</b> @item.Description
+
+                    </td>
+                </tr>
+
+            } // item
+        }
+ 
+    </tbody>
+</table>

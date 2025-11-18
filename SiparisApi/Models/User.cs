@@ -9,8 +9,8 @@ namespace SiparisApi.Models
         public string Email { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
         public int? AllowedId { get; set; }  // FK kolon
-        public AllowedEmail? AllowedEmail { get; set; }  // Navigation FK       
-
+        public AllowedEmail? AllowedEmail { get; set; }  // Navigation FK
+       
         // 🔹 Veritabanında olmayan ama UI ve log için gerekli alanlar
         [NotMapped]
         public string? NameSurname { get; set; }  // Hoşgeldiniz Bilal Bey vs.

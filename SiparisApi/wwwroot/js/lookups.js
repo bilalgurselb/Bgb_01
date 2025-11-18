@@ -78,40 +78,98 @@ async function loadCustomers() {
         select.disabled = false;
     }
 }
+// New CUSTOMER          //
+document.getElementById("btnAddCustomer").addEventListener("click", () => {
+    const modal = new bootstrap.Modal(document.getElementById("addCustomerModal"));
+    modal.show();
+});
 
+document.getElementById("addCustomerForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-// === 🔹 SATIŞ TEMSİLCİLERİ (AllowedUsers) ===
-async function loadSalesReps() {
-    const select = document.getElementById("salesRepSelect");
-    if (!select) return;
-    select.disabled = true;
-    select.innerHTML = `<option>Loading sales reps...</option>`;
+    const name = document.getElementById("newCustomerName").value.trim();
+    const country = document.getElementById("newCustomerCountry").value.trim();
 
+    if (!name || !country) return;
+
+    const payload = {
+        CARI_ISIM: name,
+        IL: country
+    };
+    const token = sessionStorage.getItem("AccessToken");
     try {
-        const cacheKey = "sintan_salesreps_v3";
-        let reps = JSON.parse(localStorage.getItem(cacheKey));
-
-        if (!reps) {
-            const res = await fetch("/api/orders/lookups/salesreps");
-            if (!res.ok) throw new Error("Failed to load sales reps");
-            reps = await res.json();
-            localStorage.setItem(cacheKey, JSON.stringify(reps));
-        }
-
-        select.innerHTML = `<option value="">Select Representative...</option>`;
-        reps.forEach(r => {
-            const opt = document.createElement("option");
-            opt.value = r.id;
-            opt.textContent = r.name;
-            select.appendChild(opt);
+        const res = await fetch("/api/orders/lookups/add", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
         });
+
+        if (!res.ok) throw new Error(await res.text());
+
+        const created = await res.json();
+
+        // Cache temizle ve tekrar yükle
+        localStorage.removeItem("sintan_customers_v5");
+        localStorage.removeItem("sintan_customers_v5_time");
+
+        await loadCustomers(); // Güncel listeyi getir
+
+        // Yeni eklenen müşteriyi otomatik seç
+        document.getElementById("customerSelect").value = created.CARI_KOD;
+
+        bootstrap.Modal.getInstance(document.getElementById("addCustomerModal")).hide();
+        showToast("✅ Yeni müşteri eklendi!");
+      
+
     } catch (err) {
-        console.error("❌ Sales reps failed:", err);
-        select.innerHTML = `<option>Error loading reps</option>`;
-    } finally {
-        select.disabled = false;
+        showToast("❌ Kayıt başarısız: " + err.message);
     }
+});
+
+
+async function loadSalesReps() {
+    return new Promise(async resolve => {    // <---- Eklenen satır
+        const select = document.getElementById("salesRepSelect");
+        if (!select) return resolve();
+
+        select.disabled = true;
+        select.innerHTML = `<option>Loading...</option>`;
+
+        try {
+            const cacheKey = "sintan_salesreps_v3";
+            let reps = JSON.parse(localStorage.getItem(cacheKey));
+
+            if (!reps) {
+                const token = sessionStorage.getItem("AccessToken");
+                const res = await fetch("/api/orders/lookups/salesreps", {
+                    headers: { "Authorization": "Bearer " + token }
+                });
+
+                reps = await res.json();
+                localStorage.setItem(cacheKey, JSON.stringify(reps));
+            }
+
+            select.innerHTML = `<option value="">Select Representative...</option>`;
+            reps.forEach(r => {
+                const opt = document.createElement("option");
+                opt.value = r.id;
+                opt.textContent = r.name;
+                select.appendChild(opt);
+            });
+
+        } catch (err) {
+            console.error(err);
+            select.innerHTML = `<option>Error loading reps</option>`;
+        } finally {
+            select.disabled = false;
+            resolve();     // <---- Burası kritik
+        }
+    });
 }
+
+
 
 
     // === 🔹 ÜRÜNLER ---//

@@ -1,91 +1,97 @@
-﻿@model IEnumerable<SiparisApi.Models.OrderHeader>
-@using System.Security.Claims
+﻿@model IEnumerable<SiparisApi.Models.OrderListVm>
 @{
-    ViewData["Title"] = "Sipariş Listesi";
-    Layout = "_Layout"; 
-    var userRole = User.FindFirst("role")?.Value ?? "User";
-    var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@{
+    var userAgent = Context.Request.Headers["User-Agent"].ToString();
+    var isMobile = userAgent.Contains("Mobi")
+                || userAgent.Contains("Android")
+                || userAgent.Contains("iPhone");
+}
+@functions {
+    public static string GetCurrencyIcon(string currency)
+    {
+        return currency?.ToUpperInvariant() switch
+        {
+            "EUR" => "<i class='fas fa-euro-sign'></i>",
+            "USD" => "<i class='fas fa-dollar-sign'></i>",
+            "RUB" => "<i class='fas fa-ruble-sign'></i>",
+            "TRY" => "<i class='fas fa-lira-sign'></i>",
+            _ => $"<span>{currency}</span>"
+        };
+    }
 }
 
-@if (ViewBag.EmptyMessage != null)
+
+@if (Model == null || !Model.Any())
 {
-    <!-- 📱 Mobil uyumlu ortalanmış boş liste ekranı -->
-    <div class="d-flex justify-content-center align-items-center text-center" style="height:70vh;">
+    <div class="d-flex justify-content-center align-items-center text-center" style="height:60vh;">
         <div>
             <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
-            <h4 class="fw-normal text-secondary">@ViewBag.EmptyMessage</h4>
+            <h5 class="text-secondary">Kayıtlı sipariş bulunmamaktadır.</h5>
 
-            <div class="mt-4">
-                <a href="@Url.Action("Create", "OrdersUIList") class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Yeni Sipariş Oluştur
-                </a>
+            <a href="@Url.Action("Create", "OrdersUIList")"
+               class="btn btn-primary mt-3">
+                <i class="fas fa-plus"></i> Yeni Sipariş
+            </a>
+        </div>
+    </div>
+}
+else
+{     
+    var totalCount = Model.Count();
+    var totalNetKg = Model.Sum(o => o.Items.Sum(i => i.NetWeight));
+
+    var currencyGroups = new List<dynamic>();
+
+    if (Model.Any())
+    {
+        currencyGroups = Model
+            .GroupBy(o => o.Currency ?? "EUR")
+            .Select(g => new
+            {
+                Currency = g.Key,
+                TotalAmount = g.Sum(o => o.Items.Sum(i => i.Total))
+            })
+            .Cast<dynamic>()
+            .ToList();
+    }
+
+    <div class="summary-item mb-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="summary-product-name">
+                <i class="fas fa-clipboard-list"></i> Sipariş Özeti
+            </div>
+            <div class="badge bg-secondary text-white">@DateTime.Now.ToString("dd.MM.yyyy")</div>
+        </div>
+
+        <div class="summary-details mt-2">
+            <div class="d-flex justify-content-between">
+                <div><b>Toplam Sipariş:</b> @totalCount adet</div>
+                <div><b>Toplam Net KG:</b> @totalNetKg.ToString("N2")</div>
+            </div>
+
+            <div class="mt-2 d-flex flex-wrap gap-3 align-items-center">
+                @foreach (var grp in currencyGroups)
+                {
+                    <div class="currency-total">
+                        @grp.TotalAmount.ToString("N2")
+                        <span class="currency-icon">@Html.Raw(GetCurrencyIcon(grp.Currency))</span>
+                    </div>
+                }
             </div>
         </div>
     </div>
-}
-else{<!-- 🧾 Sadece sipariş varsa tabloyu göster -->
-    <div class="container mt-4">
-        <h3 class="mb-3 text-center">📦 Sipariş Listesi</h3>
-        <div class="table-responsive shadow-sm">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>ID</th>
-                        <th>Müşteri</th>
-                        <th>Durum</th>
-                        <th>Oluşturan</th>
-                        <th>Oluşturulma</th>
-                        <th>Güncelleme</th>
-                        <th>Fiyat</th>
-                        <th>İşlem</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var order in Model)
-                    {
-                        <tr>
-                            <td>@order.Id</td>
-                            <td>@order.CustomerId</td>
-                            <td>
-                                <span class="badge rounded-pill" style="background-color:@order.StatusColor;">@order.Status</span>
-                            </td>
-                            <td>@order.CreatedBy?.AllowedEmail?.NameSurname</td>
-                            <td>@order.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
-                            <td>@order.UpdatedAt?.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
-                            <td>@order.Items?.Sum(i => i.Price * i.Quantity).ToString("C2")</td>
-                            <td>
-                                <a asp-controller="OrdersUIList" asp-action="Edit" asp-route-id="@order.Id" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
-}
-   
 
-@section Styles {
-    <style>
-        .new-order {
-            background-color: #fff9d6 !important;
-            transition: background-color 1s ease;
-        }
 
-        .updated-order {
-            background-color: #e6f7ff !important;
-            transition: background-color 1s ease;
-        }
 
-        table {
-            border-radius: 8px;
-            overflow: hidden;
-        }
 
-        th {
-            background-color: #f8f9fa;
-        }
-    </style>
+    if (isMobile)
+    {
+        @Html.Partial("_OrderCardsMobile", Model)
+    }
+    else
+    {
+        @Html.Partial("_OrderTableDesktop", Model)
+    }
 }

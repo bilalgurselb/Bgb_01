@@ -16,11 +16,17 @@
   </ItemGroup>
   <ItemGroup>
     <Content Remove="Views\OrdersUI\Create - Kopya.cshtml" />
+    <Content Remove="Views\OrdersUI\Create - Kopyala.cshtml" />
+    <Content Remove="wwwroot\js\JavaScript.js" />
+    <Content Remove="wwwroot\js\lookups - Kopyala.js" />
+    <Content Remove="wwwroot\js\order-create.js" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Controllers\Controllers.zip" />
+    <None Remove="Error.txt" />
     <None Remove="Models\Models.zip" />
     <None Remove="SiparisApi.zip" />
+    <None Remove="Yeni WinRAR ZIP arşivi.zip" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />

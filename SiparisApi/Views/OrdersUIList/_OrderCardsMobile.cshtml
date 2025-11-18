@@ -1,0 +1,85 @@
+﻿@model IEnumerable<SiparisApi.Models.OrderListVm>
+@using SiparisApi.Models
+
+@{
+    Func<string, (string Color, string Icon)> statusMap = status =>
+    {
+        return status switch
+        {
+            "Yeni" => ("#1976d2", "fas fa-star"),
+            "Onay Bekleniyor" => ("#FFC107", "fas fa-clock"),
+            "Onaylandı" => ("#28A745", "fas fa-check-circle"),
+            "Üretimde" => ("#17A2B8", "fas fa-industry"),
+            "İptal" => ("#DC3545", "fas fa-times-circle"),
+            _ => ("#757575", "fas fa-question-circle")
+        };
+    };
+}
+
+<div class="container mt-3">
+
+    @foreach (var order in Model)
+    {
+        var (color, icon) = statusMap(order.Status);
+
+        foreach (var item in order.Items)   // ÜRÜN BAZLI KART
+        {
+            var total = item.Price * item.NetWeight;
+
+            <div class="card shadow-sm mb-3 p-3 rounded"
+                 style="border-left:6px solid @color; border-radius:10px;">
+
+                <!-- Üst Başlık -->
+                <div class="d-flex justify-content-between">
+                    <div class="fw-bold text-primary">@item.ProductName</div>
+                    <div class="text-muted small">@order.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</div>
+                </div>
+
+                <!-- İnce Bilgi Satırı -->
+                <div class="mt-2 small fw-semibold">
+                    @item.Quantity.ToString("0") @item.PackingInfo &nbsp; | &nbsp;
+                    @item.NetWeight.ToString("N2") KG &nbsp; | &nbsp;
+                    @total.ToString("N2") @order.Currency
+                </div>
+
+                <!-- Satır: Status + Edit + Detay -->
+                <div class="mt-3 d-flex justify-content-between align-items-center">
+
+                    <span class="badge text-white px-2" style="background:@color;">
+                        <i class="@icon"></i> @order.Status
+                    </span>
+
+                    <a href="@Url.Action("Edit", "OrdersUIList", new { id = order.Id })"
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+
+                    <button class="btn btn-sm btn-outline-secondary"
+                            data-bs-toggle="collapse" data-bs-target="#detail_@order.Id@item.Id">
+                        Detay <i class="fas fa-chevron-down small"></i>
+                    </button>
+                </div>
+
+                <!-- DETAY BLOĞU -->
+                <div class="collapse mt-3" id="detail_@order.Id@item.Id">
+                    <div class="border rounded p-2 small bg-light">
+
+                        <div><b>Müşteri:</b> @order.CustomerName</div>
+                        <div><b>Satış Temsilcisi:</b> @order.SalesRepName</div>
+                        <div><b>Port:</b> @order.PortOfDelivery</div>
+                        <div><b>Şehir / Ülke:</b> @order.PlaceOfDelivery</div>
+                        <div><b>Ödeme Şartı:</b> @order.PaymentTerm</div>
+                        <div><b>Transport:</b> @order.Transport</div>
+                        <div><b>Description:</b> @item.Description</div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        }  
+
+    }
+ 
+
+</div>

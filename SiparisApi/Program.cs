@@ -1,14 +1,13 @@
 ﻿// Bilal
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using SiparisApi.Data;
 using SiparisApi.Models;
 using SiparisApi.Services;
 using System.Text;
-
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,30 +36,33 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 var jwtKey = builder.Configuration["Jwt:Key"];
 if (string.IsNullOrEmpty(jwtKey))
     throw new InvalidOperationException("JWT anahtarı (Jwt:Key) appsettings.json veya ortam değişkeninde tanımlı olmalı.");
-
-//builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddCookie(options =>
-{
-    options.LoginPath = "/Account/Login";
-    options.AccessDeniedPath = "/Account/AccessDenied";
-    options.ExpireTimeSpan = TimeSpan.FromHours(8);
-})
-.AddJwtBearer(o =>
-{
-    o.TokenValidationParameters = new TokenValidationParameters
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
     {
-        ValidateIssuer = false,
-        ValidateAudience = false,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
-    };
-});
+        options.LoginPath = "/Account/Login";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.Cookie.Name = "AuthCookie";
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Strict;
+    })
+     .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+    {
+      options.RequireHttpsMetadata = false;
+      options.SaveToken = true;
+      options.TokenValidationParameters = new TokenValidationParameters
+      {
+          ValidateIssuer = false,
+          ValidateAudience = false,
+          ValidateLifetime = true,
+          ValidateIssuerSigningKey = true,
+          IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+        
+      };
+  });
+
+
 
 builder.Services.AddAuthorization();
 
@@ -73,29 +75,36 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-// ✅ Azure App Service'de HTTPS algılaması için ForwardedHeaders kullan
-var forwardedHeaderOptions = new ForwardedHeadersOptions
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-};
-app.UseForwardedHeaders(forwardedHeaderOptions);
+});
 
-
-// 🚦 Middleware Pipeline
 app.UseStaticFiles();
+app.UseHttpsRedirection();
+app.UseRouting();
+app.Use(async (context, next) =>
+{
+    if (!context.Request.Headers.ContainsKey("Authorization") &&
+        context.Request.Cookies.TryGetValue("AccessToken", out var token))
+    {
+        context.Request.Headers.Append("Authorization", $"Bearer {token}");
+    }
+
+    await next();
+});
 app.UseSession();
 app.UseCors("Default");
-app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 🚫 Login olmadan doğrudan erişimi engelle
+
 app.Use(async (context, next) =>
 {
     var path = context.Request.Path.Value?.ToLower();
     var token = context.Session.GetString("AccessToken");
 
-    // API veya yönetim ekranlarına doğrudan erişim denemelerini engelle
     if (string.IsNullOrEmpty(token) &&
         (path!.StartsWith("/api/") || path!.StartsWith("/admin") || path!.StartsWith("/ordersui") || path!.StartsWith("/ordersuilist")))
     {
@@ -104,65 +113,12 @@ app.Use(async (context, next) =>
             context.Response.StatusCode = 401;
             context.Response.ContentType = "text/html; charset=utf-8";
 
-            var html = @"
-<!DOCTYPE html>
+            var html = @"<!DOCTYPE html>
 <html lang='tr'>
 <head>
 <meta charset='utf-8'>
 <title>Erişim Engellendi - SINTAN CHEMICALS</title>
-<style>
-body {
-    background-color: #f8f9fa;
-    font-family: 'Inter', sans-serif;
-    color: #333;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
-.card {
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    padding: 40px;
-    text-align: center;
-    max-width: 400px;
-}
-h1 {
-    color: #a81e24;
-    font-size: 22px;
-    margin-bottom: 12px;
-}
-p {
-    color: #555;
-    font-size: 14px;
-}
-button {
-    margin-top: 20px;
-    background-color: #a81e24;
-    color: #fff;
-    border: none;
-    padding: 10px 22px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-button:hover {
-    background-color: #8f1a1f;
-}
-/* 📱 Mobil uyum */
-@media (max-width: 768px) {
-    body {
-        padding: 20px;
-        justify-content: center;
-        align-items: center;
-    }
-    .card {
-        width: 100%;
-        padding: 30px 20px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    }
-}
-</style>
+<style>/* stil burada */</style>
 </head>
 <body>
     <div class='card'>
@@ -174,7 +130,6 @@ button:hover {
     </div>
 </body>
 </html>";
-
             await context.Response.WriteAsync(html);
             return;
         }
@@ -192,14 +147,12 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 app.MapControllers();
 app.MapDefaultControllerRoute();
 
-// ✅ Varsayılan yönlendirme: / isteği Login'e gitsin
 app.MapGet("/", context =>
 {
     context.Response.Redirect("/Account/Login");
     return Task.CompletedTask;
 });
 
-// 🌡️ Warm-up 
 #pragma warning disable CS4014
 Task.Run(async () =>
 {
@@ -210,7 +163,6 @@ Task.Run(async () =>
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await db.Database.CanConnectAsync();
         {
-            // 🔹 Eğer hiç AllowedEmail kaydı yoksa, ilk admini ekle
             if (!db.AllowedEmails.Any())
             {
                 db.AllowedEmails.Add(new AllowedEmail
@@ -222,7 +174,7 @@ Task.Run(async () =>
                 await db.SaveChangesAsync();
                 Console.WriteLine("[Warm-up] İlk admin eklendi: bborekci@sintankimya.com");
             }
-            // 🔹 Ledger nedeniyle null Role kayıtlarını düzelt
+
             var emptyRoles = db.AllowedEmails.Where(x => x.Role == null).ToList();
             if (emptyRoles.Any())
             {
@@ -239,4 +191,5 @@ Task.Run(async () =>
     }
 });
 #pragma warning restore CS4014
+
 app.Run();

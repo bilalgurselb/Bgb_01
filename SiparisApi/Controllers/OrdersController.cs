@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SiparisApi.Data;
@@ -6,10 +7,12 @@ using SiparisApi.Models;
 using SiparisApi.Services;
 using System.Security.Claims;
 
+
 namespace SiparisApi.Controllers
 {
-    [ApiController]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]")]
+    [ApiController]
     public class OrdersController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -22,28 +25,82 @@ namespace SiparisApi.Controllers
         }
 
         // 🔹 1️⃣ Yeni Sipariş Oluşturma
-        [Authorize]
+        // [Authorize]
+
+        [HttpPost("lookups/add")]
+        public async Task<IActionResult> AddNewCustomer([FromBody] NewCustomerDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.CARI_ISIM) || string.IsNullOrWhiteSpace(dto.IL))
+            {
+                return BadRequest(new { error = "Müşteri adı ve şehir/ülke zorunlu." });
+            }
+
+            // Yeni kod oluştur: “New00000001”, “New00000002”, …
+            var maxCode = await _context.SintanCari
+                .Where(c => c.CARI_KOD.StartsWith("New"))
+                .OrderByDescending(c => c.CARI_KOD)
+                .Select(c => c.CARI_KOD)
+                .FirstOrDefaultAsync();
+
+            int newNumber = 1;
+            if (!string.IsNullOrEmpty(maxCode) && int.TryParse(maxCode.Substring(3), out int parsed))
+            {
+                newNumber = parsed + 1;
+            }
+            string newCariKod = $"New{newNumber.ToString("D8")}";
+
+            var newCustomer = new SintanCari
+            {
+                CARI_KOD = newCariKod,
+                CARI_ISIM = dto.CARI_ISIM.Trim(),
+                IL = dto.IL.Trim()
+            };
+
+            _context.SintanCari.Add(newCustomer);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                kod = newCustomer.CARI_KOD,
+                isim = newCustomer.CARI_ISIM,
+                il = newCustomer.IL
+            });
+        }
+    
+    public class NewCustomerDto
+    {
+        public string CARI_ISIM { get; set; }
+        public string IL { get; set; }
+    }
+
+
+
         [HttpPost("create")]
         public async Task<IActionResult> CreateOrder([FromBody] OrderHeader order)
         {
             var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
-          //  var user = await _context.Users
+            // var user =  _context.Users;
             //    .Include(u => u.AllowedEmail)
-              //  .FirstOrDefaultAsync(u => u.Email == userEmail);
+            //  .FirstOrDefaultAsync(u => u.Email == userEmail);
 
+            var nameIdClaim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            var userIdClaim = User?.Claims.FirstOrDefault(c => c.Type == "UserId")?.Value;
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-            {
-                return Unauthorized("Kullanıcı bulunamadı.");
-            }
+          //  Console.WriteLine($"DEBUG → nameIdClaim = {nameIdClaim}");
+           if (string.IsNullOrEmpty(nameIdClaim) || !int.TryParse(nameIdClaim, out int nameId))
+          { 
+            //  Console.WriteLine($"DEBUG → nameid parse edilemedi.");
+           return Unauthorized("Kullanıcı bulunamadı.");
+          }
 
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == nameId);
 
             if (user == null)
+          {
+             //  Console.WriteLine($"❌ Kullanıcı bulunamadı: nameid = {nameId}");
                 return Unauthorized("Kullanıcı bulunamadı.");
-
-            order.CreatedById = user.Id;
+          }
+                  
+                order.CreatedById = user.Id;
             order.CreatedAt = DateTime.UtcNow;
             order.UpdatedAt = DateTime.UtcNow;
             order.IsNew = true;
@@ -181,31 +238,63 @@ namespace SiparisApi.Controllers
             if (user == null)
                 return Unauthorized();
 
-            var role = user.AllowedEmail?.Role ?? "User";
+            var role = user.AllowedEmail?.Role;
 
-            var orders = await _context.OrderHeaders
-                .Include(o => o.CreatedBy)
-                .Include(o => o.Items)
-                .Select(o => new
+            // Ana sorgu
+            var query =
+                from o in _context.OrderHeaders
+                    .Include(o => o.Items)
+                   join c in _context.SintanCari
+                    on o.CustomerId equals c.CARI_KOD into custJoin
+                from c in custJoin.DefaultIfEmpty()
+
+                join rep in _context.AllowedEmails
+         on o.SalesRepId equals rep.Id into repJoin
+                from rep in repJoin.DefaultIfEmpty()
+
+                select new OrderListVm
                 {
-                    o.Id,
-                    o.CustomerId,
-                    o.Status,
-                    o.CreatedAt,
-                    o.UpdatedAt,
-                    o.IsNew,
-                    o.IsUpdated,
-                    CreatedByEmail = o.CreatedBy != null ? o.CreatedBy.Email : "-",
-                    TotalPrice = role == "Admin" || role == "Yönetici"
-                        ? o.Items.Sum(i => i.Price * i.Quantity)
-                        : (o.CreatedBy != null && o.CreatedBy.Email == user.Email
-                            ? o.Items.Sum(i => i.Price * i.Quantity)
-                            : (decimal?)null)
-                })
-                .OrderByDescending(o => o.CreatedAt)
+                    Id = o.Id,
+                    CustomerId = o.CustomerId,
+                    CustomerName = c != null ? c.CARI_ISIM : (o.CustomerId ?? "-"),
+
+                    CreatedAt = o.CreatedAt,
+                    UpdatedAt = o.UpdatedAt,
+                    Status = o.Status,
+                    Currency = o.Currency ?? "EURO",
+
+                    PortOfDelivery = o.PortOfDelivery,
+                    PlaceOfDelivery = o.PlaceOfDelivery,
+                    PaymentTerm = o.PaymentTerm,
+                    Transport = o.Transport,
+
+                    SalesRepName = rep != null && !string.IsNullOrEmpty(rep.NameSurname)
+                ? rep.NameSurname
+                : "-",
+
+                    Items = o.Items.Select(i => new OrderListItemVm
+                    {
+                        Id = i.Id,
+                        ProductId = i.ProductId ?? "",
+                        ProductName = _context.SintanStok
+                            .Where(s => s.STOK_KODU == i.ProductId)
+                            .Select(s => s.STOK_ADI)
+                            .FirstOrDefault() ?? (i.ProductId ?? ""),
+
+                        Quantity = i.Quantity,
+                        PackingInfo = i.PackingInfo ?? "",
+                        NetWeight = i.NetWeight,
+                        Price = i.Price,
+                        Description = i.Description
+                       
+                    }).ToList()
+                };
+
+            var orders = await query
+                .OrderByDescending(o => o.UpdatedAt)
                 .ToListAsync();
 
-            // 🔸 Log
+            // Log (senin eski log yapın değişmeden kalsın)
             _context.Logs.Add(new Log
             {
                 UserId = user.Id,
@@ -218,9 +307,12 @@ namespace SiparisApi.Controllers
 
             return Ok(orders);
         }
+
+
+
         // 🔹 Tekil Sipariş Getir (Order Detail)
         [Authorize]
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<IActionResult> GetOrder(int id)
         {
             var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
@@ -323,6 +415,8 @@ namespace SiparisApi.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
+
+
         [HttpGet("lookups/cities")]
         public IActionResult GetCities()
         {

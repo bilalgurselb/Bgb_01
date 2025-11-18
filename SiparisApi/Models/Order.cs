@@ -1,7 +1,7 @@
 namespace SiparisApi.Models
 {
     public class Order
-    {
+    {/*
         public int Id { get; set; }                         // Primary Key
         public string? Customer { get; set; }                // Müşteri adı
         public string? Product { get; set; }                 // Ürün adı
@@ -20,7 +20,7 @@ namespace SiparisApi.Models
         public bool IsApprovedBySales { get; set; } = false;   // Satış onayı
         public bool IsChanged { get; set; } = false;        // Değişiklik işareti
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;  // Oluşturulma zamanı
-        public string Status { get; internal set; }
+        public string Status { get; internal set; }  */
     }
 }
 

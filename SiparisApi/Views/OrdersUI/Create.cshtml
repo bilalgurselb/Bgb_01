@@ -11,13 +11,18 @@
 {
     <div class="alert alert-danger">@TempData["Error"]</div>
 }
-
+@{
+    var accessToken = Context.Session.GetString("AccessToken");
+}
 <div class="form-card bg-white shadow-sm p-3 rounded">
     <form id="createOrderForm">
 
         <!-- 🔹 MÜŞTERİ SEÇİMİ -->
         <div class="form-group mb-3">
-            <label>Müşteri</label>
+            <div class="d-flex justify-content-between align-items-center">
+                <label class="mb-1">Customer</label>
+                 <a href="#" id="btnAddCustomer" class="text-primary small">+ Add New Customer</a> 
+            </div>
             <select id="customerSelect" class="form-control" required></select>
             <div id="customerInfo" class="text-muted small mt-1"></div>
         </div>
@@ -110,33 +115,90 @@
     </div>
 </div>
 <!-- 🔹 Sipariş Özeti Modal -->
+<!-- 🔹 Sipariş Özeti Modal (YENİ TASARIM) -->
 <div class="modal fade" id="orderSummaryModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">📦 Sipariş Özeti</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content shadow">
+
+            <!-- HEADER -->
+            <div class="modal-header bg-primary text-white py-2">
+                <h5 class="modal-title d-flex align-items-center">
+                    <i class="fas fa-receipt me-2"></i> Sipariş Özeti
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
+            <!-- BODY -->
             <div class="modal-body" id="orderSummaryBody">
-                <!-- JS ile dinamik tablo buraya basılacak -->
+                <!-- JS özet kartlarını buraya basar -->
             </div>
 
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-                <button type="button" class="btn btn-success" id="confirmSaveBtn">
+            <!-- FOOTER -->
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> İptal
+                </button>
+                <button type="button" class="btn btn-success px-4" id="confirmSaveBtn">
                     <i class="fas fa-check"></i> Onayla ve Kaydet
                 </button>
             </div>
+
+        </div>
+    </div>
+</div>
+
+ <!-- Yeni Müşteri Modal -->
+<!-- 🔹 Yeni Müşteri Ekle Modal -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="addCustomerForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCustomerModalLabel">Add New Customer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Customer Name</label>
+                        <input type="text" class="form-control" id="newCustomerName" required>
+                    </div>
+                  <!-- <div class="mb-3">
+                        <label class="form-label">City</label>
+                        <input type="text" class="form-control" id="newCustomerCity" required>
+                    </div> -->
+                    <div class="mb-3">
+                        <label class="form-label">Country/City</label>
+                        <input type="text" class="form-control" id="newCustomerCountry" required>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Save Customer</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
 
+
+
 @section Scripts {
     <script src="/js/lookups.js"></script>
     <script>
-              
+                         setTimeout(() => {
+            console.log("🔎 TEST: Rep Select Value:", document.getElementById("salesRepSelect")?.value);
+            console.log("🔎 TEST: Rep Select Options:", document.getElementById("salesRepSelect")?.options.length);
+            console.log("🔎 TEST: Token:", sessionStorage.getItem("AccessToken"));
+        }, 1500);
+
+                   const accessToken = '@accessToken';
+        if (accessToken) {
+            sessionStorage.setItem("AccessToken", accessToken);
+        }
+
         /* === 🧩 SİNTAN: Sayfa Yenilemeyi Engelleme (Desktop + Mobile) === */
         document.addEventListener("DOMContentLoaded", () => {
 
@@ -211,12 +273,12 @@
 
             <div class="col-6 mb-2">
               <label>Unit</label>
-              <select class="form-control unit-select" required></select>
-            </div>
-        <div class="col-md-5 mb-2">
-          <label>Price</label>
-          <div class="input-group">
-            <span class="input-group-text price-symbol">€</span>
+                <select class="form-control unit-select" align-items-center; font-size: 1.5rem; required></select>
+            </div>           
+
+          <!-- Price -->
+          <div class="col-6 mb-2">
+            <label>Price</label>
             <input type="number"
                    class="form-control price"
                    inputmode="decimal"
@@ -224,20 +286,26 @@
                    required
                    placeholder="Enter price" />
           </div>
-        </div>
 
-        <div class="col-md-5 mb-2">
-          <label>Total</label>
-          <div class="input-group">
-            <input type="text"
-                   class="form-control total-amount"
-                   value="0.00"
-                   readonly />
-            <span class="input-group-text currency-label">€</span>
+          <!-- Total -->
+          <div class="col-6 mb-2">
+            <label>Total</label>
+            <div class="input-group">
+              <input type="text"
+                     class="form-control total-amount"
+                     value="0.00"
+                     readonly />
+                <span class="input-group-text currency-label" style="min-width: 2.5rem; font-size: 1.2rem; justify-content: center;">€</span>
+            </div>
           </div>
-                  <div class="col-md-12 mb-2">
-          <label>Description</label>
-          <textarea class="form-control description" rows="2" placeholder="Açıklama girin..."></textarea>
+
+          <!-- Description -->
+          <div class="col-12 mb-2">
+            <label>Description</label>
+            <textarea class="form-control description"
+                      rows="2"
+                      placeholder="Açıklama girin..."></textarea>
+          </div>
         </div>
 
           <!-- 🔹 Net ağırlık gösterimi -->
@@ -246,7 +314,7 @@
         `;
             container.appendChild(row);
                     const select = row.querySelector(".product-select");
-        select.id = `productselect_${Date.now()}`; // Backtick kullanımı
+        select.id = `productselect_${Date.now()}`; 
           fillProductSelect(select);
 
 
@@ -272,6 +340,8 @@
                 updateRowNumbers();
             }
         });
+
+   
 
         // 🔹 TOAST
         function showToast(msg) {
@@ -387,9 +457,7 @@
               document.getElementById('subtotalDisplay')?.textContent = subtotal.toFixed(2);
               document.getElementById('vatDisplay')?.textContent = vat.toFixed(2);
               document.getElementById('grandTotalDisplay')?.textContent = grandTotal.toFixed(2);*/
-          }
-
-            
+          }            
         
                 /* --- 🔹 Tetikleyiciler (Event Binding) --- */
 
@@ -410,8 +478,6 @@
             calculateOrderTotals();
         });
 
-
-
         // === Currency seçilince Price yanına sembol yaz ===
       (function attachCurrencySymbolBinding(){
             const cur = document.getElementById("currency");
@@ -427,26 +493,27 @@
             setTimeout(refreshSymbols, 0);
         })();
 
-
-
-
-
         // 🔹 KAYDET
-
       
             const form = document.getElementById("createOrderForm");
-
+        const orderDateRaw = document.getElementById("orderDate").value;
+        const deliveryDateRaw = document.getElementById("deliveryDate").value;
+        const orderDate = orderDateRaw ? new Date(orderDateRaw).toISOString() : null;
+        const deliveryDate = deliveryDateRaw ? new Date(deliveryDateRaw).toISOString() : null;
+        const uid =Date.now() + "-" + Math.random().toString(36).substring(2, 8);
             form.addEventListener("submit", async (e) => {
                 e.preventDefault();
                 const invalidRows = [];
                 const order = {
+                    Uid: uid,
                     CustomerId: document.getElementById("customerSelect").value,
                     SalesRepId: parseInt(document.getElementById("salesRepSelect").value),
-                    OrderDate: document.getElementById("orderDate").value,
-                    DeliveryDate: document.getElementById("deliveryDate").value || null,
+                    OrderDate: orderDate,
+                    DeliveryDate: deliveryDate,
+               //     OrderDate: document.getElementById("orderDate").value,
+               //     DeliveryDate: document.getElementById("deliveryDate").value,
                     PaymentTerm: document.getElementById("paymentTerm").value,
-                    Transport: document.getElementById("transport").value,
-                    DeliveryTerm: document.getElementById("deliveryTerm").value,
+                    Transport: document.getElementById("transport").value || null,
                     DueDays: parseInt(document.getElementById("dueDays").value) || 0,
                     Currency: document.getElementById("currency").value,
                     PortOfDelivery: document.getElementById("portOfDelivery").value,
@@ -454,7 +521,7 @@
                    // CreatedById: 1, // Gerekirse auth'dan alınır
                     Items: []
                 };
-
+                    
                 // 🔒 Zorunlu alanlar (başlık)
                 if (!order.CustomerId || !order.SalesRepId || !order.OrderDate || !order.Currency)
                     return showToast("Lütfen zorunlu alanları doldurun.");
@@ -467,6 +534,7 @@
                     const unit = row.querySelector(".unit-select").value;
                     const netWeight = parseFloat(row.dataset.netKg || "0");
                     const description = row.querySelector(".description")?.value || "";
+                   
 
                     if (productId && quantity > 0 && price > 0 && unit) {
                         order.Items.push({
@@ -474,7 +542,7 @@
                             ProductId: productId,
                             Quantity: quantity,
                             Price: price,
-                            Unit: unit,
+                            PackingInfo : unit,
                             NetWeight: netWeight,
                             Description: description
                         });
@@ -488,59 +556,60 @@
                         if (invalidRows.length > 0)
         return showToast(`❌ ${invalidRows.join(", ")} numaralı satırlarda eksik alan(lar) var.`);
 
+                                   // 🔹 ÖZET MODALINI KART FORMATINDA OLUŞTURMA
+        summary = "";
 
-                            // 🟨 Sipariş Özeti Modal Tablosu//
-            let summary = `
-            <table class="table table-bordered table-sm table-hover align-middle">
-              <thead class="table-light">
-                <tr>
-                  <th>#</th>
-                  <th>Ürün</th>
-                  <th>Miktar</th>
-                  <th>Birim</th>
-                  <th>Net KG</th>
-                  <th>Toplam</th>
-                  <th>Para Birimi</th>
-                </tr>
-              </thead>
-              <tbody>`;
+        order.Items.forEach(i => {
+            const name = document.querySelector(
+                `.product-select option[value='${i.ProductId}']`
+            )?.text || "-";
 
-            order.Items.forEach(i => {
-                const name = document.querySelector(`.product-select option[value='${i.ProductId}']`)?.text || "-";
-                const total = (i.NetWeight || 0) * (i.Price || 0);
-                summary += `
-                <tr>
-                  <td>${i.RowNumber}</td>
-                  <td>${name}</td>
-                  <td>${i.Quantity}</td>
-                  <td>${i.Unit}</td>
-                  <td>${(i.NetWeight || 0).toFixed(2)}</td>
-                  <td>${total.toFixed(2)}</td>
-                  <td>${order.Currency}</td>
-                </tr>`;
-            });
+            const total = (i.NetWeight || 0) * (i.Price || 0);
 
-            summary += `</tbody></table>`;
-            document.getElementById("orderSummaryBody").innerHTML = summary;
+            summary += `
+            <div class="summary-item">
 
-            const modal = new bootstrap.Modal(document.getElementById("orderSummaryModal"));
-            modal.show();
+                <!-- Ürün başlığı -->
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="badge bg-primary me-2">#${i.RowNumber}</span>
+                    <strong class="summary-product-name">${name}</strong>
+                </div>
+
+                <!-- Alt bilgiler -->
+                <div class="summary-details">
+                    <span><b>${i.Quantity}</b> ${i.PackingInfo}</span> |
+                    <span><b>${i.NetWeight.toFixed(2)}</b> Kg</span> |
+                    <span><b>${total.toFixed(2)}</b> ${order.Currency}</span>
+                </div>
+
+            </div>`;
+        });
+
+        // Modal içine bas
+        document.getElementById("orderSummaryBody").innerHTML = summary;
+
+        // Aç
+        const modal = new bootstrap.Modal(document.getElementById("orderSummaryModal"));
+        modal.show();
 
             // ⬇️ Bu veriyi modal onayında kullanılmak üzere geçici olarak global değişkende tut
             window._pendingOrderData = order;
-        });
-               
+        });               
                     document.getElementById("confirmSaveBtn").addEventListener("click", async () => {
         const order = window._pendingOrderData;
         if (!order) return;
-               
+        
         const modal = bootstrap.Modal.getInstance(document.getElementById("orderSummaryModal"));
         modal.hide();
-                       /*-------KAyıt Onayı ile-------------*/
+                       const token = sessionStorage.getItem("AccessToken");
+                         /*------------KAyıt Onayı ile-------------*/
                 try {
+                      // const token = sessionStorage.getItem("AccessToken");
                     const res = await fetch("/api/orders/create", {
                         method: "POST",
-                        headers: { "Content-Type": "application/json" },
+                          headers: { "Content-Type": "application/json",
+                  "Authorization": "Bearer " + token
+                          },
                         body: JSON.stringify(order)
                     });
 
@@ -558,49 +627,81 @@
                     showToast("⚠️ İnternet yok. Sipariş yerel olarak kaydedildi.");
                     saveOrderOffline(order);
                 }
-
                 
             });
+                    function saveOrderOffline(order) {
+            const key = "pendingOrders";
+            let existing = JSON.parse(localStorage.getItem(key) || "[]");
 
-            function saveOrderOffline(order) {
-                const existing = JSON.parse(localStorage.getItem("pendingOrders") || "[]");
-                existing.push(order);
-                localStorage.setItem("pendingOrders", JSON.stringify(existing));
+            // Aynı sipariş daha önce kayıtlıysa güncelle
+            const isDuplicate = existing.some(o =>
+                o.Uid === order.Uid);
+            
+
+            if (isDuplicate) {
+                console.warn("⚠️ Aynı sipariş zaten kayıtlı.");
+                return;
             }
 
-            async function retryPendingOrders() {
-                const pending = JSON.parse(localStorage.getItem("pendingOrders") || "[]");
-                if (pending.length === 0) return;
+            existing.push(order);
 
-                const successful = [];
+            // Gereksiz veri birikmesini önle (örn: 50 kayıtla sınırlı)
+            if (existing.length > 50) {
+                existing = existing.slice(existing.length - 50);
+            }
 
-                for (const order of pending) {
-                    try {
-                        const res = await fetch("/api/orders/create", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(order)
-                        });
-                        if (res.ok) {
-                            successful.push(order);
-                        }
-                    } catch (err) {
-                        console.warn("⌛ Sipariş gönderilemedi. Daha sonra tekrar denenecek.");
+            localStorage.setItem(key, JSON.stringify(existing));
+            console.info("💾 Sipariş offline kaydedildi.");
+        }
+
+
+                    async function retryPendingOrders() {
+            const pending = JSON.parse(localStorage.getItem("pendingOrders") || "[]");
+            if (!pending.length) return;
+
+            const token = sessionStorage.getItem("AccessToken");
+            if (!token) {
+                console.warn("🔐 Token yok. Login olmadan offline kayıtlar gönderilemez.");
+                return;
+            }
+              console.log("📦 Token bulundu, değeri:", token);
+            const successful = [];
+
+            for (const order of pending) {
+                try {
+                    const res = await fetch("/api/orders/create", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": "Bearer " + token
+                        },
+                        body: JSON.stringify(order)
+                    });
+
+                    if (res.ok) {
+                        successful.push(order);
+                    } else {
+                        const errText = await res.text();
+                        console.warn(`🛑 Sipariş gönderilemedi: ${res.status} - ${errText}`);
+                           console.error("❌ Sunucudan hata geldi:", res.status, errText);
                     }
-                }
-
-                if (successful.length > 0) {
-                    const remaining = pending.filter(o => !successful.includes(o));
-                    localStorage.setItem("pendingOrders", JSON.stringify(remaining));
-                    showToast(`🔁 ${successful.length} bekleyen sipariş başarıyla gönderildi.`);
+                } catch (err) {
+                    console.error("🚨 Ağ hatası:", err);
                 }
             }
+
+            // Temizleme
+            if (successful.length > 0) {
+                const remaining = pending.filter(o => !successful.some(s => s.Uid === o.Uid));
+                localStorage.setItem("pendingOrders", JSON.stringify(remaining));
+                showToast(`📦 ${successful.length} bekleyen sipariş başarıyla gönderildi.`);
+            }
+        }
+
+        window.addEventListener("load", retryPendingOrders);
 
             // Sayfa açıldığında bekleyen kayıt varsa gönder
-            window.addEventListener("load", retryPendingOrders);
-    
-
-
+         //   window.addEventListener("load", retryPendingOrders); 
         document.getElementById("addItem").addEventListener("click", addOrderItemRow);
     </script>
 }

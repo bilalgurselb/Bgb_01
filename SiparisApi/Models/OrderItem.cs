@@ -1,4 +1,6 @@
-﻿namespace SiparisApi.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace SiparisApi.Models
 {
     public class OrderItem
     {
@@ -16,6 +18,8 @@
         public int RowNumber { get; set; }
         public string? PackingInfo { get; set; }
         public decimal NetWeight { get; set; }
-        
+        [NotMapped]
+        public string? ProductName { get; set; }
+
     }
 }
