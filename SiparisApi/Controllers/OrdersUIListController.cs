@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SiparisApi.Models;
 using System.Net.Http.Headers;
 using System.Text;
@@ -21,7 +22,16 @@ namespace SiparisApi.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var token = HttpContext.Session.GetString("AccessToken");
+        
+            var orders = _context.Orders
+                .Include(x => x.Items) // varsa
+                .OrderByDescending(x => x.CreatedAt)
+                .ToList();
+
+            return View(orders);
+        
+
+        var token = HttpContext.Session.GetString("AccessToken");
             if (token == null)
                 return RedirectToAction("Login", "Account");
 
