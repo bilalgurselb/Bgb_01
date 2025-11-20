@@ -64,7 +64,7 @@ namespace SiparisApi.Controllers
             // 📧 Mail servisi
             try
             {
-                var smtpHost = _config["Email:SmtpServer"];
+                var smtpHost = _config["Smtp:Host"];
                 result["EmailService"] = !string.IsNullOrEmpty(smtpHost)
                     ? $"✅ Yapılandırılmış ({smtpHost})"
                     : "⚠️ SMTP yapılandırması bulunamadı";

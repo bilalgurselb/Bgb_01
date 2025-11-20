@@ -11,6 +11,7 @@ namespace SiparisApi.Controllers
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _config;
+       
 
         public OrdersUIListController(IHttpClientFactory httpClientFactory, IConfiguration config)
         {
@@ -22,14 +23,6 @@ namespace SiparisApi.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-        
-            var orders = _context.Orders
-                .Include(x => x.Items) // varsa
-                .OrderByDescending(x => x.CreatedAt)
-                .ToList();
-
-            return View(orders);
-        
 
         var token = HttpContext.Session.GetString("AccessToken");
             if (token == null)
