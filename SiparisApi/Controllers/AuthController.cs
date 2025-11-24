@@ -125,7 +125,8 @@ namespace SiparisApi.Controllers
             {
                 Email = dto.Email,
                 PasswordHash = passwordHash,
-                AllowedId = allowed.Id
+                AllowedId = allowed.Id,
+                AllowedEmailId = allowed.Id
             };
 
             _context.Users.Add(newUser);

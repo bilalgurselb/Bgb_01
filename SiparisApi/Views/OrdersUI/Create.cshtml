@@ -104,7 +104,18 @@
         </button>
     </form>
 </div>
+<div id="smartProductDropdown" class="smart-dropdown hidden">
+    <div class="smart-dropdown-header">
+        <input type="text" id="smartProductSearch" placeholder="Ürün ara..." />
+        <button id="smartProductClose" type="button">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
 
+    <div id="smartProductList" class="smart-dropdown-list">
+        <!-- JS otomatik dolduracak -->
+    </div>
+</div>
 <!-- 🔹 TOAST & MODAL -->
 <div class="position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1080">
     <div id="toastWarning" class="toast align-items-center text-bg-warning border-0" role="alert" aria-live="assertive" aria-atomic="true">
@@ -188,140 +199,162 @@
 @section Scripts {
     <script src="/js/lookups.js"></script>
     <script>
-                         setTimeout(() => {
+                 /*        setTimeout(() => {
             console.log("🔎 TEST: Rep Select Value:", document.getElementById("salesRepSelect")?.value);
             console.log("🔎 TEST: Rep Select Options:", document.getElementById("salesRepSelect")?.options.length);
             console.log("🔎 TEST: Token:", sessionStorage.getItem("AccessToken"));
         }, 1500);
-
+        */
                    const accessToken = '@accessToken';
         if (accessToken) {
             sessionStorage.setItem("AccessToken", accessToken);
         }
 
-        /* === 🧩 SİNTAN: Sayfa Yenilemeyi Engelleme (Desktop + Mobile) === */
-        document.addEventListener("DOMContentLoaded", () => {
+        /* === 🧩 SİNTAN: Sayfa Yenilemeyi Engelleme + Güvenli Lookup Yükleme === */
+        document.addEventListener("DOMContentLoaded", async () => {
+            try {
+                // 🔹 Masaüstü için klasik yenilemeyi engelle
+                window.addEventListener("beforeunload", e => {
+                    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+                    if (!isMobile) {
+                        e.preventDefault();
+                        e.returnValue = ""; // Chrome, Edge, Firefox için
+                    }
+                });
 
-            // 🔹 Masaüstü için klasik yenilemeyi engelle
-            window.addEventListener("beforeunload", e => {
-                const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-                if (!isMobile) {
-                    e.preventDefault();
-                    e.returnValue = ""; // Chrome, Edge, Firefox için
-                }
-            });
+                // 🔹 Lookup verilerini tam yükle, sonra satır ekle
+                await loadLookups();
+                addOrderItemRow();
 
-              loadLookups().then(()=>{
-              addOrderItemRow();
-              });
-            // 🔹 Mobilde "çek-bırak yenileme"yi engelle (Android & iOS)
-            let touchStartY = 0;
-            document.addEventListener("touchstart", e => {
-                touchStartY = e.touches[0].clientY;
-            });
+                // 🔹 Mobilde "çek-bırak yenileme"yi engelle (Android & iOS)
+                let touchStartY = 0;
+                document.addEventListener("touchstart", e => {
+                    touchStartY = e.touches[0].clientY;
+                });
 
-            document.addEventListener("touchmove", e => {
-                const touchCurrentY = e.touches[0].clientY;
-                const scrollTop = document.scrollingElement.scrollTop;
-                // Sayfanın en üstünde aşağı çekiliyorsa: (pull-to-refresh)
-                if (scrollTop === 0 && touchCurrentY > touchStartY) {
-                    e.preventDefault();
-                }
-            }, { passive: false });
+                document.addEventListener("touchmove", e => {
+                    const touchCurrentY = e.touches[0].clientY;
+                    const scrollTop = document.scrollingElement.scrollTop;
+                    // Sayfanın en üstünde aşağı çekiliyorsa: (pull-to-refresh)
+                    if (scrollTop === 0 && touchCurrentY > touchStartY) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
 
-            // 🔹 Formdaki değişiklikleri algıla (ekstra güvenlik)
-            let formChanged = false;
-            document.querySelectorAll("#createOrderForm input, #createOrderForm select")
-              .forEach(el => el.addEventListener("input", () => formChanged = true));
+                // 🔹 Formdaki değişiklikleri algıla (ekstra güvenlik)
+                let formChanged = false;
+                document.querySelectorAll("#createOrderForm input, #createOrderForm select")
+                    .forEach(el => el.addEventListener("input", () => formChanged = true));
 
-            // Geri tuşu veya yönlendirme engellemesi (SPA senaryosu)
-            window.addEventListener("popstate", e => {
-                if (formChanged && !confirm("Kaydedilmemiş veriler var. Devam etmek istiyor musunuz?")) {
-                    history.pushState(null, null, location.href);
-                    e.preventDefault();
-                }
-            });
+                // 🔹 Geri tuşu veya yönlendirme engellemesi (SPA senaryosu)
+                window.addEventListener("popstate", e => {
+                    if (formChanged && !confirm("Kaydedilmemiş veriler var. Devam etmek istiyor musunuz?")) {
+                        history.pushState(null, null, location.href);
+                        e.preventDefault();
+                    }
+                });
+
+            } catch (err) {
+                console.error("❌ Sayfa yüklenirken hata:", err);
+            }
         });
+
     
-        // 🔹 ÜRÜN SATIRI EKLE
+               // 🔹 ÜRÜN SATIRI EKLE
         function addOrderItemRow() {
             const container = document.getElementById("itemsContainer");
+            if (!container) return;
+
             const rowIndex = container.children.length + 1;
 
             const row = document.createElement("div");
-            row.classList.add("item-row", "border", "p-2", "rounded", "mb-2", "bg-white", "shadow-sm");
+            row.className = "item-row border p-2 rounded mb-2 bg-white shadow-sm";
 
-                    row.innerHTML = `
-          <div class="item-row-header d-flex justify-content-between align-items-center mb-2">
-            <span class="badge bg-primary">#${rowIndex}</span>
-            <button type="button" class="btn btn-outline-danger btn-sm remove-item" aria-label="Remove">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
+            row.innerHTML = `
+                <div class="item-row-header d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge bg-primary">#${rowIndex}</span>
+                    <button type="button" class="btn btn-outline-danger btn-sm remove-item" aria-label="Remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
 
-          <!-- 🔹 Ürün bilgileri -->
-          <div class="col-12 mb-2">
-            <label>Product</label>
-            <select class="product-select" required></select>
-          </div>
+                <div class="col-12 mb-2">
+                    <label>Product</label>
+                    <select class="product-select form-control" required></select>
+                </div>
 
-          <div class="row">
-            <div class="col-6 mb-2">
-              <label>Quantity</label>
-              <input type="number" class="form-control quantity" inputmode="decimal" step="0.01" placeholder="Enter quantity" required>
-            </div>
+                <div class="row">
+                    <div class="col-6 mb-2">
+                        <label>Quantity</label>
+                        <input type="number"
+                               class="form-control quantity"
+                               inputmode="decimal"
+                               step="0.01"
+                               placeholder="Enter quantity"
+                               required />
+                    </div>
 
-            <div class="col-6 mb-2">
-              <label>Unit</label>
-                <select class="form-control unit-select" align-items-center; font-size: 1.5rem; required></select>
-            </div>           
+                    <div class="col-6 mb-2">
+                        <label>Unit</label>
+                        <select class="form-control unit-select" required></select>
+                    </div>
 
-          <!-- Price -->
-          <div class="col-6 mb-2">
-            <label>Price</label>
-            <input type="number"
-                   class="form-control price"
-                   inputmode="decimal"
-                   step="0.0001"
-                   required
-                   placeholder="Enter price" />
-          </div>
+                    <div class="col-6 mb-2">
+                        <label>Price</label>
+                        <input type="number"
+                               class="form-control price"
+                               inputmode="decimal"
+                               step="0.0001"
+                               required
+                               placeholder="Enter price" />
+                    </div>
 
-          <!-- Total -->
-          <div class="col-6 mb-2">
-            <label>Total</label>
-            <div class="input-group">
-              <input type="text"
-                     class="form-control total-amount"
-                     value="0.00"
-                     readonly />
-                <span class="input-group-text currency-label" style="min-width: 2.5rem; font-size: 1.2rem; justify-content: center;">€</span>
-            </div>
-          </div>
+                    <div class="col-6 mb-2">
+                        <label>Total</label>
+                        <div class="input-group">
+                            <input type="text"
+                                   class="form-control total-amount"
+                                   value="0.00"
+                                   readonly />
+                            <span class="input-group-text currency-label"
+                                  style="min-width: 2.5rem; font-size: 1.2rem; justify-content: center;">€</span>
+                        </div>
+                    </div>
 
-          <!-- Description -->
-          <div class="col-12 mb-2">
-            <label>Description</label>
-            <textarea class="form-control description"
-                      rows="2"
-                      placeholder="Açıklama girin..."></textarea>
-          </div>
-        </div>
+                    <div class="col-12 mb-2">
+                        <label>Description</label>
+                        <textarea class="form-control description"
+                                  rows="2"
+                                  placeholder="Açıklama girin..."></textarea>
+                    </div>
+                </div>
 
-          <!-- 🔹 Net ağırlık gösterimi -->
-          <small class="text-muted net-weight-info d-block ms-1 mt-1">Net Weight: -</small>
-        </div>
-        `;
+                <small class="text-muted net-weight-info d-block ms-1 mt-1">
+                    Net Weight: -
+                </small>
+            `;
+
             container.appendChild(row);
-                    const select = row.querySelector(".product-select");
-        select.id = `productselect_${Date.now()}`; 
-          fillProductSelect(select);
 
+            // Ürün select'i doldur
+            const productSelect = row.querySelector(".product-select");
+            if (productSelect) {
+                productSelect.id = `productselect_${Date.now()}_${rowIndex}`;
+                fillProductSelect(productSelect);
+            }
 
-              loadUnits(row.querySelector(".unit-select"));
+            // Unit select
+            const unitSelect = row.querySelector(".unit-select");
+            if (unitSelect) {
+                loadUnits(unitSelect);
+            }
+
             updateRowNumbers();
+
+            // Para birimi seçiliyse toplam hesaplarını tazele
             document.getElementById("currency")?.dispatchEvent(new Event("change"));
-        }
+        }         
+
         // 🔹 Satır numaralarını yeniden sırala
         function updateRowNumbers() {
             document.querySelectorAll("#itemsContainer .item-row").forEach((row, index) => {
@@ -353,6 +386,8 @@
         document.getElementById("createOrderForm").addEventListener("submit", function (e) {
             e.preventDefault(); // Formun klasik gönderimini iptal eder
         });
+
+
         /*---HESAPLAMA-------*/addOrderItemRow
                 /* === 🔹 HESAP MODÜLÜ (Bankacılık Tipi Para Hesabı) === */
 
@@ -387,8 +422,9 @@
 
 
         function recalcRowTotal(row) {
+               console.log("🧮 recalcRowTotal çalıştı", row);
             if (!row) return;
-
+               console.log("🧮 recalcRowTotal çalıştı", row);
             const qtyEl   = row.querySelector(".quantity");
             const priceEl = row.querySelector(".price");
             const totalEl = row.querySelector(".total-amount");
@@ -403,7 +439,7 @@
             const qty = parseFloat(qtyEl.value) || 0;
             const price = parseFloat(priceEl.value) || 0;
             const unit = unitEl?.value || "";
-
+              console.log(row.dataset)
 
         const packWeight = normalizeFloat(row.dataset.packWeight);
         const palletNet  = normalizeFloat(row.dataset.palletNet);
@@ -598,9 +634,32 @@
                     document.getElementById("confirmSaveBtn").addEventListener("click", async () => {
         const order = window._pendingOrderData;
         if (!order) return;
-        
+            console.log("📦 Giden JSON:", order);
         const modal = bootstrap.Modal.getInstance(document.getElementById("orderSummaryModal"));
         modal.hide();
+               // ======== SAYFA KİLİTLEME + LOADING OVERLAY ========
+        const overlay = document.createElement("div");
+        overlay.id = "savingOverlay";
+        overlay.style.position = "fixed";
+        overlay.style.top = "0";
+        overlay.style.left = "0";
+        overlay.style.width = "100vw";
+        overlay.style.height = "100vh";
+        overlay.style.background = "rgba(0,0,0,0.4)"; // hafif karartma
+        overlay.style.backdropFilter = "blur(3px)";
+        overlay.style.zIndex = "9999";
+        overlay.style.display = "flex";
+        overlay.style.flexDirection = "column";
+        overlay.style.justifyContent = "center";
+        overlay.style.alignItems = "center";
+        overlay.innerHTML = `
+            <div class="spinner-border text-light" style="width: 3rem; height: 3rem;"></div>
+            <div style="margin-top: 15px; font-size: 1.4rem; color:white;">Please wait...</div>
+        `;
+        document.body.appendChild(overlay);
+
+        // Sayfa tamamen kilitlensin
+        document.body.style.pointerEvents = "none";
                        const token = sessionStorage.getItem("AccessToken");
                          /*------------KAyıt Onayı ile-------------*/
                 try {
@@ -612,22 +671,27 @@
                           },
                         body: JSON.stringify(order)
                     });
+                      console.log("📦 Giden JSON:", order);
 
                     if (res.ok) {
                         alert("✅ Sipariş başarıyla kaydedildi!");
-                        window.location.href = "/OrdersUIList/Index";
-                    } else {
+                          formChanged = false;
+                          window.location.href = "/OrdersUIList/Index?refresh=1";
+                    }
+                    else {
                         const errorText = await res.text();
                         showToast("❌ Kayıt başarısız: " + errorText + ". Veri silinmedi, daha sonra gönderilecektir.");
                         saveOrderOffline(order);
+                          document.body.style.pointerEvents = "auto";
+          overlay.remove();
                     }
-
                 } catch (err) {
                     console.warn("🌐 Sunucuya erişilemedi. Offline kayıt başlatılıyor...");
                     showToast("⚠️ İnternet yok. Sipariş yerel olarak kaydedildi.");
                     saveOrderOffline(order);
-                }
-                
+                      document.body.style.pointerEvents = "auto";
+          overlay.remove();
+                }                
             });
                     function saveOrderOffline(order) {
             const key = "pendingOrders";
@@ -701,6 +765,21 @@
         window.addEventListener("load", retryPendingOrders);
 
         document.getElementById("addItem").addEventListener("click", addOrderItemRow);
+
+        document.addEventListener("click", function(e) {
+            const dd = document.getElementById("smartProductDropdown");
+
+            // Panel açıksa ve dışarı tıklanmışsa → desktop’da kapanır
+            if (!dd.classList.contains("hidden")
+                && window.innerWidth > 768
+                && !dd.contains(e.target)
+                && !e.target.classList.contains("product-select"))
+            {
+                dd.classList.add("hidden");
+            }
+        });
+    
+
     </script>
 }
 

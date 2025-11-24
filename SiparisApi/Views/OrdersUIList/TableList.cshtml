@@ -21,9 +21,21 @@
         };
     }
 }
+@functions {
+    public static string ShortenProduct(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return name;
 
+        int index = name.IndexOf("(");
+        if (index > 0)
+            return name.Substring(0, index).Trim();
 
-@if (Model == null || !Model.Any())
+        return name.Trim();
+    }
+}
+
+@if (Model == null || !Model.Any(o => o.Items.Any()))
 {
     <div class="d-flex justify-content-center align-items-center text-center" style="height:60vh;">
         <div>
@@ -38,51 +50,185 @@
     </div>
 }
 else
-{     
-    var totalCount = Model.Count();
-    var totalNetKg = Model.Sum(o => o.Items.Sum(i => i.NetWeight));
+{
+  
+    var totalOrders = Model.Count();
+    var totalKg = Model.Sum(o => o.Items.Sum(i => i.NetWeight));
 
-    var currencyGroups = new List<dynamic>();
+    var currencyTotals = Model
+        .GroupBy(o => o.Currency)
+        .Select(g => new { Currency = g.Key, Amount = g.Sum(o => o.Items.Sum(x => x.Total)) })
+        .ToList();
 
-    if (Model.Any())
-    {
-        currencyGroups = Model
-            .GroupBy(o => o.Currency ?? "EUR")
-            .Select(g => new
-            {
-                Currency = g.Key,
-                TotalAmount = g.Sum(o => o.Items.Sum(i => i.Total))
-            })
-            .Cast<dynamic>()
-            .ToList();
-    }
+    var productTotals = Model
+        .SelectMany(o => o.Items)
+        .GroupBy(i => i.ProductName)
+        .Select(g => new { Product = g.Key, Kg = g.Sum(x => x.NetWeight) })
+        .ToList();
 
-    <div class="summary-item mb-3">
-        <div class="d-flex justify-content-between align-items-center">
-            <div class="summary-product-name">
-                <i class="fas fa-clipboard-list"></i> Sipariş Özeti
-            </div>
-            <div class="badge bg-secondary text-white">@DateTime.Now.ToString("dd.MM.yyyy")</div>
+    var repTotals = Model
+        .GroupBy(o => o.SalesRepName)
+        .Select(g => new {
+            Rep = g.Key,
+            Kg = g.Sum(x => x.Items.Sum(i => i.NetWeight)),
+            Count = g.Sum(x => x.Items.Count)
+        }).ToList();
+
+    var countryTotals = Model
+        .GroupBy(o => o.Country)
+        .Select(g => new {
+            Country = g.Key,
+            Kg = g.Sum(x => x.Items.Sum(i => i.NetWeight))
+        }).ToList();
+
+    <!-- =======================
+         ÖZET PANELİ
+    ==========================-->
+    <div class="summary-header">    
+        <div class="summary-title-row">
+            <div class="summary-title-left">
+                <i class="fas fa-receipt"></i>
+                <span>Sipariş Özeti</span>
+             </div>
+            <button id="summaryToggleBtn" class="summary-toggle-btn">
+                <i class="fas fa-chevron-down"></i>
+            </button>
         </div>
+            <div class="summary-tabs">
+                <span class="summary-tab active" data-tab="genel">Genel</span>
+                <span class="summary-tab" data-tab="urun">Ürün</span>
+                <span class="summary-tab" data-tab="temsilci">Temsilci</span>
+                <span class="summary-tab country-tab" data-tab="ulke">Ülke/Şehir</span>
+            </div>     
+    </div>        
+   
 
-        <div class="summary-details mt-2">
-            <div class="d-flex justify-content-between">
-                <div><b>Toplam Sipariş:</b> @totalCount adet</div>
-                <div><b>Toplam Net KG:</b> @totalNetKg.ToString("N2")</div>
+        <!-- BODY -->
+        <div class="summary-body" id="summaryBody">
+            <!-- ===== GENEL (KAPALI HAL) ===== -->
+            <div id="genel-compact" class="summary-section">
+                <div class="summary-row">
+                    <span>Toplam Sipariş:</span>
+                    <strong>@Model.Count() adet</strong>
+                </div>
+                <div class="summary-row">
+                    <span>Toplam Net KG:</span>
+                    <strong>@Model.Sum(o => o.Items.Sum(i => i.NetWeight)).ToString("N2")</strong>
+                </div>
             </div>
 
-            <div class="mt-2 d-flex flex-wrap gap-3 align-items-center">
-                @foreach (var grp in currencyGroups)
+            <!-- ===== GENEL (AÇIK HAL / SEKMENİN KENDİSİ) ===== -->
+            <div class="summary-section d-none" id="tab-genel">
+
+                <div class="summary-row">
+                    <span>Toplam Sipariş:</span>
+                    <strong>@Model.Count() adet</strong>
+                </div>
+
+                <div class="summary-row">
+                    <span>Toplam Net KG:</span>
+                    <strong>@Model.Sum(o => o.Items.Sum(i => i.NetWeight)).ToString("N2")</strong>
+                </div>
+
+                <hr />
+
+                @foreach (var grp in Model
+                            .GroupBy(o => o.Currency ?? "EUR")
+                            .Select(g => new { c = g.Key, t = g.Sum(o => o.Items.Sum(i => i.Total)) }))
                 {
-                    <div class="currency-total">
-                        @grp.TotalAmount.ToString("N2")
-                        <span class="currency-icon">@Html.Raw(GetCurrencyIcon(grp.Currency))</span>
+                    <div class="summary-row">
+                        <span>@grp.c:</span>
+                        <strong>@grp.t.ToString("N2")</strong>
                     </div>
                 }
             </div>
-        </div>
-    </div>
+            <style>
+                #genel-compact {
+                    display: block;
+                }
 
+                .expanded #genel-compact {
+                    display: none;
+                }
+            </style>
+            <!-- ================= ÜRÜN ================= -->
+            <div class="summary-section d-none" id="tab-urun">
+                @foreach (var p in Model
+                            .SelectMany(o => o.Items)
+                            .GroupBy(i => i.ProductName)
+                            .Select(g => new
+                            {
+                                Name = g.Key,
+                                Kg = g.Sum(x => x.NetWeight)
+                            })
+                .OrderByDescending(x => x.Kg))
+                {
+                    <div class="summary-row">
+                        <span>@p.Name:</span>
+                        <strong>@p.Kg.ToString("N2") KG</strong>
+                    </div>
+                }
+            </div>
+
+            <!-- ================= TEMSİLCİ ================= -->
+            <div class="summary-section d-none" id="tab-temsilci">
+                @foreach (var rep in Model
+                            .GroupBy(o => o.SalesRepName)
+                            .Select(g => new
+                            {
+                                Rep = g.Key,
+                                Kg = g.Sum(o => o.Items.Sum(i => i.NetWeight)),
+                                Count = g.Sum(o => o.Items.Count),
+
+                                Products = g.SelectMany(o => o.Items)
+                            .GroupBy(i => ShortenProduct(i.ProductName))
+                            .Select(p => $"{p.Key} ({p.Sum(x => x.NetWeight):N2} KG)")
+                            .OrderByDescending(x => x)
+                            .ToList()
+                            })
+                            .OrderByDescending(p => p.Kg)
+                            .ToList())
+                {
+                    <div class="summary-row rep-block">
+                        <div class="rep-left">
+                            <span class="rep-name">@rep.Rep</span>
+
+                            <div class="rep-products">
+                                @foreach (var pr in rep.Products)
+                                {
+                                    <div>@pr</div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="rep-right">
+                            <strong>@rep.Kg.ToString("N2") KG</strong><br />
+                            <span class="summary-info">(@rep.Count ürün)</span>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- ================= ÜLKE ================= -->
+            <div class="summary-section d-none" id="tab-ulke">
+                @foreach (var c in Model
+                            .GroupBy(o => o.Country)
+                            .Select(g => new
+                            {
+                                Country = g.Key,
+                                Kg = g.Sum(o => o.Items.Sum(i => i.NetWeight))
+                            })
+                .OrderByDescending(x => x.Kg))
+                {
+                    <div class="summary-row">
+                        <span>@c.Country:</span>
+                        <strong>@c.Kg.ToString("N2") KG</strong>
+                    </div>
+                }
+            </div>
+
+        </div>
+       
 
 
 
@@ -95,3 +241,79 @@ else
         @Html.Partial("_OrderTableDesktop", Model)
     }
 }
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const sections = {
+                genel: document.getElementById("tab-genel"),
+                urun: document.getElementById("tab-urun"),
+                temsilci: document.getElementById("tab-temsilci"),
+                ulke: document.getElementById("tab-ulke")
+            };
+
+            const tabs = document.querySelectorAll(".summary-tab");
+            const toggleBtn = document.getElementById("summaryToggleBtn");
+            let toggleIcon = null;
+            if(toggleBtn){
+                  toggleIcon = toggleBtn.querySelector("i");
+            }
+          
+
+            const compactGenel = document.getElementById("genel-compact");
+
+            let isExpanded = false;
+            let activeTab = "genel";
+
+            // --- TÜM DETAYLARI KAPAT ---
+            function collapseAll() {
+                Object.values(sections).forEach(sec => sec.classList.add("d-none"));
+                compactGenel.style.display = "block";          // Genel compact görünür
+                toggleBtn.classList.remove("rotated");
+            }
+
+            // --- TAB GÖSTER ---
+            function showTab(tabName) {
+                activeTab = tabName;
+                collapseAll();
+                sections[tabName].classList.remove("d-none");
+                compactGenel.style.display = "none";           // Detay açıldı → compact kapanır
+                isExpanded = true;
+                toggleBtn.classList.add("rotated");
+
+                tabs.forEach(t => t.classList.remove("active"));
+                document.querySelector(`[data-tab='${tabName}']`).classList.add("active");
+            }
+
+            // --- TAB TIKLAMA ---
+            tabs.forEach(tab => {
+                tab.addEventListener("click", function () {
+                    const selected = this.dataset.tab;
+                    showTab(selected);
+                });
+            });
+
+            // --- OK TIKLAMA ---
+            toggleBtn.addEventListener("click", function () {
+                if (isExpanded) {
+                    // KAPAT
+                    collapseAll();
+                    isExpanded = false;
+
+                    activeTab = "genel"; // ❗ Reset zorunlu
+                    tabs.forEach(t => t.classList.remove("active"));
+                    document.querySelector(`[data-tab='genel']`).classList.add("active");
+                } else {
+                    // AÇ → aktif olan tabı aç
+                    showTab(activeTab);
+                }
+            });
+
+            // --- İlk yükleme: kapalı + genel aktif ---
+            collapseAll();
+            document.querySelector("[data-tab='genel']").classList.add("active");
+        });
+    </script>
+}
+
+

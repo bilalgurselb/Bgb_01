@@ -9,6 +9,7 @@ namespace SiparisApi.Models
         public string Email { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
         public int? AllowedId { get; set; }  // FK kolon
+        public int? AllowedEmailId { get; set; }
         public AllowedEmail? AllowedEmail { get; set; }  // Navigation FK
        
         // 🔹 Veritabanında olmayan ama UI ve log için gerekli alanlar

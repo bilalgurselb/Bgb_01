@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Numerics;
 
 namespace SiparisApi.Models
 {
@@ -19,10 +20,10 @@ namespace SiparisApi.Models
         public string? GRUP_ISMI { get; set; }
 
         [MaxLength(50)]
-        public string? KOD_1 { get; set; }
+        public short? KOD_1 { get; set; }
 
         [MaxLength(50)]
-        public string? KOD_2 { get; set; }
+        public short? KOD_2 { get; set; }
 
         [MaxLength(250)]
         public string? ADRES { get; set; }
@@ -46,7 +47,7 @@ namespace SiparisApi.Models
         public string? VERGI_NUMARASI { get; set; }
 
         [MaxLength(20)]
-        public string? POSTAKODU { get; set; }
+        public int? POSTAKODU { get; set; }
 
         public short? VADE_GUNU { get; set; }
 

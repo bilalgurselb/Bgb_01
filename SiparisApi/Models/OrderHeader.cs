@@ -30,7 +30,9 @@ namespace SiparisApi.Models
         public User? CreatedBy { get; set; }
         [NotMapped]
         public string? CustomerName { get; set; }
-        [NotMapped]
+    
+        
+
         public string StatusColor =>
            (Status ?? "").Trim() switch
            {

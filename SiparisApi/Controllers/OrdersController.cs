@@ -24,9 +24,8 @@ namespace SiparisApi.Controllers
             _emailService = emailService;
         }
 
-        // 🔹 1️⃣ Yeni Sipariş Oluşturma
-        // [Authorize]
-
+       
+        /*---Yeni Müşteri Ekleme---*/
         [HttpPost("lookups/add")]
         public async Task<IActionResult> AddNewCustomer([FromBody] NewCustomerDto dto)
         {
@@ -69,11 +68,12 @@ namespace SiparisApi.Controllers
     
     public class NewCustomerDto
     {
-        public string CARI_ISIM { get; set; }
-        public string IL { get; set; }
+        public string? CARI_ISIM { get; set; }
+        public string? IL { get; set; }
     }
 
-
+        // 🔹 1️⃣ Yeni Sipariş Oluşturma
+        // [Authorize]
 
         [HttpPost("create")]
         public async Task<IActionResult> CreateOrder([FromBody] OrderHeader order)
@@ -244,8 +244,8 @@ namespace SiparisApi.Controllers
             var query =
                 from o in _context.OrderHeaders
                     .Include(o => o.Items)
-                   join c in _context.SintanCari
-                    on o.CustomerId equals c.CARI_KOD into custJoin
+                join c in _context.SintanCari
+                 on o.CustomerId equals c.CARI_KOD into custJoin
                 from c in custJoin.DefaultIfEmpty()
 
                 join rep in _context.AllowedEmails
@@ -257,7 +257,15 @@ namespace SiparisApi.Controllers
                     Id = o.Id,
                     CustomerId = o.CustomerId,
                     CustomerName = c != null ? c.CARI_ISIM : (o.CustomerId ?? "-"),
-
+                    Adress = c != null ? c.ADRES : (o.CustomerId ?? "-"),
+                    Phone = c != null ? c.TELEFON : (o.CustomerId ?? "-"),
+                      City = c != null ? c.ILCE : (o.CustomerId ?? "-"),
+                     Country = c != null ? c.IL : (o.CustomerId ?? "-"),
+                  //  Postkodu = c != null ? c.POSTAKODU?.ToString() : (o.CustomerId ?? "-"),
+                  //  Postkodu = c != null ? $"{c.POSTAKODU}" : (o.CustomerId ?? "-"),
+                 //   Taxno = c != null ? $"{c.VERGI_NUMARASI}" : (o.CustomerId ?? "-"),
+                 //   Taxno = c != null ? c.VERGI_NUMARASI.ToString() : (o.CustomerId ?? "-"),
+                  Taxat = c != null ? c.VERGI_DAIRESI : (o.CustomerId ?? "-"), 
                     CreatedAt = o.CreatedAt,
                     UpdatedAt = o.UpdatedAt,
                     Status = o.Status,
@@ -272,22 +280,23 @@ namespace SiparisApi.Controllers
                 ? rep.NameSurname
                 : "-",
 
-                    Items = o.Items.Select(i => new OrderListItemVm
-                    {
-                        Id = i.Id,
-                        ProductId = i.ProductId ?? "",
-                        ProductName = _context.SintanStok
+                    Items = (o.Items != null && o.Items.Any())
+                   ? o.Items.Select(i => new OrderListItemVm
+                   {
+                       Id = i.Id,
+                       ProductId = i.ProductId ?? "",
+                       ProductName = _context.SintanStok
                             .Where(s => s.STOK_KODU == i.ProductId)
                             .Select(s => s.STOK_ADI)
                             .FirstOrDefault() ?? (i.ProductId ?? ""),
 
-                        Quantity = i.Quantity,
-                        PackingInfo = i.PackingInfo ?? "",
-                        NetWeight = i.NetWeight,
-                        Price = i.Price,
-                        Description = i.Description
-                       
-                    }).ToList()
+                       Quantity = i.Quantity,
+                       PackingInfo = i.PackingInfo ?? "",
+                       NetWeight = i.NetWeight,
+                       Price = i.Price,
+                       Description = i.Description
+
+                   }).ToList() : new List<OrderListItemVm>(),
                 };
 
             var orders = await query

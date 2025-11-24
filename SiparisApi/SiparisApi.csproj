@@ -26,6 +26,7 @@
     <None Remove="Error.txt" />
     <None Remove="Models\Models.zip" />
     <None Remove="SiparisApi.zip" />
+    <None Remove="SiparisApi23.11.2025_Taze güncel.zip" />
     <None Remove="Yeni WinRAR ZIP arşivi.zip" />
   </ItemGroup>
   <ItemGroup>

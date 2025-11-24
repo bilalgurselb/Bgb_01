@@ -53,12 +53,14 @@ async function loadCustomers() {
             country: c.country ?? c.IL ?? c.Ulke ?? "",
             phone: c.phone ?? c.TELEFON ?? ""
         }));
+        norm.sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "", "tr"));
+
 
         select.innerHTML = `<option value="">Select Customer...</option>`;
         norm.forEach(c => {
             const opt = document.createElement("option");
             opt.value = c.id;
-            opt.textContent = `${c.name} (${c.city || "N/A"}, ${c.country || "-"})`;
+            opt.textContent = `${c.name} (${c.country})`;
             opt.dataset.city = c.city || "";
             opt.dataset.country = c.country || "";
             opt.dataset.phone = c.phone || "";
@@ -78,6 +80,103 @@ async function loadCustomers() {
         select.disabled = false;
     }
 }
+// === 🔹 CUSTOMER: Mobile-Friendly Search & Filter ===
+(function makeCustomerFieldEditable() {
+    const originalSelect = document.getElementById("customerSelect");
+    if (!originalSelect) return;
+
+    // 1️⃣ Yeni input oluştur
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "Select or search customer...";
+    input.classList.add("form-control", "mb-2");
+    input.setAttribute("autocomplete", "off");
+
+    // 2️⃣ Liste container
+    const dropdown = document.createElement("div");
+    dropdown.classList.add("customer-dropdown");
+    Object.assign(dropdown.style, {
+        display: "none",
+        position: "absolute",
+        width: "100%",
+        maxHeight: "200px",
+        overflowY: "auto",
+        border: "1px solid #ccc",
+        background: "#fff",
+        zIndex: "1000",
+        borderRadius: "6px",
+    });
+
+    // 3️⃣ Kapsayıcı oluştur
+    const wrapper = document.createElement("div");
+    wrapper.style.position = "relative";
+    wrapper.style.width = "100%";
+
+    // 4️⃣ Select gizle, wrapper içine al
+    originalSelect.parentNode.insertBefore(wrapper, originalSelect);
+    wrapper.appendChild(input);
+    wrapper.appendChild(dropdown);
+    originalSelect.style.display = "none";
+
+    // 5️⃣ Dropdown'u doldur
+    function populateDropdown() {
+        dropdown.innerHTML = "";
+        Array.from(originalSelect.options).forEach(opt => {
+            if (!opt.value) return;
+            const item = document.createElement("div");
+            item.textContent = opt.textContent;
+            item.dataset.value = opt.value;
+            Object.assign(item.style, {
+                padding: "6px 10px",
+                cursor: "pointer",
+            });
+
+            item.addEventListener("mouseenter", () => {
+                item.style.background = "#e6f4f8"; 
+            });
+            item.addEventListener("mouseleave", () => {
+                item.style.background = "#fff";
+            });
+
+            item.addEventListener("click", () => {
+                input.value = opt.textContent;
+                originalSelect.value = opt.value;
+                dropdown.style.display = "none";
+                // Seçim olayı tetikle
+                originalSelect.dispatchEvent(new Event("change", { bubbles: true }));
+            });
+            dropdown.appendChild(item);
+        });
+    }
+    populateDropdown();
+
+    // 6️⃣ 🔍 Filtreleme (filter değişkeni burada)
+    input.addEventListener("input", () => {
+        const filter = input.value.toLowerCase().trim();
+        dropdown.style.display = "block";
+
+        Array.from(dropdown.children).forEach(item => {
+            const text = item.textContent.toLowerCase();
+            item.style.display = text.includes(filter) ? "block" : "none";
+        });
+    });
+
+    // 7️⃣ Focus & blur
+    input.addEventListener("focus", () => {
+        dropdown.style.display = "block";
+        input.select();
+    });
+
+    input.addEventListener("blur", () => {
+        setTimeout(() => (dropdown.style.display = "none"), 200);
+    });
+
+    // 8️⃣ Yeni müşteri eklendiğinde listeyi yenile
+    const observer = new MutationObserver(populateDropdown);
+    observer.observe(originalSelect, { childList: true });
+})();
+
+
 // New CUSTOMER          //
 document.getElementById("btnAddCustomer").addEventListener("click", () => {
     const modal = new bootstrap.Modal(document.getElementById("addCustomerModal"));
@@ -114,23 +213,42 @@ document.getElementById("addCustomerForm").addEventListener("submit", async (e) 
         localStorage.removeItem("sintan_customers_v5");
         localStorage.removeItem("sintan_customers_v5_time");
 
-        await loadCustomers(); // Güncel listeyi getir
+        await loadCustomers(); 
 
-        // Yeni eklenen müşteriyi otomatik seç
-        document.getElementById("customerSelect").value = created.CARI_KOD;
+        /*--Yeni müşteri seçimi--*/
+        const select = document.getElementById("customerSelect");
+        const newOpt = [...select.options].find(o =>
+            o.value === created.id?.toString() || o.value === created.kod?.toString()
+        );
+
+        if (newOpt) {
+            select.value = newOpt.value;
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+        }
 
         bootstrap.Modal.getInstance(document.getElementById("addCustomerModal")).hide();
-        showToast("✅ Yeni müşteri eklendi!");
+        showToast(`✅ ${created.CARI_ISIM || "Yeni müşteri"} eklendi ve seçildi.`);
       
 
     } catch (err) {
         showToast("❌ Kayıt başarısız: " + err.message);
     }
 });
+/* 🔍 Customer Search (içeren arama)
+document.getElementById("customerSearch")?.addEventListener("input", function () {
+    const filter = this.value.toLowerCase();
+    const options = document.querySelectorAll("#customerSelect option");
+
+    options.forEach(opt => {
+        const text = opt.textContent.toLowerCase();
+        opt.style.display = (filter === "" || text.includes(filter)) ? "block" : "none";
+    });
+});
+*/
 
 
 async function loadSalesReps() {
-    return new Promise(async resolve => {    // <---- Eklenen satır
+    return new Promise(async resolve => {   
         const select = document.getElementById("salesRepSelect");
         if (!select) return resolve();
 
@@ -164,16 +282,13 @@ async function loadSalesReps() {
             select.innerHTML = `<option>Error loading reps</option>`;
         } finally {
             select.disabled = false;
-            resolve();     // <---- Burası kritik
+            resolve();   
         }
     });
 }
 
-
-
-
-    // === 🔹 ÜRÜNLER ---//
-    let productListCache = [];
+// === 🔹 ÜRÜNLER ---//
+let productListCache = [];
 
 async function preloadProducts() {
     try {
@@ -181,29 +296,75 @@ async function preloadProducts() {
         if (!res.ok) throw new Error("Ürün verisi alınamadı");
         const list = await res.json();
         productListCache = Array.isArray(list) ? list : [];
+        console.log("✅ Ürün listesi yüklendi:", productListCache.length);
     } catch (err) {
         console.error("❌ Ürünler alınamadı:", err);
         productListCache = [];
     }
 }
-
 function fillProductSelect(selectElement) {
     if (!selectElement) return;
+
     selectElement.innerHTML = `<option value="">Ürün seçiniz...</option>`;
 
+    const groups = {};
     productListCache.forEach(p => {
-        const opt = document.createElement("option");
-        opt.value = p.id ?? "";
-        opt.textContent = `${p.name ?? "(isimsiz)"} (${p.id})`;
-        opt.dataset.packWeight = p.packWeight ?? 0;
-        opt.dataset.palletCount = p.palletCount ?? 0;
-        opt.dataset.palletNet = p.palletNet ?? 0;
-        opt.dataset.transportCost = p.transportCost ?? 0;
-        selectElement.appendChild(opt);
+        const groupName = (p.name ?? "").split(" ")[0];
+        if (!groups[groupName]) groups[groupName] = [];
+        groups[groupName].push(p);
     });
+
+    const groupNames = Object.keys(groups).sort((a, b) => a.localeCompare(b, "tr"));
+
+    for (const group of groupNames) {
+        const optGroup = document.createElement("optgroup");
+        optGroup.label = group.toUpperCase();
+
+        groups[group].forEach(p => {
+            const opt = document.createElement("option");
+            opt.value = p.id ?? "";
+            opt.textContent = `${p.name ?? "(isimsiz)"} (${p.id})`;
+
+            // normalize dataset
+            opt.dataset.packWeight = p.packWeight ?? p.PACK_WEIGHT ?? 0;
+            opt.dataset.palletCount = p.palletCount ?? p.PALLET_COUNT ?? 0;
+            opt.dataset.palletNet = p.palletNet ?? p.PALLET_NET ?? 0;
+            opt.dataset.transportCost = p.transportCost ?? p.TRANSPORT_COST ?? 0;
+
+            optGroup.appendChild(opt);
+        });
+
+        selectElement.appendChild(optGroup);
+    }
 
     selectElement.disabled = false;
 }
+
+document.addEventListener("change", e => {
+    if (e.target.classList.contains("product-select")) {
+        const opt = e.target.querySelector(`option[value='${e.target.value}']`);
+
+        if (!opt) return;
+
+        const row = e.target.closest(".item-row");
+        if (!row) return;
+
+        row.dataset.packWeight = opt.dataset.packWeight || 0;
+        row.dataset.palletNet = opt.dataset.palletNet || 0;
+        recalcRowTotal(row);
+        if (typeof calculateOrderTotals === "function") calculateOrderTotals();
+    }
+});
+
+/*--Köprü--*/
+document.addEventListener("productSelected", e => {
+    const { selectId, productId } = e.detail;
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    select.value = productId;
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+});
 
 // === 🔹 SHIP FROM (Sabit) ===
 function loadShipFrom() {
@@ -325,18 +486,6 @@ async function loadPorts(selectId = "portOfDelivery") {
 }
 
 
-
-document.addEventListener('change', function (e) {
-    if (e.target.classList.contains('product-select')) {
-        const opt = e.target.selectedOptions[0];
-        const row = e.target.closest('.item-row');
-        // loadProducts sırasında set ettiğiniz packWeight ve palletNet verilerini kullanın
-        row.dataset.packWeight = opt.dataset.packWeight || 0;
-        row.dataset.palletNet = opt.dataset.palletNet || 0;
-        recalcRowTotal(row);
-    }
-});
-
 // === 🔹 PLACE OF DELIVERY (SQL: dbo.SintanCari.IL) ===
 async function loadCities(selectId = "placeOfDelivery") {
     const select = document.getElementById(selectId);
@@ -376,7 +525,7 @@ async function loadCities(selectId = "placeOfDelivery") {
         select.disabled = false;
     }
 }
-///*-------yaRDIMCI OLMAK-------*/// 
+
 // === 🔹 Genel Yardımcılar ===
 function fillSelect(id, list) {
     const select = document.getElementById(id);
@@ -399,5 +548,174 @@ function fillSelectElement(select, list) {
         select.appendChild(opt);
     });
 }
+
+// ============================================================
+// SMART PRODUCT DROPDOWN
+// ============================================================
+
+let smartDropdownActiveSelect = null;
+let smartDropdownScrollY = 0; 
+// Ürün select'i tıklanınca özel dropdown aç
+document.addEventListener("click", function (e) {
+    if (e.target.classList.contains("product-select")) {
+        e.preventDefault(); 
+        const select = e.target;
+        smartDropdownActiveSelect = select;
+        openSmartProductDropdown(select);
+    }
+});
+
+function openSmartProductDropdown(selectEl) {
+    const dropdown = document.getElementById("smartProductDropdown");
+    if (!dropdown) return;
+
+    // Mevcut scroll konumunu kaydet (mobil için önemli)
+    smartDropdownScrollY =
+        window.scrollY || document.documentElement.scrollTop || 0;
+
+    dropdown.classList.remove("hidden");
+
+    // Desktop'ta select'in altına konumla
+    if (window.innerWidth > 768) {
+        const rect = selectEl.getBoundingClientRect();
+        dropdown.style.top = rect.bottom + window.scrollY + "px";
+        dropdown.style.left = rect.left + window.scrollX + "px";
+        dropdown.style.width = rect.width + "px";
+    } else {
+        // Mobile: tam ekran, soldan başlasın
+        dropdown.style.top = "0";
+        dropdown.style.left = "0";
+        dropdown.style.width = "100%";
+    }
+
+    // Listeyi doldur
+    buildSmartProductList(productListCache);
+}
+
+
+// Dropdown kapatma
+document.getElementById("smartProductClose").addEventListener("click", function () {
+    document.getElementById("smartProductDropdown").classList.add("hidden");
+    window.scrollTo({ top: smartDropdownScrollY, left: 0, behavior: "auto" });
+});
+
+// Arama
+document.getElementById("smartProductSearch").addEventListener("input", function () {
+    const term = this.value.toLowerCase();
+    const filtered = productListCache.filter(p => p.name.toLowerCase().includes(term));
+    buildSmartProductList(filtered);
+});
+// KATEGORİ + ÜRÜN LİSTESİNİ KUR (alfabetik)
+function buildSmartProductList(list) {
+    const container = document.getElementById("smartProductList");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    const groups = {};
+
+    list.forEach(p => {
+        const name = (p.name ?? "").trim();
+        const groupName = (name.split(" ")[0] || "DİĞER").toUpperCase();
+
+        if (!groups[groupName]) groups[groupName] = [];
+        groups[groupName].push(p);
+    });
+
+    const groupNames = Object.keys(groups).sort((a, b) =>
+        a.localeCompare(b, "tr")
+    );
+
+    groupNames.forEach(groupName => {
+        const groupEl = document.createElement("div");
+        groupEl.classList.add("smart-category");
+        groupEl.innerHTML = `
+            ${groupName}
+            <i class="fas fa-chevron-right"></i>
+        `;
+        container.appendChild(groupEl);
+
+        const productWrapper = document.createElement("div");
+        productWrapper.classList.add("smart-products-wrapper");
+        productWrapper.style.display = "none";
+
+        // Grup içi ürünleri alfabetik sırala
+        const products = groups[groupName].slice().sort((a, b) =>
+            (a.name ?? "").localeCompare(b.name ?? "", "tr")
+        );
+
+        products.forEach(p => {
+            const item = document.createElement("div");
+            item.classList.add("smart-product");
+            item.textContent = p.name;
+
+            item.addEventListener("click", () => {
+                smartDropdownActiveSelect.value = p.id;
+
+                smartDropdownActiveSelect.dispatchEvent(
+                    new Event("change", { bubbles: true }));
+                // Paneli kapat
+                const dd = document.getElementById("smartProductDropdown");
+                dd.classList.add("hidden");
+
+                // Scroll'u eski yerine geri al
+                window.scrollTo({ top: smartDropdownScrollY, left: 0, behavior: "auto" });
+            });
+
+
+            productWrapper.appendChild(item);
+        });
+
+        container.appendChild(productWrapper);
+
+        // Grup başlığı tıkla → aç/kapat
+        groupEl.addEventListener("click", function () {
+            const isOpen = productWrapper.style.display === "block";
+            productWrapper.style.display = isOpen ? "none" : "block";
+            groupEl.classList.toggle("expanded", !isOpen);
+        });
+    });
+}
+
+document.addEventListener("smart-select-product", function (e) {
+    const select = e.detail.select;
+    const productId = e.detail.id;
+
+    let matched = false;
+    [...select.options].forEach((o, i) => {
+        o.selected = (o.value == productId);
+        if (o.selected) {
+            select.selectedIndex = i;  
+            select.value = productId;
+            matched = true;
+        }
+    });
+
+    if (!matched) return;
+
+    const opt = select.selectedOptions[0];
+    const row = select.closest(".item-row");
+
+    if (!row || !opt) return;
+
+    // Dataset değerlerini yükle
+    row.dataset.packWeight = opt.dataset.packWeight || 0;
+    row.dataset.palletNet = opt.dataset.palletNet || 0;
+
+    // Hesaplamayı tetikle
+    recalcRowTotal(row);
+    if (typeof calculateOrderTotals === "function") {
+        calculateOrderTotals();
+    }
+    select.dispatchEvent(new Event("change"));
+});
+document.addEventListener("mousedown", function (e) {
+    if (e.target.classList.contains("product-select")) {
+        e.preventDefault(); // native dropdown’u engeller
+        const select = e.target;
+        smartDropdownActiveSelect = select;
+        openSmartProductDropdown(select);
+    }
+});
 
 

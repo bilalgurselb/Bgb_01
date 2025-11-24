@@ -23,8 +23,17 @@ namespace SiparisApi.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
+            if (Request.Query.ContainsKey("refresh"))
+            {
+                var cookieToken = Request.Cookies["AccessToken"];
+                if (!string.IsNullOrEmpty(cookieToken))
+                {
+                    HttpContext.Session.SetString("AccessToken", cookieToken);
+                }
+            }
 
-        var token = HttpContext.Session.GetString("AccessToken");
+
+            var token = HttpContext.Session.GetString("AccessToken");
             if (token == null)
                 return RedirectToAction("Login", "Account");
 

@@ -1,4 +1,6 @@
-﻿namespace SiparisApi.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace SiparisApi.Models
 {
     public class OrderListItemVm
     {
@@ -22,10 +24,15 @@
 
         public string? CustomerId { get; set; }
         public string CustomerName { get; set; } = "";
-
+       public string? Phone { get; set; }       
+        public string? City { get; set; }
+        public string? Country { get; set; }
+     //   public string? Postkodu { get; set; }
+        public string? Adress { get; set; } 
+    //    public string? Taxno { get; set; }
+        public string? Taxat { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
-
         public string Status { get; set; } = "Onay Bekleniyor";
         public string Currency { get; set; } = "EURO";
 

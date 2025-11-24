@@ -1,89 +1,128 @@
 ﻿@model IEnumerable<SiparisApi.Models.OrderListVm>
 
 
-<table class="table table-bordered table-hover align-middle">
-    <thead class="table-light">
-        <tr>
-            <th>#</th>
-            <th>Müşteri</th>
-            <th>Ürün</th>
-            <th>Miktar</th>
-            <th>Birim</th>
-            <th>Net KG</th>
-            <th>Tutar</th>
-            <th>Para Birimi</th>
-            <th>Temsilci</th>
-            <th>Durum</th>
-            <th>İşlem</th>
-        </tr>
-    </thead>
 
-    <tbody>
+<!-- --------------------------------------------- -->
+<!--          GRUPLANMIŞ + COLLAPSE SİPARİŞLER     -->
+<!-- --------------------------------------------- -->
+@foreach (var order in Model)
+{
+    string collapseId = $"order{order.Id}";
+    var statusKey = order.Status?.Trim().ToLowerInvariant().Replace(" ", "");
+    var icon = statusKey switch
+    {
+        "yeni" => "fas fa-star",
+        "onaybekleniyor" => "fas fa-clock",
+        "onaylandı" => "fas fa-check-circle",
+        "üretimde" => "fas fa-industry",
+        "iptal" => "fas fa-times-circle",
+        _ => "fas fa-question-circle"
+    };
 
-        @foreach (var order in Model)
-        {
-            var statusKey = order.Status?.Trim().ToLowerInvariant().Replace(" ", "");
-            var icon = statusKey switch
-            {
-                "yeni" => "fas fa-star",
-                "onaybekleniyor" => "fas fa-clock",
-                "onaylandı" => "fas fa-check-circle",
-                "üretimde" => "fas fa-industry",
-                "iptal" => "fas fa-times-circle",
-                _ => "fas fa-question-circle"
-            };
+    <div class="order-block">
 
-            var statusClass = $"order-status status-{statusKey}";
+        <!-- HEADER -->
+        <div class="order-header" data-bs-toggle="collapse" data-bs-target="#@collapseId">
+            <div class="header-left">
+                <div class="header-title">
+                    @order.CustomerName
+                    <div class="customer-details">
+                        <div class="hederse">
 
-            foreach (var item in order.Items)
-            {
-                var total = item.Price * item.NetWeight;
+                            @if (!string.IsNullOrWhiteSpace(order.Adress))
+                            {
+                                <span><i class="fas fa-home"></i> @order.Adress</span>
+                            }
 
-                <tr>
-                    <td>@order.Id</td>
-                    <td>@order.CustomerName</td>
-                    <td>@item.ProductName</td>
+                            @if (!string.IsNullOrWhiteSpace(order.City) || !string.IsNullOrWhiteSpace(order.Country))
+                            {
+                                <span><i class="fas fa-map-marker-alt"></i> @order.City @((order.City != null && order.Country != null) ? "/" : "") @order.Country</span>
+                            }
 
-                    <td>@item.Quantity.ToString("0")</td>
-                    <td>@item.PackingInfo</td>
+                            @if (!string.IsNullOrWhiteSpace(order.Phone))
+                            {
+                                <span><i class="fas fa-phone"></i> @order.Phone</span>
+                            }
 
-                    <td>@item.NetWeight.ToString("N2")</td>
-                    <td>@total.ToString("N2")</td>
+                            @if (!string.IsNullOrWhiteSpace(order.Taxat))
+                            {
+                                <span><i class="fas fa-building"></i> @order.Taxat</span>
+                            }
+                        </div>
+                    </div>
 
-                    <td>@order.Currency</td>
+                </div>
+         
+            </div>
 
-                    <td>@order.SalesRepName</td>
+            
+        </div>
 
-                    <td>
-                        <span class="order-status status-@statusKey">
-                            <i class="@icon"></i> @order.Status
-                        </span>
+        <!-- COLLAPSE BODY -->
+        <div class="collapse order-items" id="@collapseId">
 
-                    </td>
+            <table class="items-table table table-bordered mb-0">
+                <thead>
+                    <tr>
+                        <th>Ürün</th>
+                        <th>Miktar</th>
+                        <th>Net KG</th>
+                        <th>Tutar</th>
+                        <th>Temsilci</th>
+                        <th>Durum</th>               
+                                            
+                        <th>İşlem</th>
+                    </tr>
+                </thead>
 
-                    <td>
-                        <a href="@Url.Action("Edit", "OrdersUIList", new { id = order.Id })"
-                           class="btn btn-sm btn-primary">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                    </td>
-                </tr>
+                <tbody>
+                    @foreach (var item in order.Items)
+                    {
+                        var total = item.Price * item.NetWeight;
 
-                <!-- DETAY SATIRI -->
-                <tr class="bg-light">
-                    <td colspan="11" class="small">
+                        <tr>
+                            <td>@item.ProductName</td>
 
-                        <b>Port:</b> @order.PortOfDelivery &nbsp; | &nbsp;
-                        <b>Şehir/Ülke:</b> @order.PlaceOfDelivery &nbsp; | &nbsp;
-                        <b>Ödeme Şartı:</b> @order.PaymentTerm &nbsp; | &nbsp;
-                        <b>Transport:</b> @order.Transport &nbsp; | &nbsp;
-                        <b>Açıklama:</b> @item.Description
+                            <td class="num-col">
+                                @item.Quantity
+                                <span class="order-unit">@item.PackingInfo</span>
+                            </td>
 
-                    </td>
-                </tr>
+                            <td class="num-col">
+                                @item.NetWeight.ToString("N2") <span class="order-unit">Kg</span>
+                            </td>
 
-            } // item
-        }
- 
-    </tbody>
-</table>
+                            <td class="num-col order-amount-line">
+                                @total.ToString("N2") <span class="order-unit">@order.Currency</span>
+                            </td>
+                                                     
+                            <td>@order.SalesRepName</td>
+                            <td>
+                            <span class="order-status status-@statusKey">
+                                <i class="@icon"></i> @order.Status
+                            </span>
+                            </td>
+                            <td>
+                                <a class="btn btn-primary btn-square"
+                                   href="@Url.Action("Edit", "OrdersUIList", new { id = order.Id })">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <!-- DETAY SATIRI -->
+            <div class="order-detail">
+                <span><b>ID:</b> @order.Id</span>
+                <b>Şehir/Ülke:</b> @order.PlaceOfDelivery &nbsp; | &nbsp;
+                <b>Port:</b> @order.PortOfDelivery &nbsp; | &nbsp;
+                <b>Ödeme Şartı:</b> @order.PaymentTerm &nbsp; | &nbsp;
+                <b>Transport:</b> @order.Transport &nbsp; | &nbsp;
+                <b>Açıklama:</b> @order.Items.FirstOrDefault()?.Description
+            </div>
+
+        </div>
+    </div>
+}
