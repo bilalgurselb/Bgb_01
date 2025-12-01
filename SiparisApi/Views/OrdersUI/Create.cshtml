@@ -676,7 +676,7 @@
                     if (res.ok) {
                         alert("✅ Sipariş başarıyla kaydedildi!");
                           formChanged = false;
-                          window.location.href = "/OrdersUIList/Index?refresh=1";
+                          window.location.href = "/OrdersUIList";
                     }
                     else {
                         const errorText = await res.text();

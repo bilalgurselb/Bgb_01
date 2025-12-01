@@ -8,20 +8,28 @@
     --sintan-orange: #DF5A41;
     --sintan-green: #57B37F;
     --sintan-green-light: #8BCBA3;
-    --sintan-red: #E84C3D;
+    --sintan-red: #E4002B;
     --text-dark: #1B1B1B;
     --text-light: #FFFFFF;
     --bg-white: #FFFFFF;
     --bg-light: #F8F9FA;
     --border-gray: #E6E6E6;
     --shadow: rgba(0, 0, 0, 0.05);
+    --sintan-yellow: #FFB81C;
+    --sintan-purple: #2E3192;
+    --sintan-darkgray: #2D2926;
+    --sintan-gray: #6D8CA1;
+    --sintan-orange-strong: #FF8200;
+    --sintan-green-dark: #006537;
+    --sintan-brown: #977C47;
 }
 
 /* ============================================================
    🌐 GENERAL
    ============================================================ */
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Work Sans', Arial, sans-serif;
+    /*font-family: 'Inter', sans-serif;*/
     background: var(--bg-light);
     color: var(--text-dark);
     margin: 0;
@@ -31,6 +39,8 @@ body {
 
 h1, h2, h3 {
     color: var(--text-dark);
+    font-family: 'Work Sans', Arial, sans-serif;
+    font-weight: 600;
 }
 
 /* ============================================================
@@ -171,9 +181,9 @@ select {
     box-sizing: border-box;
 }
 
-    input:focus, select:focus {
-        border-color: var(--sintan-blue);
-        outline: none;
+    button:focus, input:focus, select:focus {
+        outline: 2px dashed var(--sintan-blue);
+        outline-offset: 2px;
     }
 
 /* ============================================================
