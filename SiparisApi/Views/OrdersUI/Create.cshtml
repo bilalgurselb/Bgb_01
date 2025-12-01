@@ -57,29 +57,40 @@
             </div>
         </div>
 
-        <!-- 🔹 TESLİMAT BİLGİLERİ -->
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label>Port of Delivery</label>
-                <select id="portOfDelivery" class="form-control" ></select>
+        <!-- 🔹 TESLİMAT BİLGİLERİ (Gizlenebilir Panel) -->
+        <div class="card mb-4">
+            <div class="card-header bg-light" style="cursor:pointer;" data-bs-toggle="collapse" data-bs-target="#deliveryPanel">
+                <strong><i class="fas fa-truck"></i> Teslimat Bilgileri (İsteğe Bağlı)</strong>
+                <span class="float-end"><i class="fas fa-chevron-down small"></i></span>
             </div>
-            <div class="col-md-6 mb-3">
-                <label>Place of Delivery</label>
-                <select id="placeOfDelivery" class="form-control" ></select>
-            </div>
-            <div class="form-group mb-3">
-                <label>Delivery Term</label>
-                <select id="deliveryTerm" class="form-select" >
-                    <option value="">Choose...</option>
-                    <option value="CFR">CFR (Cost and Freight)</option>
-                    <option value="CIF">CIF (Cost, Insurance and Freight)</option>
-                    <option value="FOB">FOB (Free on Board)</option>
-                    <option value="DAP">DAP (Delivered At Place)</option>
-                </select>
-            </div>
-            <div class="form-group mb-3">
-                <label for="dueDays">Due Date (Days)</label>
-                <input type="number" id="dueDays" class="form-control" inputmode="numeric" min="0" step="1" placeholder="örnek: 30" />
+
+            <div id="deliveryPanel" class="collapse card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="portOfDelivery">Port of Delivery</label>
+                        <select id="portOfDelivery" class="form-control"></select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="placeOfDelivery">Place of Delivery</label>
+                        <select id="placeOfDelivery" class="form-control"></select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="deliveryTerm">Delivery Term</label>
+                        <select id="deliveryTerm" class="form-select">
+                            <option value="">Choose...</option>
+                            <option value="CFR">CFR (Cost and Freight)</option>
+                            <option value="CIF">CIF (Cost, Insurance and Freight)</option>
+                            <option value="FOB">FOB (Free on Board)</option>
+                            <option value="DAP">DAP (Delivered At Place)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="dueDays">Due Date (Days)</label>
+                        <input type="number" id="dueDays" class="form-control" inputmode="numeric" min="0" step="1" placeholder="örnek: 30" />
+                    </div>
+                </div>
             </div>
         </div>
 
