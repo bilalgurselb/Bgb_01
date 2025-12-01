@@ -254,64 +254,85 @@ else
 
             const tabs = document.querySelectorAll(".summary-tab");
             const toggleBtn = document.getElementById("summaryToggleBtn");
-            let toggleIcon = null;
-            if(toggleBtn){
-                  toggleIcon = toggleBtn.querySelector("i");
-            }
-          
+             const compactGenel = document.getElementById("genel-compact");
 
-            const compactGenel = document.getElementById("genel-compact");
+                     if (!toggleBtn || tabs.length === 0 || !compactGenel) {
+                console.warn("Summary UI bulunamadı → Script pasif moda geçti.");
+                return;
+            }
 
             let isExpanded = false;
             let activeTab = "genel";
 
-            // --- TÜM DETAYLARI KAPAT ---
+            // ==========================
+            //     INTERNAL FUNCTIONS
+            // ==========================
+
             function collapseAll() {
-                Object.values(sections).forEach(sec => sec.classList.add("d-none"));
-                compactGenel.style.display = "block";          // Genel compact görünür
+                Object.values(sections).forEach(sec => {
+                    if (sec) sec.classList.add("d-none");
+                });
+
+                if (compactGenel) compactGenel.style.display = "block";
                 toggleBtn.classList.remove("rotated");
             }
 
-            // --- TAB GÖSTER ---
             function showTab(tabName) {
                 activeTab = tabName;
                 collapseAll();
-                sections[tabName].classList.remove("d-none");
-                compactGenel.style.display = "none";           // Detay açıldı → compact kapanır
+
+                if (sections[tabName]) {
+                    sections[tabName].classList.remove("d-none");
+                }
+
+                if (compactGenel) compactGenel.style.display = "none";
+
                 isExpanded = true;
                 toggleBtn.classList.add("rotated");
 
                 tabs.forEach(t => t.classList.remove("active"));
-                document.querySelector(`[data-tab='${tabName}']`).classList.add("active");
+                const activeTabElm = document.querySelector(`[data-tab='${tabName}']`);
+                if (activeTabElm) activeTabElm.classList.add("active");
             }
 
-            // --- TAB TIKLAMA ---
-            tabs.forEach(tab => {
-                tab.addEventListener("click", function () {
-                    const selected = this.dataset.tab;
-                    showTab(selected);
-                });
-            });
+            // ==========================
+            //     EVENT BINDINGS
+            // ==========================
 
-            // --- OK TIKLAMA ---
+            // --- TAB CLICK ---
+            if (tabs && tabs.length > 0) {
+                tabs.forEach(tab => {
+                    tab.addEventListener("click", function () {
+                        const selected = this.dataset.tab;
+                        if (selected) {
+                            showTab(selected);
+                        }
+                    });
+                });
+            }
+
+            // --- TOGGLE BUTTON ---
             toggleBtn.addEventListener("click", function () {
                 if (isExpanded) {
-                    // KAPAT
                     collapseAll();
                     isExpanded = false;
 
-                    activeTab = "genel"; // ❗ Reset zorunlu
+                    // Reset tab to GENEL
+                    activeTab = "genel";
                     tabs.forEach(t => t.classList.remove("active"));
-                    document.querySelector(`[data-tab='genel']`).classList.add("active");
+
+                    const genelTab = document.querySelector("[data-tab='genel']");
+                    if (genelTab) genelTab.classList.add("active");
                 } else {
-                    // AÇ → aktif olan tabı aç
                     showTab(activeTab);
                 }
             });
 
-            // --- İlk yükleme: kapalı + genel aktif ---
+            // --- INITIAL STATE ---
             collapseAll();
-            document.querySelector("[data-tab='genel']").classList.add("active");
+            const firstTab = document.querySelector("[data-tab='genel']");
+            if (firstTab) firstTab.classList.add("active");
+
         });
     </script>
 }
